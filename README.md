@@ -13,22 +13,22 @@ This project is in early development.
 
 ## 📄 Syntax
 ````
-void main() { --| main function
-    int i = 0 --| var declaration (integer type)
+void main() {
+    int i = 0
 
-    if i >= 0 { --| if statement
-        i++ --| increment operator
+    if i >= 0 {
         i++
+        i++ ;; this is a normal comment
     }
 
     for int j = 0; j < i; j++ {
-        print('Var value: ${j}') --| outputs j value
+        print('Var value: ${j}')
     }
 }
 
--|  
+;;;  
 this is  
 a multi line  
 comment...  
--|
+;;;
 ````
