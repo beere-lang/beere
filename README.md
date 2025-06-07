@@ -10,3 +10,23 @@ Compiler written in C
 
 ## 🔧 Status
 This project is in early development. Contributions and feedback are welcome!
+
+## 📄 Syntax
+````
+void main() { --| main function
+    int i = 0 --| var declaration (integer type)
+    if i >= 0 { --| if statement
+        i++ --| increment operator
+        i++
+    }
+    for int j = 0; j < i; j++ {
+        print('Var value: ${j}') --| outputs j value
+    }
+}
+
+-|  
+this is  
+a multi line  
+comment...  
+-|
+````
