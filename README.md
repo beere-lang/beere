@@ -1,4 +1,4 @@
-# Lurge Programming Language
+# Lurje Programming Language
 Lurje is a modern compiled programming language designed with a clean and slightly more modern syntax. The Lurje compiler is implemented in C and generates efficient assembly code.
 
 ## 🚀 Features
