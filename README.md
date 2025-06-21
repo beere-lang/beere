@@ -12,23 +12,35 @@ Compiler written in C
 This project is in early development.
 
 ## 📄 Syntax
-````
-void main() {
-    int i = 0
+```rust
+fn foo(bar: int): int
 
-    if i >= 0 {
-        i++
-        i++ ;; this is a normal comment
+fn main(): void
+{
+    let x: int = 0
+
+    while (x < 100)
+    {
+       x++
     }
 
-    for int j = 0; j < i; j++ {
-        print('Var value: ${j}')
+    switch (x)
+    {
+        case 100:
+            x = 100
+            break
+        case 0:
+            break
+        default:
+            x = 9
+            break
     }
+
+    const y: int = foo(10) // comment test
 }
 
-;;;  
-this is  
-a multi line  
-comment...  
-;;;
-````
+fn foo(bar: int): int
+{
+    return bar + 1 // bar + 1
+}
+```
