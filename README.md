@@ -6,6 +6,7 @@ Modern syntax inspired by classic and modern languages
 
 - Compiled to assembly.
 - Compiler written in C.
+- A package manager.
 
 ## 🔧 Status
 This project is in early development.
