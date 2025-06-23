@@ -33,7 +33,7 @@ class Sum
 
 fn sum(n1: int, n2: int): int
 {
-    const scoped sum_object: Sum* = new Sum(n1, n2)
+    const scoped sum_object: Sum* = new Sum(n1, n2) // scoped: automatically frees when it goes out of scope...
     const sum = sum_object->sum()
 
     return sum
