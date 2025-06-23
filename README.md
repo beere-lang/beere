@@ -1,5 +1,5 @@
-# Bare Programming Language
-Bare is a compiled programming language designed with a more modern syntax. The Bare compiler is implemented in C and generates assembly code.
+# Beere Programming Language
+Beere is a compiled programming language designed with a more modern syntax. The Beere compiler is implemented in C and generates assembly code.
 
 ## 🚀 Features
 Modern syntax inspired by classic and modern languages
