@@ -12,7 +12,7 @@ This project is in early development.
 
 ## 📄 Syntax
 ```rust
-import "std_bare"
+import "std"
 
 class Sum
 {
