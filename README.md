@@ -12,34 +12,57 @@ This project is in early development.
 
 ## 📄 Syntax
 ```rust
-fn foo(bar: int): int
+import "std_lurje"
 
-fn main(): void
+class Sum
 {
-    let x: int = 0
+    priv n1: int = 0
+    n2: int = 0 // private by default...
 
-    while (x < 100)
+    constructor(n1: int, n2: int)
     {
-       x++
+        this.n1 = n1
+        this.n2 = n2
     }
 
-    switch (x)
+    pub fn sum(): int
     {
-        case 100:
-            x = 100
-            break
-        case 0:
-            break
-        default:
-            x = 9
-            break
+        return this->n1 + this->n2
     }
-
-    const y: int = foo(10) // comment test
 }
 
-fn foo(bar: int): int
+fn sum(n1: int, n2: int): int
 {
-    return bar + 1 // bar + 1
+    const scoped sum_object: Sum* = new Sum(n1, n2)
+    const sum = sum_object->sum()
+
+    return sum
+}
+
+fn ptr_test(ptr: int*, value: int) // void by default...
+{
+    *ptr = value
+}
+
+fn main(): int
+{
+    let sum: int = sum(10, 20)
+
+    if (sum != 10 + 20)
+    {
+        return 1
+    }
+
+    let i: int = 10
+
+    ptr_test(&i, 20)
+
+    if (i != 20)
+    {
+        print("Failed to test pointers...")
+        return 1
+    }
+
+    return 0
 }
 ```
