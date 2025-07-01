@@ -13,57 +13,24 @@ This project is in early development.
 
 ## 📄 Syntax
 ```rust
-import "std"
-
-class Sum
+class SuperClass
 {
-    priv n1: int = 0
-    n2: int = 0 // private by default...
+    pub let name: string
+}
 
-    constructor(n1: int, n2: int)
+class Clazz extends SuperClass
+{
+    pub let age: int = 0
+    
+    pub Clazz(name: string, age: int)
     {
-        this->n1 = n1
-        this->n2 = n2
-    }
-
-    pub fn sum(): int
-    {
-        return this->n1 + this->n2
+        super(name)
+        this->age = age
     }
 }
 
-fn sum(n1: int, n2: int): int
+fn main()
 {
-    const scoped sum_object: Sum* = new Sum(n1, n2) // scoped: automatically frees when it goes out of scope...
-    const sum = sum_object->sum()
-
-    return sum
-}
-
-fn ptr_test(ptr: int*, value: int) // void by default...
-{
-    *ptr = value
-}
-
-fn main(): int
-{
-    let sum: int = sum(10, 20)
-
-    if (sum != 10 + 20)
-    {
-        return 1
-    }
-
-    let i: int = 10
-
-    ptr_test(&i, 20)
-
-    if (i != 20)
-    {
-        print("Failed to test pointers...")
-        return 1
-    }
-
-    return 0
+    let clazz: Clazz* = new Clazz("Name", 20)
 }
 ```
