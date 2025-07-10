@@ -2552,7 +2552,7 @@ static void analyzer_handle_switch_case(Module* module, Node* node, SymbolTable*
 	{
 		printf("[Analyzer] [Debug] Invalid expression return type...\n");
 		exit(1);
-	}
+	} 
 
 	analyzer_analyze_node(module, block, scope, offset);
 }
