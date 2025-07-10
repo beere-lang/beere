@@ -24,7 +24,7 @@ It’s designed for developers who want the power of C with a more modern and cl
 - 🧩 Clean and modern syntax
 - 🌐 Native C interop:
   ```beere
-  extern "C" from "libc.so"
+  extern "C" from "libc.h"
   {
     fn foo(bar: int)
   }
