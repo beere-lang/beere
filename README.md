@@ -4,7 +4,7 @@
 
 ## ✨ Features
 
-- **Object-oriented support**
+- **Object-oriented**
 - Clean and **modern** syntax.
 - Fast and optimized in compiler-time
 - **Optional** garbage collector
