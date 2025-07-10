@@ -1,7 +1,6 @@
 # Beere Programming Language
 
-**Beere** is a lightweight, low-level programming language focused on simplicity, performance, and full control over memory and execution.  
-It’s designed for developers who want the power of C with a more modern and clean syntax, without sacrificing control or transparency.
+**Beere** is a lightweight, programming language focused on simplicity, performance.  
 
 ---
 
