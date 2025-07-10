@@ -1,6 +1,8 @@
-bereec/.vscode/
-bereec/.vs/
-bereec/.tours/
-bereec/.idea/
-bereec/.history/
-bereec/.cache/
+beerec/.vscode/
+beerec/.vs/
+beerec/.tours/
+beerec/.idea/
+beerec/.history/
+beerec/.cache/
+beerec/out/
+beerec/cmake-build-debug/
