@@ -28,7 +28,7 @@
 #include "analyzer.h"
 #include "../modules/modules.h"
 #include "../parser/parser.h"
-#include "../modules/modules.h"
+#include "../modules/modules.h" 
 #include "../symbols/symbols.h"
 
 static Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
