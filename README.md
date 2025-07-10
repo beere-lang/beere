@@ -6,7 +6,7 @@
 
 - **Object-oriented**
 - Clean and **modern** syntax.
-- Fast and optimized in compiler-time
+- Fast and optimized in compile-time
 - **Optional** garbage collector
 
 # 👽 Socials
