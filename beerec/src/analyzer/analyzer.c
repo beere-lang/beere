@@ -592,11 +592,11 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 
 	symbol->symbol_class->identifier = node->class_node.class_node.identifer; // class identifier
 
-	symbol->symbol_class->functions = node->class_node.class_node.func_declare_list; // functions list declared inside class scope
-	symbol->symbol_class->fields = node->class_node.class_node.var_declare_list; // fields list declared inside class scope
+	symbol->symbol_class->functions = node->class_node.class_node.func_declare_list; // lista de funções dentro da classe
+	symbol->symbol_class->fields = node->class_node.class_node.var_declare_list; // lista de field dentro da classe
 
-	symbol->symbol_class->func_count = node->class_node.class_node.func_count; // sets function count for iteration
-	symbol->symbol_class->field_count = node->class_node.class_node.var_count; // sets fields count for iteration
+	symbol->symbol_class->func_count = node->class_node.class_node.func_count; // seta a quantidade de funções (pra iteração)
+	symbol->symbol_class->field_count = node->class_node.class_node.var_count; // seta a quantidade de field (pra iteração)
 
 	symbol->is_export = node->class_node.class_node.is_export;
 
@@ -1581,7 +1581,7 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 	switch (operation->op) 
 	{
 		/**
-		 * Operadores de contexto.
+		 * Operadores logicos.
 		 */
 		case TOKEN_OPERATOR_OR: // ||
 		case TOKEN_OPERATOR_AND: // &&
@@ -2173,9 +2173,9 @@ static void analyzer_handle_dereference(Node* node, SymbolTable* scope)
 		exit(1);
 	}
 	
-	Symbol* var = analyzer_find_symbol_from_scope(ref->variable_node.variable.identifier, scope, 0, 0, 0);
+	Symbol* field = analyzer_find_symbol_from_scope(ref->variable_node.variable.identifier, scope, 0, 0, 0);
 	
-	if (var == NULL)
+	if (field == NULL)
 	{
 		printf("[Analyzer] [Debug] Dereferencing a not declared variable...\n");
 		exit(1);
@@ -2503,9 +2503,7 @@ static void analyzer_check_array_literal_values(Module* module, Node* head, Type
 {
 	Node* current = head;
 	
-	/**
-	 * Pula o primeiro tipo (array), ja que a array necessita de varios daquele tipo.
-	 */
+	// Pula o primeiro tipo (array), ja que a array necessita de varios daquele tipo.
 	Type* required = type->base;
 
 	int index = 0;
