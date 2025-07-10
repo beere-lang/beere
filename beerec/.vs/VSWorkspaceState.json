@@ -1,0 +1,16 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "out\\build\\x64-Debug",
+      "out\\install\\x64-Debug"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\compiler",
+    "\\compiler\\lexer",
+    "\\compiler\\parse"
+  ],
+  "SelectedNode": "\\compiler\\lexer\\lexer.h",
+  "PreviewInSolutionExplorer": false
+}

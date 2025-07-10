@@ -1,0 +1,21 @@
+import "lib"
+
+fn print(str: string)
+{
+    printn(str + "\n")
+}
+
+fn alloc(size: int): any*
+{
+    return mallocn(size)
+}
+
+fn to_string(number: double): string
+{
+    return to_stringn(double)
+}
+
+fn free(ptr: any*): void
+{
+    return freen(ptr)
+}

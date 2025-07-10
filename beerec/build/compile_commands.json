@@ -1,0 +1,56 @@
+[
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\compiler\\main.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\compiler\\main.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/compiler/main.c",
+  "output": "CMakeFiles/beerec.dir/compiler/main.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\compiler\\compiler.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\compiler\\compiler.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/compiler/compiler.c",
+  "output": "CMakeFiles/beerec.dir/compiler/compiler.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\src\\lexer\\lexer.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\src\\lexer\\lexer.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/src/lexer/lexer.c",
+  "output": "CMakeFiles/beerec.dir/src/lexer/lexer.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\src\\parser\\parser.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\src\\parser\\parser.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/src/parser/parser.c",
+  "output": "CMakeFiles/beerec.dir/src/parser/parser.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\src\\analyzer\\analyzer.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\src\\analyzer\\analyzer.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/src/analyzer/analyzer.c",
+  "output": "CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\src\\utils\\utils.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\src\\utils\\utils.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/src/utils/utils.c",
+  "output": "CMakeFiles/beerec.dir/src/utils/utils.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\src\\utils\\logger\\logger.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\src\\utils\\logger\\logger.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/src/utils/logger/logger.c",
+  "output": "CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\src\\utils\\string_builder\\string_builder.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\src\\utils\\string_builder\\string_builder.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/src/utils/string_builder/string_builder.c",
+  "output": "CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj"
+},
+{
+  "directory": "C:/Users/jer1337/Documents/projects/beerec/build",
+  "command": "C:\\PROGRA~1\\JETBRA~1\\CLION2~1.1\\bin\\mingw\\bin\\gcc.exe   -g -std=gnu99 -fstack-usage -o CMakeFiles\\beerec.dir\\src\\modules\\modules.c.obj -c C:\\Users\\jer1337\\Documents\\projects\\beerec\\src\\modules\\modules.c",
+  "file": "C:/Users/jer1337/Documents/projects/beerec/src/modules/modules.c",
+  "output": "CMakeFiles/beerec.dir/src/modules/modules.c.obj"
+}
+]

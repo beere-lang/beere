@@ -1,0 +1,4 @@
+C:/Program Files/JetBrains/CLion 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/stdio.h:371:5:printf	80	static
+C:\Users\jer1337\Documents\projects\beerec\compiler\utils\logger\logger.c:4:6:parser_error	48	static
+C:\Users\jer1337\Documents\projects\beerec\compiler\utils\logger\logger.c:9:6:parser_alert	48	static
+C:\Users\jer1337\Documents\projects\beerec\compiler\utils\logger\logger.c:14:6:parser_info	48	static

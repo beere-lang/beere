@@ -1,0 +1,6 @@
+import "./mano.beere" as std
+
+fn main()
+{
+	let i: int = 0
+}
