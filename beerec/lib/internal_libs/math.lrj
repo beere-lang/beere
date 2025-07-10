@@ -1,9 +1,3 @@
-import "std_lurje"
-
-/**
-    TODO: FINISH THIS AND OTHER LIBS...
-*/
-
 fn pow(base: double, exp: int)
 {
     if (exp == 0)
