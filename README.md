@@ -1,5 +1,5 @@
 # Beere Programming Language
-Beere is a compiled programming language designed with a more modern syntax. The Beere compiler is implemented in C and generates assembly code.
+Beere is a compiled programming language designed with a more modern syntax. The Beere compiler is generates assembly code.
 
 ## 🚀 Features
 Modern syntax inspired by classic and modern languages
