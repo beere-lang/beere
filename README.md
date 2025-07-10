@@ -2,8 +2,6 @@
 
 **Beere** is a lightweight, programming language focused on simplicity, performance.  
 
----
-
 ## ✨ Features
 
 - ⚙️ **Compiled to Assembly**
