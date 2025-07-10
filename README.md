@@ -11,4 +11,10 @@
 
 # 👽 Socials
 
-Discord - https://discord.gg/uBRJmGnuPp
+Discord https://discord.gg/uBRJmGnuPp
+
+# Documentation
+**Soon**
+
+# Progress
+*Close to the first release*
