@@ -13,8 +13,8 @@
 
 Discord https://discord.gg/uBRJmGnuPp
 
-# Documentation
+# 💨 Documentation
 **Soon**
 
-# Progress
+# 👍 Progress
 *Close to the first release*
