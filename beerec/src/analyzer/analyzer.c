@@ -2648,7 +2648,9 @@ static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scop
 	}
 	else
 	{
-		// TODO: Dar handle em imports de libs imbutidas.
+		/**
+		 * TODO: Dar handle em imports de libs imbutidas.
+		 */
 	}
 }
 
