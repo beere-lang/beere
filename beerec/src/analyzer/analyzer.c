@@ -19,7 +19,7 @@
  * - função de pegar nome (string) do enum, no parser.
  * - deixar codigo mais bonito
  * - adicionar alguns checks de segurança, EXEMPLO: checks pra ver se um malloc retornou NULL
- */
+ */ 
 
 #include <stdio.h>
 #include <stdlib.h>
