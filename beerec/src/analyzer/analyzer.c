@@ -15,12 +15,9 @@
  */
 
 /**
- * IMPORTANTE: Arrumar umas coisas de outros arquivos
- * - comentarios do lexer, parser
- * - função de pegar nome (string) do enum, no parser.
- * - deixar codigo mais bonito
- * - adicionar alguns checks de segurança, EXEMPLO: checks pra ver se um malloc retornou NULL
- */ 
+ * IMPORTANTE:
+ * - adicionar checks em alocaçoes de memoria no parser.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -105,6 +102,12 @@ static Node* analyzer_create_prototype_method_node(char* method_name, Node** par
 {
 	Node* node = malloc(sizeof(Node));
 
+	if (node == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for prototype method node...\n");
+		exit(1);
+	}
+
 	node->type = NODE_FUNCTION;
 
 	node->function_node.function.params = params == NULL ? NULL : chain_nodes_to_list(params);
@@ -124,6 +127,12 @@ static Node* analyzer_create_prototype_method_node(char* method_name, Node** par
 static PrototypeMethod* analyzer_create_prototype_method(const char* method_name, Type* access_type, int type_acurracy, Node* method_ref, Type* return_type, NodeList* params)
 {
 	PrototypeMethod* prototype_method = malloc(sizeof(PrototypeMethod));
+
+	if (prototype_method == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for prototype method struct...\n");
+		exit(1);
+	}
 
 	prototype_method->access_type = access_type;
 	prototype_method->method_name = method_name;
@@ -480,9 +489,22 @@ static void _analyzer_add_symbol_to_scope(Symbol* symbol, SymbolTable* scope)
 static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, SymbolTable* scope, int* offset)
 {
 	Symbol* symbol = malloc(sizeof(Symbol));
+
+	if (symbol == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol...\n");
+		exit(1);
+	}
+
 	symbol->type = SYMBOL_VARIABLE;
 
 	symbol->symbol_variable = malloc(sizeof(SymbolVariable));
+
+	if (symbol->symbol_variable == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol variable struct...\n");
+		exit(1);
+	}
 
 	symbol->symbol_variable->is_global = (scope->scope_kind == GLOBAL_SCOPE || scope->scope_kind == SYMBOL_CLASS);
 
@@ -526,7 +548,19 @@ static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, 
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_VARIABLE;
 
+	if (symbol == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol struct (parameter)...\n");
+		exit(1);
+	}
+
 	symbol->symbol_variable = malloc(sizeof(SymbolVariable));
+
+	if (symbol->symbol_variable == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol variable struct (parameter)...\n");
+		exit(1);
+	}
 
 	symbol->symbol_variable->type = node->param_node.param.argument_type;
 	symbol->symbol_variable->identifier = node->param_node.param.identifier;
@@ -559,7 +593,19 @@ static Symbol* analyzer_create_function_symbol(Module* module, Node* node, Symbo
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_FUNCTION;
 
+	if (symbol == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol struct (function)...\n");
+		exit(1);
+	}
+
 	symbol->symbol_function = malloc(sizeof(SymbolFunction));
+
+	if (symbol->symbol_function == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol function struct (function)...\n");
+		exit(1);
+	}
 
 	symbol->symbol_function->return_type = node->function_node.function.return_type;
 	symbol->symbol_function->identifier = node->function_node.function.identifier;
@@ -595,17 +641,29 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_CLASS;
 
+	if (symbol == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol struct (class)...\n");
+		exit(1);
+	}
+
 	symbol->symbol_class = malloc(sizeof(SymbolClass));
+
+	if (symbol->symbol_class == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol class struct (class)...\n");
+		exit(1);
+	}
 
 	symbol->symbol_class->class_scope = NULL;
 
-	symbol->symbol_class->identifier = node->class_node.class_node.identifer; // class identifier
+	symbol->symbol_class->identifier = node->class_node.class_node.identifer;
 
-	symbol->symbol_class->functions = node->class_node.class_node.func_declare_list; // lista de funções dentro da classe
-	symbol->symbol_class->fields = node->class_node.class_node.var_declare_list; // lista de field dentro da classe
+	symbol->symbol_class->functions = node->class_node.class_node.func_declare_list;
+	symbol->symbol_class->fields = node->class_node.class_node.var_declare_list;
 
-	symbol->symbol_class->func_count = node->class_node.class_node.func_count; // seta a quantidade de funções (pra iteração)
-	symbol->symbol_class->field_count = node->class_node.class_node.var_count; // seta a quantidade de field (pra iteração)
+	symbol->symbol_class->func_count = node->class_node.class_node.func_count;
+	symbol->symbol_class->field_count = node->class_node.class_node.var_count;
 
 	symbol->is_export = node->class_node.class_node.is_export;
 
@@ -626,7 +684,19 @@ static Symbol* analyzer_create_module_symbol(Module* module, Node* node, SymbolT
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_MODULE;
 
+	if (symbol == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol struct (module)...\n");
+		exit(1);
+	}
+
 	symbol->symbol_module = malloc(sizeof(SymbolModule));
+
+	if (symbol->symbol_module == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alloc memory for symbol module struct (module)...\n");
+		exit(1);
+	}
 
 	symbol->symbol_module->identifier = node->class_node.class_node.identifer;
 
@@ -1426,8 +1496,7 @@ static Type* analyzer_get_adress_of_type(Module* module, Node* node, SymbolTable
 {
 	Type* inner = analyzer_return_type_of_expression(module, node->adress_of_node.adress_of.expression, scope, NULL, 0, NULL);
 	
-	Type* ptr = malloc(sizeof(Type));
-	ptr->type = TYPE_PTR;
+	Type* ptr = create_type(TYPE_PTR, NULL);
 	ptr->base = inner;
 			
 	return ptr;
@@ -2603,24 +2672,9 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 		stack = setup_module_stack();
 	}
 	
-	/*char* path = node->import_statement_node.import_node.import_path;
-
-	char* abs_path = get_absolute_path(module->module_path);
-
-	char* directory = get_directory(abs_path);
-	char* full_path = get_path_from_relative(directory, path);
-
-	if (is_importing(module, full_path))
-	{
-		printf("[Analyzer] [Debug] Already importing module...\n");
-		exit(1);
-	}
-
-	if (full_path == NULL)
-	{
-		printf("[Analyzer] [Debug] Failed to find module with path: \"%s\"...\n", path);
-		exit(1);
-	}*/
+	/**
+	 * PATH HANDLE HERE:
+	 */
 
 	printf("\ninput/mano.beere: ---------------------------------------------------------------+\n\n");
 

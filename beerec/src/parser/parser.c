@@ -477,6 +477,9 @@ static Node* parse_arithmetic(Parser* parser)
 
 	TokenType tkn_type = peek_tkn(parser)->token_type;
 
+	/**
+	 * +, -, *, /, +=, -=, *=, /=
+	 */
 	while (
 		tkn_type == TOKEN_OPERATOR_PLUS ||
 		tkn_type == TOKEN_OPERATOR_MINUS ||
@@ -486,7 +489,7 @@ static Node* parse_arithmetic(Parser* parser)
 		tkn_type == TOKEN_OPERATOR_MINUS_EQUALS ||
 		tkn_type == TOKEN_OPERATOR_TIMES_EQUALS ||
 		tkn_type == TOKEN_OPERATOR_DIVIDED_EQUALS
-	) //+, -, *, /, +=, -=, *=, /=
+	)
 	{
 		const TokenType operator = peek_tkn(parser)->token_type;
 
@@ -520,6 +523,9 @@ static Node* parse_comparator(Parser* parser)
 
 	TokenType tkn_type = peek_tkn(parser)->token_type;
 
+	/**
+	 * ==, >, >=, <, <=, !=
+	 */
 	while (
 		tkn_type == TOKEN_OPERATOR_EQUALS ||
 		tkn_type == TOKEN_OPERATOR_GREATER ||
@@ -527,7 +533,7 @@ static Node* parse_comparator(Parser* parser)
 		tkn_type == TOKEN_OPERATOR_LESS ||
 		tkn_type == TOKEN_OPERATOR_LESS_EQUALS ||
 		tkn_type == TOKEN_OPERATOR_NOT_EQUALS
-	) // ==, >, >=, <, <=, !=
+	)
 	{
 		const TokenType operator = peek_tkn(parser)->token_type;
 
@@ -1778,76 +1784,76 @@ Node* parse_stmt(Parser* parser)
 		return handle_function_and_variable_parse(parser);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_IF) // if statements
+	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_IF)
 	{
 		return parse_if(parser);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_SWITCH) // switch statements
+	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_SWITCH)
 	{
 		return parse_switch(parser);
 	}
 
-	if (parser->current->token_type == TOKEN_KEYWORD_RETURN) // return statements
+	if (parser->current->token_type == TOKEN_KEYWORD_RETURN)
 	{
 		return parse_return(parser);
 	}
 
-	if (parser->current->token_type == TOKEN_KEYWORD_CONTINUE) // parse continue statements
+	if (parser->current->token_type == TOKEN_KEYWORD_CONTINUE)
 	{
 		return parse_continue(parser);
 	}
 
-	if (parser->current->token_type == TOKEN_KEYWORD_BREAK) // parse break statements
+	if (parser->current->token_type == TOKEN_KEYWORD_BREAK)
 	{
 		return parse_break(parser);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_WHILE) // parse while statements
+	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_WHILE)
 	{
 		return parse_while_loop(parser);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_FOR) // parse for statements
+	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_FOR)
 	{
 		return parse_for_loop(parser);
 	}
 
 	Node* left = parse_unary(parser);
 
-	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_ASSIGN) // parse variable assign
+	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_ASSIGN)
 	{
 		advance_tkn(parser);
 
 		return parse_var_assign(parser, left);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_INCREMENT) // parse variable increment
+	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_INCREMENT)
 	{
 		return parse_var_increment(parser, left);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_DECREMENT) // parse variable decrement
+	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_DECREMENT)
 	{
 		return parse_var_decrement(parser, left);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_PLUS_EQUALS) // parse plus equals operations
+	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_PLUS_EQUALS)
 	{
 		return parse_var_plus_equals(parser, left);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_MINUS_EQUALS) // parse minus equals operations
+	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_MINUS_EQUALS)
 	{
 		return parse_var_minus_equals(parser, left);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_DIVIDED_EQUALS) // parse divided equals operations
+	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_DIVIDED_EQUALS)
 	{
 		return parse_var_divided_equals(parser, left);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_TIMES_EQUALS) // parse times equals operations
+	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_TIMES_EQUALS)
 	{
 		return parse_var_times_equals(parser, left);
 	}

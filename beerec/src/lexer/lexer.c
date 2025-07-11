@@ -71,7 +71,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 {
 	switch (start[0])
 	{
-		case 'i': // int, if
+		case 'i':
 		{
 			if (length == 3 && strncmp(start, "int", 3) == 0)
 			{
@@ -141,7 +141,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'b': // break, bool
+		case 'b':
 		{
 			if (length == 5 && strncmp(start, "break", 5) == 0)
 			{
@@ -156,7 +156,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'f': // for, float
+		case 'f':
 		{
 			if (length == 3 && strncmp(start, "for", 3) == 0)
 			{
@@ -176,7 +176,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'r': // return
+		case 'r':
 		{
 			if (length == 6 && strncmp(start, "return", 6) == 0)
 			{
@@ -186,7 +186,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'v': // void
+		case 'v':
 		{
 			if (length == 4 && strncmp(start, "void", 4) == 0)
 			{
@@ -211,7 +211,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'w': // while
+		case 'w':
 		{
 			if (length == 5 && strncmp(start, "while", 5) == 0)
 			{
@@ -221,7 +221,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'e': // else
+		case 'e':
 		{
 			if (length == 4 && strncmp(start, "else", 4) == 0)
 			{
@@ -241,7 +241,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'c': // continue, char
+		case 'c':
 		{
 			if (length == 8 && strncmp(start, "continue", 8) == 0)
 			{
@@ -271,7 +271,7 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
-		case 'n': // null
+		case 'n':
 		{
 			if (length == 4 && strncmp(start, "null", 4) == 0)
 			{
@@ -887,49 +887,86 @@ const char* token_type_to_string(const TokenType type)
 	switch (type) 
 	{
 		case TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";
-		case TOKEN_LITERAL_INT: return "TOKEN_INT_NUMBER";
-		case TOKEN_LITERAL_FLOAT: return "TOKEN_FLOAT_NUMBER";
-		case TOKEN_LITERAL_DOUBLE: return "TOKEN_DOUBLE_NUMBER";
-		case TOKEN_LITERAL_CHAR: return "TOKEN_CHAR";
-		case TOKEN_LITERAL_STRING: return "TOKEN_STRING";
-		case TOKEN_LITERAL_BOOL: return "TOKEN_BOOL";
+
+		case TOKEN_OPERATOR_ASSIGN: return "TOKEN_OPERATOR_ASSIGN";
+
+		case TOKEN_CHAR_COLON: return "TOKEN_CHAR_COLON";
+		case TOKEN_CHAR_COMMA: return "TOKEN_CHAR_COMMA";
+		case TOKEN_CHAR_SEMI_COLON: return "TOKEN_CHAR_SEMI_COLON";
+		case TOKEN_CHAR_OPEN_BRACE: return "TOKEN_CHAR_OPEN_BRACE";
+		case TOKEN_CHAR_CLOSE_BRACE: return "TOKEN_CHAR_CLOSE_BRACE";
+		case TOKEN_CHAR_OPEN_PAREN: return "TOKEN_CHAR_OPEN_PAREN";
+		case TOKEN_CHAR_CLOSE_PAREN: return "TOKEN_CHAR_CLOSE_PAREN";
+		case TOKEN_CHAR_DOUBLE_QUOTE: return "TOKEN_CHAR_DOUBLE_QUOTE";
+		case TOKEN_CHAR_STAR: return "TOKEN_CHAR_STAR";
+		case TOKEN_CHAR_OPEN_BRACKET: return "TOKEN_CHAR_OPEN_BRACKET";
+		case TOKEN_CHAR_CLOSE_BRACKET: return "TOKEN_CHAR_CLOSE_BRACKET";
+
+		case TOKEN_OPERATOR_DIVIDED: return "TOKEN_OPERATOR_DIVIDED";
 		case TOKEN_OPERATOR_PLUS: return "TOKEN_OPERATOR_PLUS";
 		case TOKEN_OPERATOR_MINUS: return "TOKEN_OPERATOR_MINUS";
-		case TOKEN_OPERATOR_ASSIGN: return "TOKEN_OPERATOR_ASSIGN";
-		case TOKEN_OPERATOR_EQUALS: return "TOKEN_OPERATOR_EQUALS";
-		case TOKEN_OPERATOR_AND: return "TOKEN_OPERATOR_AND";
-		case TOKEN_OPERATOR_DIVIDED: return "TOKEN_OPERATOR_DIVIDED";
-		case TOKEN_CHAR_STAR: return "TOKEN_CHAR_STAR";
-		case TOKEN_OPERATOR_ADRESS: return "TOKEN_OPERATOR_ADRESS";
-		case TOKEN_OPERATOR_TIMES_EQUALS: return "TOKEN_OPERATOR_TIMES_EQUALS";
+		case TOKEN_OPERATOR_PLUS_EQUALS: return "TOKEN_OPERATOR_PLUS_EQUALS";
+		case TOKEN_OPERATOR_MINUS_EQUALS: return "TOKEN_OPERATOR_MINUS_EQUALS";
 		case TOKEN_OPERATOR_DIVIDED_EQUALS: return "TOKEN_OPERATOR_DIVIDED_EQUALS";
+		case TOKEN_OPERATOR_TIMES_EQUALS: return "TOKEN_OPERATOR_TIMES_EQUALS";
+		case TOKEN_OPERATOR_DECREMENT: return "TOKEN_OPERATOR_DECREMENT";
+		case TOKEN_OPERATOR_INCREMENT: return "TOKEN_OPERATOR_INCREMENT";
+		case TOKEN_OPERATOR_AND: return "TOKEN_OPERATOR_AND";
+		case TOKEN_OPERATOR_OR: return "TOKEN_OPERATOR_OR";
+		case TOKEN_OPERATOR_GREATER: return "TOKEN_OPERATOR_GREATER";
+		case TOKEN_OPERATOR_LESS: return "TOKEN_OPERATOR_LESS";
+		case TOKEN_OPERATOR_GREATER_EQUALS: return "TOKEN_OPERATOR_GREATER_EQUALS";
+		case TOKEN_OPERATOR_LESS_EQUALS: return "TOKEN_OPERATOR_LESS_EQUALS";
+		case TOKEN_OPERATOR_EQUALS: return "TOKEN_OPERATOR_EQUALS";
+		case TOKEN_OPERATOR_NOT_EQUALS: return "TOKEN_OPERATOR_NOT_EQUALS";
+		case TOKEN_OPERATOR_ADRESS: return "TOKEN_OPERATOR_ADRESS";
+		case TOKEN_OPERATOR_ACCESS_PTR: return "TOKEN_OPERATOR_ACCESS_PTR";
+		case TOKEN_OPERATOR_DOT: return "TOKEN_OPERATOR_DOT";
+
+		case TOKEN_LITERAL_CHAR: return "TOKEN_LITERAL_CHAR";
+		case TOKEN_LITERAL_STRING: return "TOKEN_LITERAL_STRING";
+		case TOKEN_LITERAL_INT: return "TOKEN_LITERAL_INT";
+		case TOKEN_LITERAL_FLOAT: return "TOKEN_LITERAL_FLOAT";
+		case TOKEN_LITERAL_DOUBLE: return "TOKEN_LITERAL_DOUBLE";
+		case TOKEN_LITERAL_BOOL: return "TOKEN_LITERAL_BOOL";
+		case TOKEN_LITERAL_NULL: return "TOKEN_LITERAL_NULL";
+
 		case TOKEN_END_LINE: return "TOKEN_END_LINE";
 		case TOKEN_END_SRC: return "TOKEN_END_SRC";
-		case TOKEN_CHAR_OPEN_BRACE: return "TOKEN_OPEN_BRACE";
-		case TOKEN_CHAR_CLOSE_BRACE: return "TOKEN_CLOSE_BRACE";
-		case TOKEN_CHAR_OPEN_BRACKET: return "TOKEN_OPEN_BRACKET";
-		case TOKEN_CHAR_CLOSE_BRACKET: return "TOKEN_CLOSE_BRACKET";
+
 		case TOKEN_KEYWORD_RETURN: return "TOKEN_KEYWORD_RETURN";
 		case TOKEN_KEYWORD_IF: return "TOKEN_KEYWORD_IF";
 		case TOKEN_KEYWORD_ELSE: return "TOKEN_KEYWORD_ELSE";
 		case TOKEN_KEYWORD_FOR: return "TOKEN_KEYWORD_FOR";
 		case TOKEN_KEYWORD_WHILE: return "TOKEN_KEYWORD_WHILE";
-		case TOKEN_CHAR_SEMI_COLON: return "TOKEN_SEMI_COLON";
-		case TOKEN_OPERATOR_INCREMENT: return "TOKEN_INCREMENT";
 		case TOKEN_KEYWORD_BREAK: return "TOKEN_KEYWORD_BREAK";
 		case TOKEN_KEYWORD_CONTINUE: return "TOKEN_KEYWORD_CONTINUE";
+		case TOKEN_KEYWORD_EXTENDS: return "TOKEN_KEYWORD_EXTENDS";
+		case TOKEN_KEYWORD_FUNCTION: return "TOKEN_KEYWORD_FUNCTION";
+		case TOKEN_KEYWORD_LET: return "TOKEN_KEYWORD_LET";
+		case TOKEN_KEYWORD_CONST: return "TOKEN_KEYWORD_CONST";
+		case TOKEN_KEYWORD_CASE: return "TOKEN_KEYWORD_CASE";
+		case TOKEN_KEYWORD_SWITCH: return "TOKEN_KEYWORD_SWITCH";
+		case TOKEN_KEYWORD_ONE_LINE_COMMENT: return "TOKEN_KEYWORD_ONE_LINE_COMMENT";
+		case TOKEN_KEYWORD_MULTI_LINE_COMMENT: return "TOKEN_KEYWORD_MULTI_LINE_COMMENT";
+		case TOKEN_KEYWORD_IMPORT: return "TOKEN_KEYWORD_IMPORT";
+		case TOKEN_KEYWORD_STATIC: return "TOKEN_KEYWORD_STATIC";
+		case TOKEN_KEYWORD_CLASS: return "TOKEN_KEYWORD_CLASS";
+		case TOKEN_KEYWORD_THIS: return "TOKEN_KEYWORD_THIS";
+		case TOKEN_KEYWORD_PUB: return "TOKEN_KEYWORD_PUB";
+		case TOKEN_KEYWORD_PRIV: return "TOKEN_KEYWORD_PRIV";
+		case TOKEN_KEYWORD_NEW: return "TOKEN_KEYWORD_NEW";
+		case TOKEN_KEYWORD_OVERRIDE: return "TOKEN_KEYWORD_OVERRIDE";
+		case TOKEN_KEYWORD_VIRTUAL: return "TOKEN_KEYWORD_VIRTUAL";
+		case TOKEN_KEYWORD_EXPORT: return "TOKEN_KEYWORD_EXPORT";
+		case TOKEN_KEYWORD_AS: return "TOKEN_KEYWORD_AS";
+
 		case TOKEN_KEYWORD_TYPE_VOID: return "TOKEN_KEYWORD_TYPE_VOID";
 		case TOKEN_KEYWORD_TYPE: return "TOKEN_KEYWORD_TYPE";
-		case TOKEN_CHAR_COMMA: return "TOKEN_COMMA";
-		case TOKEN_CHAR_COLON: return "TOKEN_COLON";
-		case TOKEN_CHAR_OPEN_PAREN: return "TOKEN_OPEN_PAREN";
-		case TOKEN_CHAR_CLOSE_PAREN: return "TOKEN_CLOSE_PAREN";
-		case TOKEN_OPERATOR_DOT: return "TOKEN_OPERATOR_DOT";
-		case TOKEN_OPERATOR_ACCESS_PTR: return "TOKEN_OPERATOR_ACCESS_PTR";
-		case TOKEN_KEYWORD_LET: return "TOKEN_KEYWORD_LET";
-		case TOKEN_KEYWORD_CASE: return "TOKEN_KEYWORD_CASE";
-		case TOKEN_KEYWORD_ONE_LINE_COMMENT: return "TOKEN_ONE_LINE_COMMENT";
-		case TOKEN_KEYWORD_CLASS: return "TOKEN_KEYWORD_CLASS";
+		case TOKEN_KEYWORD_SUPER: return "TOKEN_KEYWORD_SUPER";
+
+		case TOKEN_UNKNOWN: return "TOKEN_UNKNOWN";
+
 		default: return "UNKNOWN_TOKEN_TYPE";
 	}
 }

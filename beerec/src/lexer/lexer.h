@@ -17,4 +17,4 @@ Token read_next_tkn(Lexer* lexer);
 TokenType get_by_keyword_type(Lexer* lexer, const char* start, size_t length);
 const char* token_type_to_string(const TokenType type);
 
-#endif //LEXER_H
+#endif
