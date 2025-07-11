@@ -10,10 +10,6 @@
  * - Implementar o sistema de extern "C"
  */
 
-/**
- * TODO: Dar free nas coisas do module file (module nodes, token list, node list, etc)
- */
-
 /** 
  * IMPORTANTE: Terminar todos os TODOS daqui.
  */
@@ -803,21 +799,21 @@ static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTab
 				return next;
 			}
 		}
-		else if (next->type == SYMBOL_VARIABLE && !is_function) 
+		if (next->type == SYMBOL_VARIABLE && !is_function) 
 		{
 			if (strcmp(identifier, next->symbol_variable->identifier) == 0)
 			{
 				return next;
 			}
 		}
-		else if (next->type == SYMBOL_CLASS && is_class) 
+		if (next->type == SYMBOL_CLASS && is_class) 
 		{
 			if (strcmp(identifier, next->symbol_class->identifier) == 0)
 			{
 				return next;
 			}
 		}
-		else if (next->type == SYMBOL_MODULE && is_module) 
+		if (next->type == SYMBOL_MODULE && is_module) 
 		{
 			if (strcmp(identifier, next->symbol_module->identifier) == 0)
 			{
@@ -829,7 +825,7 @@ static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTab
 	return analyzer_find_symbol_from_scope(identifier, scope->parent, is_function, is_class, is_module);
 }
 
-static Symbol* analyzer_find_symbol_only_from_scope(const char* identifier, SymbolTable* scope, int is_function, int is_class)
+static Symbol* analyzer_find_symbol_only_from_scope(const char* identifier, SymbolTable* scope, int is_function, int is_class, int is_module)
 {
 	int i = 0;
 
@@ -844,16 +840,23 @@ static Symbol* analyzer_find_symbol_only_from_scope(const char* identifier, Symb
 				return next;
 			}
 		}
-		else if (next->type == SYMBOL_VARIABLE && !is_function) 
+		if (next->type == SYMBOL_VARIABLE && !is_function) 
 		{
 			if (strcmp(identifier, next->symbol_variable->identifier) == 0)
 			{
 				return next;
 			}
 		}
-		else if (next->type == SYMBOL_CLASS && is_class) 
+		if (next->type == SYMBOL_CLASS && is_class) 
 		{
 			if (strcmp(identifier, next->symbol_class->identifier) == 0)
+			{
+				return next;
+			}
+		}
+		if (next->type == SYMBOL_MODULE && is_module) 
+		{
+			if (strcmp(identifier, next->symbol_module->identifier) == 0)
 			{
 				return next;
 			}
@@ -1780,9 +1783,9 @@ static void analyzer_analyze_type(Type* type, SymbolTable* scope)
 
 static void analyzer_handle_variable_declaration(Module* module, Node* node, SymbolTable* scope, int* offset)
 { 
-	if (analyzer_find_symbol_only_from_scope(node->declare_node.declare.identifier, scope, 0, 0) != NULL)
+	if (analyzer_find_symbol_only_from_scope(node->declare_node.declare.identifier, scope, 0, 0, 1) != NULL)
 	{
-		printf("[Analyzer] [Debug] Variable already declared in scope...\n");
+		printf("[Analyzer] [Debug] Statement with identifier already declared in scope...\n");
 		exit(1);
 	}
 
@@ -1820,7 +1823,7 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 
 		*offset += size;
 
-		if (analyzer_find_symbol_only_from_scope(next->param_node.param.identifier, scope, 0, 0) != NULL)
+		if (analyzer_find_symbol_only_from_scope(next->param_node.param.identifier, scope, 0, 0, 0) != NULL)
 		{
 			printf("[Analyzer] [Debug] Parameter with name: \"%s\" already declared...\n", next->param_node.param.identifier);
 			exit(1);
@@ -2064,9 +2067,9 @@ static void analyzer_check_global_scope(Node* node, SymbolTable* scope)
 		exit(1);
 	}
 
-	if (type != NODE_FUNCTION && type != NODE_CLASS && type != NODE_DECLARATION && type != NODE_IMPORT && kind == GLOBAL_SCOPE)
+	if (type != NODE_FUNCTION && type != NODE_LITERAL && type != NODE_CLASS && type != NODE_DECLARATION && type != NODE_IMPORT && kind == GLOBAL_SCOPE)
 	{
-		printf("[Analyzer] [Debug] Statements can't be in a global scope...\n");
+		printf("[Analyzer] [Debug] Statement can't be in a global scope: %d...\n", type);
 		exit(1);
 	}
 }
@@ -2701,9 +2704,9 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
  */
 static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scope)
 {
-	if (analyzer_find_symbol_from_scope(node->import_statement_node.import_node.identifier, scope, 0, 0, 1) != NULL)
+	if (analyzer_find_symbol_from_scope(node->import_statement_node.import_node.identifier, scope, 0, 1, 1) != NULL)
 	{
-		printf("[Analyzer] [Debug] Module with identifier: \"%s\" already declared...\n", node->import_statement_node.import_node.identifier);
+		printf("[Analyzer] [Debug] Statement with identifier: \"%s\" already declared...\n", node->import_statement_node.import_node.identifier);
 		exit(1);
 	}
 	

@@ -1,4 +1,11 @@
+fn std()
+{
+
+}
+
+import "mano/" as std
+
 fn main()
 {
-	let i: int = 0
+	
 }

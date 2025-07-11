@@ -1385,10 +1385,7 @@ static Node* parse_import(Parser* parser)
 
 	node->import_statement_node.import_node.is_local = 0;
 
-	if (import_path[0] == '.' || (strchr(import_path, '/') != NULL))
-	{
-		node->import_statement_node.import_node.is_local = 1;
-	}
+	node->import_statement_node.import_node.is_local = 1;
 
 	node->import_statement_node.import_node.import_path = token_lib_name->str_value;
 	node->import_statement_node.import_node.identifier = identifier_str;
