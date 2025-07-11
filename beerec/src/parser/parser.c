@@ -344,6 +344,12 @@ static Node* parse_literal(Parser* parser)
 		{
 			Node* callee = malloc(sizeof(Node));
 
+			if (callee == NULL) 
+			{ 
+				parser_error("Failed to allocate memory for callee..."); 
+				exit(1); 
+			}
+
 			callee->type = NODE_IDENTIFIER;
 			callee->variable_node.variable.identifier = identifier;
 
@@ -357,6 +363,12 @@ static Node* parse_literal(Parser* parser)
 		{
 			Node* callee = malloc(sizeof(Node));
 
+			if (callee == NULL) 
+			{ 
+				parser_error("Failed to allocate memory for callee..."); 
+				exit(1); 
+			}
+
 			callee->type = NODE_IDENTIFIER;
 			callee->variable_node.variable.identifier = identifier;
 
@@ -367,6 +379,12 @@ static Node* parse_literal(Parser* parser)
 		else 
 		{
 			Node* var_node = malloc(sizeof(Node));
+
+			if (var_node == NULL) 
+			{ 
+				parser_error("Failed to allocate memory for variable node..."); 
+				exit(1); 
+			}
 
 			var_node->type = NODE_IDENTIFIER;
 			var_node->variable_node.variable.identifier = identifier;
@@ -379,6 +397,13 @@ static Node* parse_literal(Parser* parser)
 		advance_tkn(parser);
 
 		Node* this_node = malloc(sizeof(Node));
+
+		if (this_node == NULL) 
+		{ 
+			parser_error("Failed to allocate memory for this node..."); 
+			exit(1); 
+		}
+
 		this_node->type = NODE_THIS;
 
 		expr = this_node;
@@ -426,6 +451,13 @@ static Node* parse_primary(Parser* parser)
 			Node* object = expr;
 
 			Node* node = malloc(sizeof(Node));
+
+			if (node == NULL) 
+			{ 
+				parser_error("Failed to allocate memory for member access node..."); 
+				exit(1); 
+			}
+
 			node->type = NODE_MEMBER_ACCESS;
 
 			node->member_access_node.member_access.object = object;
@@ -632,6 +664,13 @@ static Node* parse_block(Parser* parser)
 	skip_end_lines(parser);
 
 	NodeList* node_list = malloc(sizeof(NodeList));
+
+	if (node_list == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for node list..."); 
+		exit(1); 
+	}
+
 	Node** current = &node_list->head;
 
 	while (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_BRACE) 
@@ -681,6 +720,13 @@ static int check_case_scope(Parser* parser, int true)
 static Node* parse_switch_label_content(Parser* parser, Node* condition, int new_scope)
 {
 	NodeList* statement_list = malloc(sizeof(NodeList));
+
+	if (statement_list == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for node list..."); 
+		exit(1); 
+	}
+
 	Node** current = &statement_list->head;
 	
 	while (check_case_scope(parser, new_scope)) 
@@ -708,11 +754,24 @@ static Node* parse_switch_label_content(Parser* parser, Node* condition, int new
 	}
 
 	Node* block_node = malloc(sizeof(Node));
+
+	if (block_node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for block node..."); 
+		exit(1); 
+	}
+
 	block_node->type = NODE_BLOCK;
 
 	block_node->block_node.block.statements = statement_list;
 
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for switch case block node..."); 
+		exit(1); 
+	}
 	
 	node->type = NODE_SWITCH_CASE_BLOCK;
 	node->switch_case_block_node.switch_case_block.condition = condition;
@@ -726,6 +785,13 @@ static Node* parse_var_assign(Parser* parser, Node* left)
 	Node* expression = parse_expression(parser);
 
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for variable assign node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_VARIABLE_ASSIGN;
 
 	node->variable_assign_node.variable_assign.left = left;
@@ -742,7 +808,20 @@ static Node* parse_var_increment(Parser* parser, Node* left)
 	
 	Node* node = malloc(sizeof(Node));
 
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for operation node..."); 
+		exit(1); 
+	}
+
 	Node* node_literal = malloc(sizeof(Node));
+
+	if (node_literal == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for literal node..."); 
+		exit(1); 
+	}
+
 	node_literal->type = NODE_LITERAL;
 
 	Type* type = create_type(TYPE_INT, NULL);
@@ -768,7 +847,20 @@ static Node* parse_var_decrement(Parser* parser, Node* left)
 	
 	Node* node = malloc(sizeof(Node));
 
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for operation node..."); 
+		exit(1); 
+	}
+
 	Node* node_literal = malloc(sizeof(Node));
+
+	if (node_literal == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for literal node..."); 
+		exit(1); 
+	}
+
 	node_literal->type = NODE_LITERAL;
 
 	Type* type = create_type(TYPE_INT, NULL);
@@ -793,6 +885,13 @@ static Node* parse_var_plus_equals(Parser* parser, Node* left)
 	advance_tkn(parser);
 	
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for operation node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_OPERATION;
 
 	Node* expression = parse_expression(parser);
@@ -809,6 +908,13 @@ static Node* parse_var_minus_equals(Parser* parser, Node* left)
 	advance_tkn(parser);
 	
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for operation node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_OPERATION;
 
 	Node* expression = parse_expression(parser);
@@ -825,6 +931,13 @@ static Node* parse_var_times_equals(Parser* parser, Node* left)
 	advance_tkn(parser);
 	
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for operation node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_OPERATION;
 
 	Node* expression = parse_expression(parser);
@@ -841,6 +954,13 @@ static Node* parse_var_divided_equals(Parser* parser, Node* left)
 	advance_tkn(parser);
 	
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for operation node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_OPERATION;
 
 	Node* expression = parse_expression(parser);
@@ -900,6 +1020,13 @@ static Node* parse_if(Parser* parser)
 	skip_end_lines(parser);
 
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for if node..."); 
+		exit(1); 
+	}
+
 	node->if_statement_node.if_statement.else_branch = NULL;
 
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_ELSE)
@@ -907,6 +1034,13 @@ static Node* parse_if(Parser* parser)
 		parser_info("Parsing else...");
 
 		Node* else_statements = malloc(sizeof(Node));
+
+		if (else_statements == NULL) 
+		{
+			parser_error("Failed to allocate memory for block node..."); 
+			exit(1); 
+		}
+
 		else_statements->type = NODE_BLOCK;
 
 		advance_tkn(parser);
@@ -952,6 +1086,13 @@ static Node* parse_array_access(Parser* parser, Node* array_access)
 	advance_tkn(parser);
 
 	Node* access_node = malloc(sizeof(Node));
+
+	if (access_node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for array access node..."); 
+		exit(1); 
+	}
+
 	access_node->type = NODE_ARRAY_ACCESS;
 
 	access_node->acess_array_node.acess_array.array = array_access;
@@ -1032,7 +1173,9 @@ static Node* parse_func(
 	skip_end_lines(parser);
 
 	Node* node = malloc(sizeof(Node));
-	if (node == NULL) {
+
+	if (node == NULL) 
+	{
 		parser_error("Failed to allocate memory for function node");
 		exit(1);
 	}
@@ -1153,6 +1296,13 @@ static Node* parse_for_loop(Parser* parser)
 	skip_end_lines(parser);
 	
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for for loop node..."); 
+		exit(1); 
+	}
+
 	node->for_loop_node.for_loop.init = initializer;
 	node->for_loop_node.for_loop.condition = condition;
 	node->for_loop_node.for_loop.then_statement = then_statement;
@@ -1184,6 +1334,13 @@ static Node* parse_switch(Parser* parser)
 	skip_end_lines(parser);
 	
 	NodeList* cases = malloc(sizeof(NodeList));
+
+	if (cases == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for node list..."); 
+		exit(1); 
+	}
+
 	Node** current = &cases->head;
 
 	while (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_BRACE)
@@ -1226,6 +1383,13 @@ static Node* parse_switch(Parser* parser)
 	skip_end_lines(parser);
 
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for switch statement node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_SWITCH_STATEMENT;
 	node->switch_statement_node.switch_statement.value = expression;
 	node->switch_statement_node.switch_statement.case_list = cases;
@@ -1236,6 +1400,13 @@ static Node* parse_switch(Parser* parser)
 static Node* parse_continue(Parser* parser)
 {
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for continue node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_CONTINUE;
 
 	return node;
@@ -1244,6 +1415,13 @@ static Node* parse_continue(Parser* parser)
 static Node* parse_break(Parser* parser)
 {
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for operation node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_BREAK;
 	advance_tkn(parser);
 
@@ -1381,6 +1559,13 @@ static Node* parse_import(Parser* parser)
 	char* import_path = token_lib_name->str_value;
 
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for import node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_IMPORT;
 
 	node->import_statement_node.import_node.is_local = 0;
@@ -1407,6 +1592,13 @@ static Node* parse_new_class_instance(Parser* parser, char* class_name)
 	advance_tkn(parser);
 
 	Node* instance = malloc(sizeof(Node));
+
+	if (instance == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for create instance node..."); 
+		exit(1); 
+	}
+
 	instance->type = NODE_CREATE_INSTANCE;
 
 	instance->create_instance_node.create_instance.class_name = class_name;
@@ -1418,6 +1610,13 @@ static Node* parse_new_class_instance(Parser* parser, char* class_name)
 static NodeList* parse_array_values(Parser* parser)
 {
 	NodeList* list = malloc(sizeof(NodeList));
+
+	if (list == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for node list..."); 
+		exit(1); 
+	}
+
 	list->head = NULL;
 
 	Node** current = &list->head;
@@ -1461,6 +1660,13 @@ static Node* parse_new_array(Parser* parser, Type* array_type)
 	advance_tkn(parser);
 
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for array literal node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_ARRAY_LITERAL;
 
 	node->array_literal_node.array_literal.array_type = array_type;
@@ -1496,6 +1702,12 @@ static Node** parse_class_declarations(Node* block, int* out_count, Node** const
 	int constructor_count = 0;
 
 	Node** node_list = malloc(sizeof(Node*) * capacity);
+
+	if (node_list == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for node array..."); 
+		exit(1); 
+	}
 
 	Node* statement = block->block_node.block.statements->head;
 
@@ -1550,7 +1762,14 @@ static Node** filter_declarations(Node** list, int type_filter, int* out_count)
 {
 	int capacity = 4;
 	int count = 0;
+
 	Node** result = malloc(sizeof(Node*) * capacity);
+
+	if (result == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for node array..."); 
+		exit(1); 
+	}
 
 	for (int i = 0; list[i] != NULL; i++)
 	{
@@ -1627,6 +1846,13 @@ static Node* parse_class(Parser* parser)
 	free(declarations);
 
 	Node* node = malloc(sizeof(Node));
+
+	if (node == NULL) 
+	{ 
+		parser_error("Failed to allocate memory for class node..."); 
+		exit(1); 
+	}
+
 	node->type = NODE_CLASS;
 
 	node->class_node.class_node.identifer = identifier;
@@ -1875,6 +2101,13 @@ static Node* parse_unary(Parser* parser)
 		advance_tkn(parser);
 		
 		Node* node = malloc(sizeof(Node));
+
+		if (node == NULL) 
+		{ 
+			parser_error("Failed to allocate memory for cast node..."); 
+			exit(1); 
+		}
+
 		node->type = NODE_CAST;
 
 		node->cast_statement_node.cast_node.cast_type = type;
@@ -1890,6 +2123,13 @@ static Node* parse_unary(Parser* parser)
 		Node* expr = parse_unary(parser);
 
 		Node* node = malloc(sizeof(Node));
+
+		if (node == NULL) 
+		{ 
+			parser_error("Failed to allocate memory for adress of node..."); 
+			exit(1); 
+		}
+
 		node->type = NODE_ADRESS_OF;
 		node->adress_of_node.adress_of.expression = expr;
 
@@ -1903,6 +2143,13 @@ static Node* parse_unary(Parser* parser)
 		Node* expr = parse_unary(parser);
 
 		Node* node = malloc(sizeof(Node));
+
+		if (node == NULL) 
+		{ 
+			parser_error("Failed to allocate memory for dereference node..."); 
+			exit(1); 
+		}
+
 		node->type = NODE_DEREFERENCE;
 		node->dereference_node.dereference.ptr = expr;
 
@@ -2204,6 +2451,12 @@ void free_node(Node* node)
 			free_type(node->array_literal_node.array_literal.array_type);
 
 			break;
+		}
+
+		case NODE_IMPORT:
+		{
+			free(node->import_statement_node.import_node.identifier);
+			free(node->import_statement_node.import_node.import_path);
 		}
 
 		case NODE_BREAK:

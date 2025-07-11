@@ -10,13 +10,8 @@
  * - Implementar o sistema de extern "C"
  */
 
-/** 
- * IMPORTANTE: Terminar todos os TODOS daqui.
- */
-
 /**
- * IMPORTANTE:
- * - adicionar checks em alocaçoes de memoria no parser.
+ * IMPORTANTE: Adicionar checks se algo (funçoes, variaveis globais, etc) dos modulos importados ja existem no modulo que importa.
  */
 
 #include <stdio.h>
@@ -2699,9 +2694,6 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 	//free(full_path);
 }
 
-/**
- * TODO: Terminar isso.
- */
 static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scope)
 {
 	if (analyzer_find_symbol_from_scope(node->import_statement_node.import_node.identifier, scope, 0, 1, 1) != NULL)
@@ -2722,15 +2714,6 @@ static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scop
 	}
 }
 
-/**
- * TODO: Adicionar checks pra ver se não existe nenhum symbol com o nome do identifier do import (só se for global)
- * 
- * Exemplo:
- * 
- * import "./foo.beere" as foo
- * 
- * let foo: int = 0 // ERRO: Simbolo já declarado.
- */
 static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope, int* offset)
 {
 	analyzer_check_global_scope(node, scope);
