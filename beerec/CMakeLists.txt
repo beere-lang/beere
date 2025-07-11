@@ -16,4 +16,5 @@ add_executable(beerec
         src/utils/logger/logger.c
         src/utils/string_builder/string_builder.c
 		src/modules/modules.c
+		src/modules/handler/module-handler.c
 )

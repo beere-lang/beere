@@ -1,7 +1,3 @@
-/**
-	Created by jer1337 on 13/06/2025.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,40 +43,6 @@ char* get_directory(char* path)
     return copy;
 }
 
-char* get_path_from_relative(const char* directory, const char* relative_path)
-{
-    size_t len_dir = strlen(directory);
-    size_t len_rel = strlen(relative_path);
-    int need_sep = 0;
-
-    if (len_dir == 0)
-    {
-        // Diretório vazio, só retorna uma cópia do relativo
-        return strdup(relative_path);
-    }
-
-    // Verifica se o directory termina com barra
-    char last_char = directory[len_dir - 1];
-    if (last_char != '/' && last_char != '\\')
-    {
-        need_sep = 1;
-    }
-
-    // +1 para barra +1 para '\0' se precisar
-    char* full_path = malloc(len_dir + len_rel + (need_sep ? 2 : 1));
-    if (!full_path)
-        return NULL;
-
-    strcpy(full_path, directory);
-
-    if (need_sep)
-        strcat(full_path, "\\");
-
-    strcat(full_path, relative_path);
-
-    return full_path;
-}
-
 char* get_absolute_path(const char* relative_path)
 {
     char* abs_path = malloc(_MAX_PATH);
@@ -94,7 +56,7 @@ char* get_absolute_path(const char* relative_path)
     return abs_path;
 }
 
-static int has_extension(const char* filename) 
+static int has_extension(const char* filename, const char* required) 
 {
 	const char* extension = strrchr(filename, '.');
 
@@ -103,23 +65,23 @@ static int has_extension(const char* filename)
 		return 0;
 	}
 
-	return strcmp(extension, ".beere") == 0;
+	return strcmp(extension, required) == 0;
 }
 
-char* read_file(const char* file_name)
+char* read_file(const char* file_path, int mod)
 {
-	if (!has_extension(file_name)) 
+	if (!has_extension(file_path, (mod) ? ".mod" : ".beere")) 
 	{
-		printf("[File Reader] [Error] Invalid file extension...\n");
+		printf("[FileReader] [Error] Invalid file extension...\n");
 
 		return NULL;
 	}
 
-	FILE* file = fopen(file_name, "rb");
+	FILE* file = fopen(file_path, "rb");
 
 	if (!file)
 	{
-		printf("[File Reader] Failed to get input file: %s\n", file_name);
+		printf("[FileReader] Failed to get input file: %s\n", file_path);
 
 		return NULL;
 	}
@@ -134,7 +96,7 @@ char* read_file(const char* file_name)
 
 	if (!buffer)
 	{
-		printf("[File Reader] Failed to allocate memory.\n");
+		printf("[FileReader] Failed to allocate memory.\n");
 		fclose(file);
 
 		return NULL;
@@ -144,7 +106,7 @@ char* read_file(const char* file_name)
 
 	if (bytes_read != size)
 	{
-		printf("[File Reader] Failed to read all bytes from file.\n");
+		printf("[FileReader] Failed to read all bytes from file.\n");
 		fclose(file);
 
 		return NULL;

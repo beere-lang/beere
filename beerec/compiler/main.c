@@ -6,7 +6,8 @@
  */
 int main(int _, char* argv[])
 {
-	Module* main_module = compile(argv[1], argv[2]);
+	ModuleHandler* handler = interpret_module_file(argv[2]);
+	Module* main_module = compile(argv[1], argv[3]);
 
 	return 0;
 }

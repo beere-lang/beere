@@ -2,6 +2,7 @@
 #define MODULES_H
 
 #include "../ast/nodes/nodes.h"
+#include "handler/module-handler.h"
 
 typedef struct Symbol Symbol;
 typedef struct SymbolTable SymbolTable;
@@ -41,7 +42,8 @@ struct Module
 Module* compile_module(ModuleStack* stack, char* file_path);
 int push_stack_module(ModuleStack* stack, Module* module);
 int pop_stack_module(ModuleStack* stack, Module* module);
-ModuleStack* setup_module_stack();
 Module* setup_module(char* path, ModuleStack* stack);
+ModuleHandler* interpret_module_file(char* path);
+ModuleStack* setup_module_stack();
 
 #endif

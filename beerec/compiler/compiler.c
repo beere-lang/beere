@@ -99,6 +99,7 @@ Token* tokenize_code(char* content, int lexer_debug)
 	Token* tokens = malloc(sizeof(Token) * MAX_TOKEN_LENGTH);
 
 	int i = 0;
+
 	while (1)
 	{
 		Token token = read_next_tkn(&lexer);
@@ -121,7 +122,8 @@ Token* tokenize_code(char* content, int lexer_debug)
 			printf("[Lexer] [Debug] Token Type: %s\n", token_type_to_string(type));
 		}
 
-		if (type == TOKEN_END_SRC) {
+		if (type == TOKEN_END_SRC) 
+		{
 			break;
 		}
 
@@ -150,7 +152,7 @@ Module* compile(char* file_path, char* lexer_flag)
 		exit(1);
 	}
 
-	char* content = read_file(file_path);
+	char* content = read_file(file_path, 0);
 
 	int lexer_debug = 0;
 

@@ -5,6 +5,7 @@
  * 
  * NEXT:
  * - Implementar o optimizer.
+ * - Implementar sistema de logs robusto e funcional.
  * - Implementar o codegen.
  * - Implementar o sistema de extern "C"
  */

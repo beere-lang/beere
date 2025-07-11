@@ -4,6 +4,7 @@
 #include "modules.h"
 #include "../utils/utils.h"
 #include "../../compiler/compiler.h"
+#include "handler/module-handler.h"
 
 ModuleStack* setup_module_stack()
 {
@@ -98,8 +99,6 @@ int pop_stack_module(ModuleStack* stack, Module* module)
 	return 0;
 }
 
-
-
 Module* setup_module(char* path, ModuleStack* stack)
 {
 	Module* module = malloc(sizeof(Module));
@@ -135,17 +134,13 @@ Module* compile_module(ModuleStack* stack, char* file_path)
 		exit(1);
 	}
 
-	char* content = read_file(file_path);
+	char* content = read_file(file_path, 0);
 
 	if (content == NULL)
 	{
 		printf("[Compiler] [Debug] Failed to read input file: %s...\n", file_path);
 		exit(1);
 	}
-
-	//printf("+-----------------------------------------------+\n");
-	//printf("Content:\n%s\n", content);
-	//printf("+-----------------------------------------------+\n");
 
 	Module* module = setup_module(file_path, stack);
 
@@ -163,4 +158,39 @@ Module* compile_module(ModuleStack* stack, char* file_path)
 	pop_stack_module(stack, module);
 
 	return module;
+}
+
+ModuleHandler* interpret_module_file(char* path)
+{
+	if (path == NULL)
+	{
+		printf("[Modules] [Debug] File Path not found...\n");
+		exit(1);
+	}
+
+	char* content = read_file(path, 1);
+
+	if (content == NULL)
+	{
+		printf("[Compiler] [Debug] Failed to read module file: %s...\n", path);
+		exit(1);
+	}
+
+	ModuleHandler* handler = malloc(sizeof(ModuleHandler));
+	handler->root_path = NULL;
+
+	Token* tokens = tokenize_code(content, 0);
+
+	ModuleParser* module_parser = malloc(sizeof(ModuleParser));
+
+	module_parser->tokens = tokens;
+	module_parser->current = tokens;
+
+	ModuleNode** node_list = parse_statements(module_parser);
+
+	handle_nodes(handler, node_list);
+
+	printf("\n");
+
+	return handler;
 }

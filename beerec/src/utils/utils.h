@@ -4,8 +4,8 @@
 char* get_path_from_relative(char* dir, char* path);
 char* get_absolute_path(const char* relative_path);
 char* strndup(const char* src, const size_t len);
-static int has_extension(const char* filename);
-char* read_file(const char* file_name);
+static int has_extension(const char* filename, const char* required);
+char* read_file(const char* file_name, int mod);
 char* get_directory(char* path);
 
 #endif //UTILS_H
