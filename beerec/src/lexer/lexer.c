@@ -416,7 +416,7 @@ Token handle_literals(Lexer* lexer, int negative)
 
 		free_string_builder(&sb);
 
-		Token tkn = (Token) { TOKEN_LITERAL_STRING, lexer->start, (size_t)(lexer->current - lexer->start), lexer->line };
+		Token tkn = (Token) { TOKEN_LITERAL_STRING, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
 
 		tkn.var_type = TYPE_STRING;
 		tkn.str_value = str;

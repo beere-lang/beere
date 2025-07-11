@@ -133,12 +133,23 @@ Token* tokenize_code(char* content, int lexer_debug)
 	return tokens;
 }
 
-void free_all(Node** node_list, Token* tokens, char* content)
+static void free_tokens(Token* token_list)
 {
-	free_nodes(node_list);
+	if (token_list == NULL)
+	{
+		return;
+	}
 
-	free(tokens);
-	tokens = NULL;
+	free(token_list);
+	token_list = NULL;
+}
+
+static void free_content(char* content)
+{
+	if (content == NULL)
+	{
+		return;
+	}
 
 	free(content);
 	content = NULL;
@@ -167,7 +178,6 @@ Module* compile(char* file_path, char* lexer_flag)
 	if (content == NULL)
 	{
 		printf("[Compiler] [Debug] Failed to read input file: %s...\n", file_path);
-
 		exit(1);
 	}
 
@@ -177,7 +187,12 @@ Module* compile(char* file_path, char* lexer_flag)
 
 	Node** node_list = parse_tokens(tokens);
 
+	free_tokens(tokens);
+	free_content(content);
+
 	analyze_nodes(module, node_list);
+
+	free_nodes(node_list); // Adicionar o code gen antes desse free.
 
 	return module;
 }

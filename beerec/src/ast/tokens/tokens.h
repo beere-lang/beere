@@ -122,7 +122,9 @@ TokenType;
 typedef struct
 {
 	TokenType token_type;
+
 	const char* start;
+
 	size_t length;
 	size_t line;
 
@@ -137,4 +139,4 @@ typedef struct
 } 
 Token;
 
-#endif //TOKEN_H
+#endif
