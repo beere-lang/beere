@@ -6,6 +6,10 @@
 #include "../../compiler/compiler.h"
 #include "handler/module-handler.h"
 
+static void free_module_nodes(ModuleNode** node_list);
+static void free_module_parser(ModuleParser* parser);
+static void free_module_tokens(Token* token_list);
+
 ModuleStack* setup_module_stack()
 {
 	ModuleStack* stack = malloc(sizeof(ModuleStack));
@@ -188,9 +192,100 @@ ModuleHandler* interpret_module_file(char* path)
 
 	ModuleNode** node_list = parse_statements(module_parser);
 
+	free_module_parser(module_parser); // não vai ser usado mais, só o conteúdo.
+	
 	handle_nodes(handler, node_list);
+
+	free_module_tokens(tokens); // não vai ser usado mais.
+	free_module_nodes(node_list); // não vai ser usado mais.
 
 	printf("\n");
 
 	return handler;
+}
+
+static void free_module_node(ModuleNode* node)
+{
+	if (node == NULL)
+	{
+		return;
+	}
+	
+	switch (node->type)
+	{
+		case MODULE_NODE_DECLARATION:
+		{
+			free(node->module_node_declaration->identifier);
+			free(node->module_node_declaration->value);
+
+			break;
+		}
+
+		default:
+		{
+			exit(1);
+		}
+	}
+
+	free(node);
+	node = NULL;
+}
+
+static void free_module_nodes(ModuleNode** node_list)
+{
+	if (node_list == NULL)
+	{
+		return;
+	}
+	
+	ModuleNode* next = node_list[0];
+
+	int i = 0;
+
+	while (next != NULL)
+	{
+		free_module_node(next);
+
+		i++;
+
+		next = node_list[i];
+	}
+
+	free(node_list);
+	node_list = NULL;
+}
+
+static void free_module_tokens(Token* token_list)
+{
+	if (token_list == NULL)
+	{
+		return;
+	}
+	
+	free(token_list);
+	token_list = NULL;
+}
+
+static void free_module_parser(ModuleParser* parser)
+{
+	if (parser == NULL)
+	{
+		return;
+	}
+	
+	free(parser);
+	parser = NULL;
+}
+
+static void free_module_handler(ModuleHandler* handler)
+{
+	if (handler == NULL)
+	{
+		return;
+	}
+	
+	free(handler->root_path);
+
+	free(handler);
+	handler = NULL;
 }

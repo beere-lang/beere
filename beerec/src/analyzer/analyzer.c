@@ -10,6 +10,10 @@
  * - Implementar o sistema de extern "C"
  */
 
+/**
+ * TODO: Dar free nas coisas do module file (module nodes, token list, node list, etc)
+ */
+
 /** 
  * IMPORTANTE: Terminar todos os TODOS daqui.
  */
