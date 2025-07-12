@@ -24,8 +24,8 @@
 #include "../modules/modules.h" 
 #include "../symbols/symbols.h"
 
+static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 static Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
-static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_function, int is_class, int is_module);
 static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype);
 static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope);
 static void analyzer_check_arguments(Module* module, Node* params_head, Node* args_head, SymbolTable* scope);
@@ -406,7 +406,7 @@ static void analyzer_add_export_symbol(Module* module, Symbol* symbol)
 
 static int analyzer_get_class_size(Type* type, SymbolTable* scope)
 {
-	Symbol* class_symbol = analyzer_find_symbol_from_scope(type->class_name, scope, NULL, 1, 0);
+	Symbol* class_symbol = analyzer_find_symbol_from_scope(type->class_name, scope, NULL, 0, 1, 0);
 
 	if (class_symbol == NULL)
 	{
@@ -845,7 +845,7 @@ static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTa
 	return NULL;
 }
 
-static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_function, int is_class, int is_module)
+static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module)
 {
 	if (scope == NULL) 
 	{
@@ -865,7 +865,7 @@ static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTab
 				return next;
 			}
 		}
-		if (next->type == SYMBOL_VARIABLE && !is_function) 
+		if (next->type == SYMBOL_VARIABLE && is_variable) 
 		{
 			if (strcmp(identifier, next->symbol_variable->identifier) == 0)
 			{
@@ -888,7 +888,7 @@ static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTab
 		}
 	}
 
-	return analyzer_find_symbol_from_scope(identifier, scope->parent, is_function, is_class, is_module);
+	return analyzer_find_symbol_from_scope(identifier, scope->parent, is_variable, is_function, is_class, is_module);
 }
 
 static Symbol* analyzer_find_symbol_only_from_scope(const char* identifier, SymbolTable* scope, int is_function, int is_class, int is_module)
@@ -991,8 +991,8 @@ static int analyzer_is_compatible(Type* first, Type* second, SymbolTable* scope)
 
 	if (first->type == TYPE_CLASS && second->type == TYPE_CLASS) 
 	{
-		Symbol* class = analyzer_find_symbol_from_scope(first->class_name, scope, 0, 1, 0);
-		Symbol* _class = analyzer_find_symbol_from_scope(second->class_name, scope, 0, 1, 0);
+		Symbol* class = analyzer_find_symbol_from_scope(first->class_name, scope, 0, 0, 1, 0);
+		Symbol* _class = analyzer_find_symbol_from_scope(second->class_name, scope, 0, 0, 1, 0);
 
 		if (class == NULL || _class == NULL)
 		{
@@ -1212,7 +1212,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	const char* class_name = type->class_name;
 	
 	if (type->type == TYPE_PTR && !is_ptr)
-	 {
+	{
 		printf("[Analyzer] [Debug] Use '->' to access pointers...\n");
 
 		return NULL;
@@ -1242,7 +1242,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		printf("[Analyzer [Debug] Using 'this' pointer...\n");
 	}
 
-	int is_class = is_class_object(type, is_ptr);
+	int is_class = is_class_object(type, is_ptr);		
 
 	if (type == NULL)
 	{
@@ -1275,8 +1275,8 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		return NULL;
 	}
 			
-	Symbol* class_symbol = analyzer_find_symbol_from_scope(class_name, scope, 0, 1, 0);
-		
+	Symbol* class_symbol = analyzer_find_symbol_from_scope(class_name, scope, 0, 0, 1, 0);
+	
 	if (class_symbol == NULL)
 	{
 		return NULL;
@@ -1319,7 +1319,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	}
 
 	Node* member = analyzer_get_member_from_class(class_symbol, field_name);
-
+	
 	if (member == NULL)
 	{
 		return NULL;
@@ -1428,7 +1428,7 @@ static Type* analyzer_get_function_call_type(Module* module, Node* node, SymbolT
 
 	if (callee->type == NODE_IDENTIFIER)
 	{
-		Symbol* symbol = analyzer_find_symbol_from_scope(callee->variable_node.variable.identifier, scope, 1, 0, 0);
+		Symbol* symbol = analyzer_find_symbol_from_scope(callee->variable_node.variable.identifier, scope, 0, 1, 0, 0);
 
 		if (symbol == NULL)
 		{
@@ -1577,11 +1577,11 @@ static Type* analyzer_get_adress_of_type(Module* module, Node* node, SymbolTable
 
 static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int member_access, int* direct)
 {
-	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 0, 0, 0);
-			
+	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 0, 0);
+	
 	if (symbol == NULL)
 	{
-		Symbol* class = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 0, 1, 0);
+		Symbol* class = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 0, 0, 1, 0);
 
 		if (class != NULL)
 		{
@@ -1837,7 +1837,7 @@ static void analyzer_analyze_type(Type* type, SymbolTable* scope)
 			exit(1);
 		}
 		
-		if (analyzer_find_symbol_from_scope(type->class_name, scope, 0, 1, 0) == NULL)
+		if (analyzer_find_symbol_from_scope(type->class_name, scope, 0, 0, 1, 0) == NULL)
 		{
 			printf("[Analyzer] [Debug] Class of type: \"%s\" not found...\n", type->class_name);
 			exit(1);
@@ -2009,7 +2009,7 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 {
 	const FunctionNode* function_node = &node->function_node.function;
 	
-	if (analyzer_find_symbol_from_scope(function_node->identifier, scope, 1, 0, 0) != NULL)
+	if (analyzer_find_symbol_from_scope(function_node->identifier, scope, 0, 1, 0, 0) != NULL)
 	{
 		printf("[Analyzer] [Debug] Function with name: \"%s\" already declared...\n", function_node->identifier);
 		exit(1);
@@ -2110,14 +2110,14 @@ static void analyzer_handle_operation(Module* module, Node* node, SymbolTable* s
 {
 	OperationNode* operation = &node->operation_node.operation;
 	
+	analyzer_analyze_node(module, operation->left, scope, NULL);
+	analyzer_analyze_node(module, operation->right, scope, NULL);
+	
 	if (!analyzer_is_operation_compatible(module, node, scope))
 	{
 		printf("[Analyzer] [Debug] Incompatible operation...\n");
 		exit(1);
 	}
-
-	analyzer_analyze_node(module, operation->left, scope, NULL);
-	analyzer_analyze_node(module, operation->right, scope, NULL);
 
 	analyzer_implictly_cast_operation(module, node, scope);
 }
@@ -2270,7 +2270,6 @@ static void analyzer_handle_function_call(Module* module, Node* node, SymbolTabl
 	if (type == NULL)
 	{
 		printf("[Analyzer] [Debug] Function not found...\n");
-			
 		exit(1);
 	}
 }
@@ -2306,7 +2305,7 @@ static void analyzer_handle_adress_of(Node* node, SymbolTable* scope)
 		exit(1);
 	}
 	
-	Symbol* var = analyzer_find_symbol_from_scope(adress_of->expression->variable_node.variable.identifier, scope, 0, 0, 0);
+	Symbol* var = analyzer_find_symbol_from_scope(adress_of->expression->variable_node.variable.identifier, scope, 1, 0, 0, 0);
 	
 	if (var == NULL)
 	{
@@ -2330,7 +2329,7 @@ static void analyzer_handle_dereference(Node* node, SymbolTable* scope)
 		exit(1);
 	}
 	
-	Symbol* field = analyzer_find_symbol_from_scope(ref->variable_node.variable.identifier, scope, 0, 0, 0);
+	Symbol* field = analyzer_find_symbol_from_scope(ref->variable_node.variable.identifier, scope, 1, 0, 0, 0);
 	
 	if (field == NULL)
 	{
@@ -2402,12 +2401,18 @@ static void analyzer_handle_var_assign(Module* module, Node* node, SymbolTable* 
 	
 	Type* type = analyzer_return_type_of_expression(module, left, scope, NULL, 0, NULL);
 
+	if (type == NULL)
+	{
+		printf("[Analyzer] [Debug] Member not found...\n");
+		exit(1);
+	}
+
 	analyzer_analyze_node(module, expression, scope, NULL); // analyze function already checks if things exist...
 	analyzer_analyze_node(module, expression, scope, NULL);
 
 	if (left->type == NODE_CAST)
 	{
-		printf("[Analyzer] [Debug] Can't assign value to a cast...");
+		printf("[Analyzer] [Debug] Can't assign value to a cast...\n");
 		exit(1);
 	}
 
@@ -2498,7 +2503,7 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 {
 	const ClassNode* class_node = &node->class_node.class_node;
 	
-	if (analyzer_find_symbol_from_scope(class_node->identifer, scope, 0, 1, 0) != NULL)
+	if (analyzer_find_symbol_from_scope(class_node->identifer, scope, 0, 0, 1, 0) != NULL)
 	{
 		printf("[Analyzer] [Debug] Class already declared: %s...", class_node->identifer);
 		exit(1);
@@ -2510,7 +2515,7 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 	
 	if (class_node->super_identifer != NULL)
 	{
-		Symbol* super_symbol = analyzer_find_symbol_from_scope(class_node->super_identifer, scope, 0, 1, 0);
+		Symbol* super_symbol = analyzer_find_symbol_from_scope(class_node->super_identifer, scope, 0, 0, 1, 0);
 		
 		if (super_symbol == NULL)
 		{
@@ -2531,7 +2536,7 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 	if (class_node->constructor != NULL)
 	{
 		analyzer_analyze_node(module, class_node->constructor, class_scope, NULL);
-		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function_node.function.identifier, class_scope, 1, 0, 0);
+		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function_node.function.identifier, class_scope, 0, 1, 0, 0);
 	}
 	
 	analyzer_handle_class_vars(module, node, class_scope);
@@ -2542,7 +2547,7 @@ static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTa
 {
 	const CreateInstanceNode* instance_node = &node->create_instance_node.create_instance;
 	
-	Symbol* class = analyzer_find_symbol_from_scope(instance_node->class_name, scope, 0, 1, 0);
+	Symbol* class = analyzer_find_symbol_from_scope(instance_node->class_name, scope, 0, 0, 1, 0);
 	
 	if (class == NULL)
 	{
@@ -2609,7 +2614,6 @@ static void analyzer_handle_member_access(Module* module, Node* node, SymbolTabl
 	if (type == NULL)
 	{
 		printf("[Analyzer] [Debug] Member not found...\n");
-
 		exit(1);
 	}
 }
@@ -2647,7 +2651,7 @@ static void analyzer_handle_cast(Module* module, Node* node, SymbolTable* scope)
 
 static void analyzer_handle_identifier(Node* node, SymbolTable* scope)
 {
-	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 0, 0, 0);
+	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 0, 0);
 
 	if (symbol == NULL)
 	{
@@ -2773,7 +2777,7 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 
 static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scope)
 {
-	if (analyzer_find_symbol_from_scope(node->import_statement_node.import_node.identifier, scope, 0, 1, 1) != NULL)
+	if (analyzer_find_symbol_from_scope(node->import_statement_node.import_node.identifier, scope, 1, 1, 1, 1) != NULL)
 	{
 		printf("[Analyzer] [Debug] Statement with identifier: \"%s\" already declared...\n", node->import_statement_node.import_node.identifier);
 		exit(1);

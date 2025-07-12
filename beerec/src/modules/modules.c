@@ -74,7 +74,7 @@ int push_stack_module(ModuleStack* stack, Module* module)
 {
 	if (contains_module(stack, module))
 	{
-		printf("[Module Manager] [Debug] Invalid import, module will be imported recursively: \"%s\"...", module->module_path);
+		printf("\n[Module Manager] [Debug] Invalid import, module will be imported recursively: \"%s\"...\n", module->module_path);
 		return 0;
 	}
 
