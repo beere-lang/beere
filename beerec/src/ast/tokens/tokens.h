@@ -20,6 +20,8 @@ typedef enum
 	TYPE_VOID, // void, for functions
 
 	TYPE_NULL, // null,
+
+	TYPE_MODULE,
 	
 	TYPE_UNKNOWN
 } VarType;

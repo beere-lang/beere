@@ -1202,6 +1202,127 @@ static void analyzer_check_directly(int direct, Node* member, NodeType type)
 	}
 }
 
+static Type* handle_function(Symbol* class_symbol, char* field_name, Module* module, SymbolTable* scope, int directly, NodeList* args)
+{
+	Node* member = analyzer_get_function_from_class(class_symbol, field_name);
+		
+	if (member == NULL)
+	{
+		return NULL;
+	}
+
+	if (member->type == NODE_FUNCTION)
+	{
+		if (member->function_node.function.visibility != VISIBILITY_PUBLIC)
+		{
+			printf("[Analyzer] [Debug] Trying to access a private function: \"%s\"...\n", field_name);
+			return NULL;
+		}
+
+		analyzer_check_directly(directly, member, NODE_FUNCTION);
+	
+		Type* field_type = analyzer_return_type_of_expression(module, member, class_symbol->symbol_class->class_scope, args, 1, NULL);
+
+		Node* params_head = member->function_node.function.params == NULL ? NULL : member->function_node.function.params->head;
+		Node* args_head = (args == NULL) ? NULL : args->head;
+			
+		analyzer_check_arguments(module, params_head, args_head, scope);
+
+		if (field_type == NULL)
+		{
+			return NULL;
+		}
+		
+		return field_type;
+	}
+}
+
+static Type* handle_prototype_method(Type* type, char* field_name, Module* module, SymbolTable* scope, NodeList* args)
+{
+	printf("[Analyzer] [Debug] Maybe found a prototype function call...\n");
+
+	PrototypeMethod* ref = NULL;
+
+	Type* function_type = analyzer_handle_prototype(type, field_name, &ref);
+
+	Node* params_head = ref->params == NULL ? NULL : ref->params->head;
+	Node* args_head = (args == NULL) ? NULL : args->head;
+		
+	analyzer_check_arguments(module, params_head, args_head, scope);
+
+	if (function_type == NULL)
+	{
+		return NULL;
+	}
+		
+	return function_type;
+}
+
+static Type* handle_module_class_directly_access(Symbol* module_symbol, SymbolTable* scope, const char* module_identifier, char* field_name)
+{
+	SymbolTable* module_scope = module_symbol->symbol_module->module->global_scope;
+	Symbol* class_symbol = analyzer_find_symbol_from_scope(field_name, module_scope, 0, 0, 1, 0);
+
+	if (class_symbol == NULL)
+	{
+		return NULL;
+	}
+	
+	/**
+	 * TODO: Check if module is exporting field.
+	 */
+
+	return create_type(TYPE_CLASS, (char*) class_symbol->symbol_class->identifier);
+}
+
+static Type* handle_module_field_access(Module* module, SymbolTable* scope, const char* module_identifier, char* field_name)
+{
+	Symbol* module_symbol = analyzer_find_symbol_from_scope(module_identifier, scope, 0, 0, 0, 1);
+	
+	if (module_symbol == NULL)
+	{
+		return NULL;
+	}
+
+	SymbolTable* module_scope = module_symbol->symbol_module->module->global_scope;
+	Symbol* field_symbol = analyzer_find_symbol_from_scope(field_name, module_scope, 1, 0, 0, 0);
+
+	if (field_symbol == NULL)
+	{
+		return handle_module_class_directly_access(module_symbol, scope, module_identifier, field_name);
+	}
+	
+	/**
+	 * TODO: Check if module is exporting field.
+	 */
+
+	return field_symbol->symbol_variable->type;
+}
+
+static Type* handle_module_method_access(Module* module, SymbolTable* scope, const char* module_identifier, char* method_name)
+{
+	Symbol* module_symbol = analyzer_find_symbol_from_scope(module_identifier, scope, 0, 0, 0, 1);
+	
+	if (module_symbol == NULL)
+	{
+		return NULL;
+	}
+
+	SymbolTable* module_scope = module_symbol->symbol_module->module->global_scope;
+	Symbol* field_symbol = analyzer_find_symbol_from_scope(method_name, module_scope, 0, 1, 0, 0);
+
+	if (field_symbol == NULL)
+	{
+		return NULL;
+	}
+	
+	/**
+	 * TODO: Check if module is exporting method.
+	 */
+
+	return field_symbol->symbol_function->return_type;
+}
+
 Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* scope, NodeList* args)
 {
 	int directly = 0;
@@ -1210,12 +1331,21 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	char* field_name = node->member_access_node.member_access.member_name;
 
 	int is_ptr = node->member_access_node.member_access.ptr_acess;
-			
+	
+	int is_module = (type->type == TYPE_MODULE);
+
 	const char* class_name = type->class_name;
 	
 	if (type->type == TYPE_PTR && !is_ptr)
 	{
 		printf("[Analyzer] [Debug] Use '->' to access pointers...\n");
+
+		return NULL;
+	}
+
+	if (is_module && is_ptr)
+	{
+		printf("[Analyzer] [Debug] Use '.' to access modules...\n");
 
 		return NULL;
 	}
@@ -1244,6 +1374,16 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		printf("[Analyzer [Debug] Using 'this' pointer...\n");
 	}
 
+	if (is_module)
+	{
+		if (node->member_access_node.member_access.is_function)
+		{
+			return handle_module_method_access(module, scope, class_name, field_name);
+		}
+
+		return handle_module_field_access(module, scope, class_name, field_name);
+	}
+
 	int is_class = is_class_object(type, is_ptr);		
 
 	if (type == NULL)
@@ -1253,23 +1393,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 
 	if (node->member_access_node.member_access.is_function && !is_class)
 	{
-		printf("[Analyzer] [Debug] Maybe found a prototype function call...\n");
-
-		PrototypeMethod* ref = NULL;
-
-		Type* function_type = analyzer_handle_prototype(type, field_name, &ref);
-
-		Node* params_head = ref->params == NULL ? NULL : ref->params->head;
-		Node* args_head = (args == NULL) ? NULL : args->head;
-		
-		analyzer_check_arguments(module, params_head, args_head, scope);
-
-		if (function_type == NULL)
-		{
-			return NULL;
-		}
-		
-		return function_type;
+		return handle_prototype_method(type, field_name, module, scope, args);
 	}
 
 	if (!is_class)
@@ -1286,38 +1410,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 
 	if (node->member_access_node.member_access.is_function)
 	{
-		Node* member = analyzer_get_function_from_class(class_symbol, field_name);
-		
-		if (member == NULL)
-		{
-			return NULL;
-		}
-
-		if (member->type == NODE_FUNCTION)
-		{
-			if (member->function_node.function.visibility != VISIBILITY_PUBLIC)
-			{
-				printf("[Analyzer] [Debug] Trying to access a private function: \"%s\"...\n", field_name);
-
-				return NULL;
-			}
-
-			analyzer_check_directly(directly, member, NODE_FUNCTION);
-		
-			Type* field_type = analyzer_return_type_of_expression(module, member, class_symbol->symbol_class->class_scope, args, 1, NULL);
-
-			Node* params_head = member->function_node.function.params == NULL ? NULL : member->function_node.function.params->head;
-			Node* args_head = (args == NULL) ? NULL : args->head;
-			
-			analyzer_check_arguments(module, params_head, args_head, scope);
-
-			if (field_type == NULL)
-			{
-				return NULL;
-			}
-		
-			return field_type;
-		}
+		return handle_function(class_symbol, field_name, module, scope, directly, args);
 	}
 
 	Node* member = analyzer_get_member_from_class(class_symbol, field_name);
@@ -1579,22 +1672,30 @@ static Type* analyzer_get_adress_of_type(Module* module, Node* node, SymbolTable
 
 static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int member_access, int* direct)
 {
-	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 0, 0);
-	
+	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 1, 1);
+
 	if (symbol == NULL)
 	{
-		Symbol* class = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 0, 0, 1, 0);
-
-		if (class != NULL)
-		{
-			printf("[Analyzer] [Debug] Accessing directly: \"%s\"...\n", node->variable_node.variable.identifier);
-			
-			*direct = 1;
-			return create_type(TYPE_CLASS, (char*) class->symbol_class->identifier);
-		}
-
 		printf("[Analyzer] [Debug] Variable not declared: %s...\n", node->variable_node.variable.identifier);
 		exit(1);
+	}
+	
+	if (symbol->type == SYMBOL_CLASS)
+	{	
+		printf("[Analyzer] [Debug] Accessing directly: \"%s\"...\n", node->variable_node.variable.identifier);
+			
+		*direct = 1;
+
+		return create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
+	}
+
+	if (symbol->type == SYMBOL_MODULE)
+	{
+		printf("[Analyzer] [Debug] Accessing a module: \"%s\"...\n", node->variable_node.variable.identifier);
+		
+		Type* module_type = create_type(TYPE_MODULE, symbol->symbol_module->identifier);
+
+		return module_type;
 	}
 
 	if (!member_access)
@@ -2263,6 +2364,21 @@ static void analyzer_check_arguments(Module* module, Node* params_head, Node* ar
 	}
 }
 
+static char* get_function_call_name(Node* callee)
+{
+	if (callee->type == NODE_MEMBER_ACCESS)
+	{
+		return callee->member_access_node.member_access.member_name;
+	}
+
+	if (callee->type == NODE_IDENTIFIER)
+	{
+		return callee->variable_node.variable.identifier;
+	}
+
+	return "";
+}
+
 static void analyzer_handle_function_call(Module* module, Node* node, SymbolTable* scope)
 {
 	printf("[Analyzer] [Debug] Trying to call a function...\n");
@@ -2271,7 +2387,7 @@ static void analyzer_handle_function_call(Module* module, Node* node, SymbolTabl
 
 	if (type == NULL)
 	{
-		printf("[Analyzer] [Debug] Function not found...\n");
+		printf("[Analyzer] [Debug] Function not found: \"%s\"...\n", get_function_call_name(node->function_call_node.function_call.callee));
 		exit(1);
 	}
 }

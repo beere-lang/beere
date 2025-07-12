@@ -4,6 +4,8 @@
 #include "module-handler.h"
 #include "../../utils/utils.h"
 
+#define ROOT_IDENTIFIER "root"
+
 static void advance_token(ModuleParser* parser)
 {
 	parser->current++;
@@ -156,7 +158,7 @@ ModuleNode** parse_statements(ModuleParser* parser)
 
 static void handle_declaration(ModuleHandler* handler, ModuleNode* node)
 {
-	if (strcmp(node->module_node_declaration->identifier, "path") == 0)
+	if (strcmp(node->module_node_declaration->identifier, ROOT_IDENTIFIER) == 0)
 	{
 		printf("[ModuleHandler] [Debug] Found a path declaration: \"%s\"...\n", node->module_node_declaration->value);
 
