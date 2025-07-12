@@ -2750,9 +2750,6 @@ static char* handle_relative_path(char* abs_path, char* relative)
 	return resolve_path(abs_path, relative);
 }
 
-/**
- * TODO: Terminar o sistema de path.
- */
 static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable* scope)
 {
 	ModuleStack* stack = module->stack;
@@ -2775,7 +2772,7 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 
 	add_module_to_list(module, import_module);
 
-	// A variavel path é usado agora, apenas, depois é copiada.
+	// A variavel path é usado agora apenas, depois é copiada.
 	free(path);
 }
 
