@@ -29,8 +29,9 @@ static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTab
 static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype);
 static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope);
 static void analyzer_check_arguments(Module* module, Node* params_head, Node* args_head, SymbolTable* scope);
-static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scope);
 static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope, int* offset);
+static int check_module_has_symbol(Module* module, char* identifier, SymbolType type);
+static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scope);
 static Node* analyzer_get_function_from_class(Symbol* class, char* func_name);
 static Node* analyzer_get_member_from_class(Symbol* class, char* member_name);
 static int analyzer_get_type_size(Type* type, SymbolTable* scope);
@@ -136,6 +137,76 @@ static PrototypeMethod* analyzer_create_prototype_method(const char* method_name
 	prototype_method->params = params;
 
 	return prototype_method;
+}
+
+static int check_already_has_symbol(Module* module, char* identifier, SymbolType type)
+{
+	Module* current = module->imported_modules[0];
+
+	for (int i = 0; i < module->modules_count; i++)
+	{
+		if (check_module_has_symbol(current, identifier, type))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int check_module_has_symbol(Module* module, char* identifier, SymbolType type)
+{
+	if (module == NULL)
+	{
+		return 0;
+	}
+	
+	SymbolTable* scope = module->global_scope;
+
+	for (int i = 0; i < scope->count; i++)
+	{
+		Symbol* symbol = scope->symbols[i];
+
+		switch (symbol->type)
+		{
+			case SYMBOL_FUNCTION:
+			{
+				if (strcmp(symbol->symbol_function->identifier, identifier) == 0 && type == SYMBOL_FUNCTION)
+				{
+					return 1;
+				}
+
+				break;
+			}
+
+			case SYMBOL_VARIABLE:
+			{
+				if (strcmp(symbol->symbol_variable->identifier, identifier) == 0 && type == SYMBOL_VARIABLE)
+				{
+					return 1;
+				}
+
+				break;
+			}
+
+			case SYMBOL_CLASS:
+			{
+				if (strcmp(symbol->symbol_class->identifier, identifier) == 0 && type == SYMBOL_CLASS)
+				{
+					return 1;
+				}
+
+				break;
+			}
+			
+			default:
+			{
+				exit(1);
+			}
+		}
+	}
+
+	return check_already_has_symbol(module, identifier, type);
 }
 
 /**
@@ -1941,6 +2012,12 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 	if (analyzer_find_symbol_from_scope(function_node->identifier, scope, 1, 0, 0) != NULL)
 	{
 		printf("[Analyzer] [Debug] Function with name: \"%s\" already declared...\n", function_node->identifier);
+		exit(1);
+	}
+
+	if (check_already_has_symbol(module, function_node->identifier, SYMBOL_FUNCTION))
+	{
+		printf("[Analyzer] [Debug] Function with name: %s, already declared in imported modules...\n", function_node->identifier);
 		exit(1);
 	}
 

@@ -1,4 +1,6 @@
-fn main()
+import "mano" as mano
+
+fn cagar()
 {
 	
 }
