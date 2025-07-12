@@ -2,6 +2,5 @@ import "mano/mano.beere" as mano
 
 fn main()
 {
-    let arr: int[] = new int[] { 10, 20, 30 }
-	mano.man()
+    mano.Mano.age = 10
 }

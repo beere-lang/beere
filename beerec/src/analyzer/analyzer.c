@@ -163,12 +163,12 @@ static int check_module_has_symbol(Module* module, char* identifier, SymbolType 
 	}
 	
 	SymbolTable* scope = module->global_scope;
-
+	
 	for (int i = 0; i < scope->count; i++)
 	{
 		Symbol* symbol = scope->symbols[i];
 
-		switch (type)
+		switch (symbol->type)
 		{
 			case SYMBOL_FUNCTION:
 			{
@@ -199,11 +199,10 @@ static int check_module_has_symbol(Module* module, char* identifier, SymbolType 
 
 				break;
 			}
-			
+
 			default:
 			{
-				printf("[Analyzer] [Debug] Invalid symbol: %d\n", symbol->type);
-				exit(1);
+				break;
 			}
 		}
 	}
@@ -1272,7 +1271,10 @@ static Type* handle_module_class_directly_access(Symbol* module_symbol, SymbolTa
 	 * TODO: Check if module is exporting field.
 	 */
 
-	return create_type(TYPE_CLASS, (char*) class_symbol->symbol_class->identifier);
+	Type* type = create_type(TYPE_CLASS, (char*) class_symbol->symbol_class->identifier);
+	type->class_symbol = class_symbol;
+
+	return type;
 }
 
 static Type* handle_module_field_access(Module* module, SymbolTable* scope, const char* module_identifier, char* field_name)
@@ -1403,6 +1405,12 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 			
 	Symbol* class_symbol = analyzer_find_symbol_from_scope(class_name, scope, 0, 0, 1, 0);
 	
+	if (class_symbol == NULL)
+	{
+		class_symbol = type->class_symbol;
+		directly = 1;
+	}
+
 	if (class_symbol == NULL)
 	{
 		return NULL;

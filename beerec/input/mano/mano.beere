@@ -1,6 +1,9 @@
-import "test/subfolder/test.beere" as ta
-
-fn mano()
+class Mano
 {
+    public static let age: int = 0
 
+    public static fn oi()
+    {
+
+    }
 }
