@@ -2338,6 +2338,11 @@ void free_node(Node* node)
 			break;
 		}
 
+		case NODE_THIS:
+		{
+			break;
+		}
+
 		case NODE_IF:
 		{
 			free_node(node->if_statement_node.if_statement.condition_top);
