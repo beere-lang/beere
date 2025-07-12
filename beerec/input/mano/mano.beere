@@ -1,0 +1,6 @@
+import "test/subfolder/test.beere" as ta
+
+fn mano()
+{
+
+}

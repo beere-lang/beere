@@ -56,10 +56,10 @@ RM = "C:\Program Files\CMake\bin\cmake.exe" -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = C:\Users\jer1337\Documents\projects\beerec
+CMAKE_SOURCE_DIR = C:\Users\jer1337\Documents\GitHub\beere\beerec
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\jer1337\Documents\projects\beerec\build
+CMAKE_BINARY_DIR = C:\Users\jer1337\Documents\GitHub\beere\beerec\build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -86,16 +86,16 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles C:\Users\jer1337\Documents\projects\beerec\build\\CMakeFiles\progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles C:\Users\jer1337\Documents\GitHub\beere\beerec\build\\CMakeFiles\progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles 0
 .PHONY : all
 
 # The main codegen target
 codegen: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles C:\Users\jer1337\Documents\projects\beerec\build\\CMakeFiles\progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles C:\Users\jer1337\Documents\GitHub\beere\beerec\build\\CMakeFiles\progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 codegen
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles 0
 .PHONY : codegen
 
 # The main clean target
@@ -230,6 +230,30 @@ src/lexer/lexer.s: src/lexer/lexer.c.s
 src/lexer/lexer.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\beerec.dir\build.make CMakeFiles/beerec.dir/src/lexer/lexer.c.s
 .PHONY : src/lexer/lexer.c.s
+
+src/modules/handler/module-handler.obj: src/modules/handler/module-handler.c.obj
+.PHONY : src/modules/handler/module-handler.obj
+
+# target to build an object file
+src/modules/handler/module-handler.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\beerec.dir\build.make CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj
+.PHONY : src/modules/handler/module-handler.c.obj
+
+src/modules/handler/module-handler.i: src/modules/handler/module-handler.c.i
+.PHONY : src/modules/handler/module-handler.i
+
+# target to preprocess a source file
+src/modules/handler/module-handler.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\beerec.dir\build.make CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.i
+.PHONY : src/modules/handler/module-handler.c.i
+
+src/modules/handler/module-handler.s: src/modules/handler/module-handler.c.s
+.PHONY : src/modules/handler/module-handler.s
+
+# target to generate assembly for a file
+src/modules/handler/module-handler.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\beerec.dir\build.make CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.s
+.PHONY : src/modules/handler/module-handler.c.s
 
 src/modules/modules.obj: src/modules/modules.c.obj
 .PHONY : src/modules/modules.obj
@@ -373,6 +397,9 @@ help:
 	@echo ... src/lexer/lexer.obj
 	@echo ... src/lexer/lexer.i
 	@echo ... src/lexer/lexer.s
+	@echo ... src/modules/handler/module-handler.obj
+	@echo ... src/modules/handler/module-handler.i
+	@echo ... src/modules/handler/module-handler.s
 	@echo ... src/modules/modules.obj
 	@echo ... src/modules/modules.i
 	@echo ... src/modules/modules.s

@@ -20,6 +20,8 @@ ModuleStack;
 
 struct Module
 {
+	ModuleHandler* handler;
+
 	char* module_path;
 
 	Node** nodes;
@@ -39,7 +41,7 @@ struct Module
 	ModuleStack* stack;
 };
 
-Module* compile_module(ModuleStack* stack, char* file_path);
+Module* compile_module(ModuleHandler* handler, ModuleStack* stack, char* file_path);
 int push_stack_module(ModuleStack* stack, Module* module);
 int pop_stack_module(ModuleStack* stack, Module* module);
 Module* setup_module(char* path, ModuleStack* stack);

@@ -23,6 +23,7 @@
 #include "../parser/parser.h"
 #include "../modules/modules.h" 
 #include "../symbols/symbols.h"
+#include "../utils/utils.h"
 
 static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 static Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
@@ -167,7 +168,7 @@ static int check_module_has_symbol(Module* module, char* identifier, SymbolType 
 	{
 		Symbol* symbol = scope->symbols[i];
 
-		switch (symbol->type)
+		switch (type)
 		{
 			case SYMBOL_FUNCTION:
 			{
@@ -201,6 +202,7 @@ static int check_module_has_symbol(Module* module, char* identifier, SymbolType 
 			
 			default:
 			{
+				printf("[Analyzer] [Debug] Invalid symbol: %d\n", symbol->type);
 				exit(1);
 			}
 		}
@@ -2743,6 +2745,11 @@ static void analyzer_handle_switch_statement(Module* module, Node* node, SymbolT
 	}
 }
 
+static char* handle_relative_path(char* abs_path, char* relative)
+{
+	return resolve_path(abs_path, relative);
+}
+
 /**
  * TODO: Terminar o sistema de path.
  */
@@ -2755,13 +2762,11 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 		stack = setup_module_stack();
 	}
 	
-	/**
-	 * PATH HANDLE HERE:
-	 */
+	char* path = handle_relative_path(module->handler->root_path, node->import_statement_node.import_node.import_path);
 
-	printf("\ninput/mano.beere: ---------------------------------------------------------------+\n\n");
+	printf("\n%s: ---------------------------------------------------------------+\n\n", node->import_statement_node.import_node.import_path);
 
-	Module* import_module = compile_module(stack, "input/mano.beere");
+	Module* import_module = compile_module(module->handler, stack, path);
 
 	printf("\n+---------------------------------------------------------------------------------+\n\n");
 
@@ -2770,9 +2775,8 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 
 	add_module_to_list(module, import_module);
 
-	// As variaveis 'directory' e 'full_path' são copias, sempre liberar depois de não usar em nenhum lugar.
-	//free(directory);
-	//free(full_path);
+	// A variavel path é usado agora, apenas, depois é copiada.
+	free(path);
 }
 
 static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scope)

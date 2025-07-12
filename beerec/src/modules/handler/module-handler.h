@@ -4,8 +4,8 @@
 #include "../../ast/tokens/tokens.h"
 
 typedef struct ModuleHandler ModuleHandler;
-typedef struct ModuleNode ModuleNode;
 typedef struct ModuleParser ModuleParser;
+typedef struct ModuleNode ModuleNode;
 
 typedef enum
 {
@@ -38,6 +38,7 @@ struct ModuleParser
 
 struct ModuleHandler
 {
+	char* original_path;
 	char* root_path;
 };
 

@@ -130,8 +130,10 @@ Module* setup_module(char* path, ModuleStack* stack)
 	return module;
 }
 
-Module* compile_module(ModuleStack* stack, char* file_path)
+Module* compile_module(ModuleHandler* handler, ModuleStack* stack, char* file_path)
 {
+	file_path = strndup(file_path, strlen(file_path) + 1);
+	
 	if (file_path == NULL)
 	{
 		printf("[Compiler] [Debug] File Path not found...\n");
@@ -147,6 +149,7 @@ Module* compile_module(ModuleStack* stack, char* file_path)
 	}
 
 	Module* module = setup_module(file_path, stack);
+	module->handler = handler;
 
 	Token* tokens = tokenize_code(content, 0);
 
@@ -182,6 +185,7 @@ ModuleHandler* interpret_module_file(char* path)
 
 	ModuleHandler* handler = malloc(sizeof(ModuleHandler));
 	handler->root_path = NULL;
+	handler->original_path = path;
 
 	Token* tokens = tokenize_code(content, 0);
 

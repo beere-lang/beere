@@ -160,8 +160,10 @@ static void handle_declaration(ModuleHandler* handler, ModuleNode* node)
 	{
 		printf("[ModuleHandler] [Debug] Found a path declaration: \"%s\"...\n", node->module_node_declaration->value);
 
-		handler->root_path = malloc(strlen(node->module_node_declaration->value) + 1);
-		strcpy(handler->root_path, node->module_node_declaration->value);
+		char* real_path = get_dot_mod_relative_path(handler->original_path, node->module_node_declaration->value);
+		
+		handler->root_path = malloc(strlen(real_path) + 1);
+		strcpy(handler->root_path, real_path);
 
 		return;
 	}

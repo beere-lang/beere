@@ -53,10 +53,10 @@ RM = "C:\Program Files\CMake\bin\cmake.exe" -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = C:\Users\jer1337\Documents\projects\beerec
+CMAKE_SOURCE_DIR = C:\Users\jer1337\Documents\GitHub\beere\beerec
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\jer1337\Documents\projects\beerec\build
+CMAKE_BINARY_DIR = C:\Users\jer1337\Documents\GitHub\beere\beerec\build
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -84,14 +84,14 @@ clean: CMakeFiles/beerec.dir/clean
 CMakeFiles/beerec.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\beerec.dir\build.make CMakeFiles/beerec.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\beerec.dir\build.make CMakeFiles/beerec.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10 "Built target beerec"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11 "Built target beerec"
 .PHONY : CMakeFiles/beerec.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/beerec.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles 10
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles 11
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/beerec.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles 0
 .PHONY : CMakeFiles/beerec.dir/rule
 
 # Convenience name for target.
@@ -101,7 +101,7 @@ beerec: CMakeFiles/beerec.dir/rule
 # codegen rule for target.
 CMakeFiles/beerec.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\beerec.dir\build.make CMakeFiles/beerec.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10 "Finished codegen for target beerec"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11 "Finished codegen for target beerec"
 .PHONY : CMakeFiles/beerec.dir/codegen
 
 # clean rule for target.

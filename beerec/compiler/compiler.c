@@ -155,7 +155,7 @@ static void free_content(char* content)
 	content = NULL;
 }
 
-Module* compile(char* file_path, char* lexer_flag)
+Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)
 {
 	if (file_path == NULL)
 	{
@@ -182,6 +182,7 @@ Module* compile(char* file_path, char* lexer_flag)
 	}
 
 	Module* module = setup_module(file_path, NULL);
+	module->handler = handler;
 
 	Token* tokens = tokenize_code(content, lexer_debug);
 

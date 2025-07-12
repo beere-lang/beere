@@ -1,0 +1,9 @@
+C:/Program Files/JetBrains/CLion 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/stdio.h:371:5:printf	80	static
+C:/Program Files/JetBrains/CLion 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/stdio.h:458:5:snprintf	64	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c:8:7:strndup	64	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c:24:7:get_directory	64	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c:46:7:resolve_path	80	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c:60:7:get_dot_mod_relative_path	2144	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c:86:7:get_absolute_path	64	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c:99:12:has_extension	64	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c:111:7:read_file	80	static

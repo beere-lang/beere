@@ -1,5 +1,9 @@
 CMakeFiles/beerec.dir/compiler/main.c.obj: \
- C:\Users\jer1337\Documents\projects\beerec\compiler\main.c \
+ C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\main.c \
+ C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.h \
+ C:/Users/jer1337/Documents/GitHub/beere/beerec/src/modules/modules.h \
+ C:/Users/jer1337/Documents/GitHub/beere/beerec/src/ast/nodes/nodes.h \
+ C:/Users/jer1337/Documents/GitHub/beere/beerec/src/ast/tokens/tokens.h \
  C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/stdio.h \
  C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/corecrt_stdio_config.h \
  C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/corecrt.h \
@@ -11,22 +15,7 @@ CMakeFiles/beerec.dir/compiler/main.c.obj: \
  C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/_mingw_off_t.h \
  C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/swprintf.inl \
  C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/sec_api/stdio_s.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/stdlib.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/corecrt_wstdlib.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/limits.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/syslimits.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/limits.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/crtdefs.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/sec_api/stdlib_s.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/malloc.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/mm_malloc.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/errno.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/string.h \
- C:/Program\ Files/JetBrains/CLion\ 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/sec_api/string_s.h \
- C:/Users/jer1337/Documents/projects/beerec/compiler/lexer/lexer.h \
- C:/Users/jer1337/Documents/projects/beerec/compiler/utils/tokens/token.h \
- C:/Users/jer1337/Documents/projects/beerec/compiler/parser/parser.h \
- C:/Users/jer1337/Documents/projects/beerec/compiler/utils/tokens/token.h \
- C:\Users\jer1337\Documents\projects\beerec\compiler\semantic/semantic_analyzer.h \
- C:/Users/jer1337/Documents/projects/beerec/compiler/parser/parser.h \
- C:\Users\jer1337\Documents\projects\beerec\compiler\utils/tokens/token.h
+ C:/Users/jer1337/Documents/GitHub/beere/beerec/src/ast/types/types.h \
+ C:/Users/jer1337/Documents/GitHub/beere/beerec/src/ast/tokens/tokens.h \
+ C:/Users/jer1337/Documents/GitHub/beere/beerec/src/modules/handler/module-handler.h \
+ C:/Users/jer1337/Documents/GitHub/beere/beerec/src/ast/tokens/tokens.h

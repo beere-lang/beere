@@ -52,10 +52,10 @@ RM = "C:\Program Files\CMake\bin\cmake.exe" -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = C:\Users\jer1337\Documents\projects\beerec
+CMAKE_SOURCE_DIR = C:\Users\jer1337\Documents\GitHub\beere\beerec
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\jer1337\Documents\projects\beerec\build
+CMAKE_BINARY_DIR = C:\Users\jer1337\Documents\GitHub\beere\beerec\build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/beerec.dir/depend.make
@@ -72,130 +72,144 @@ CMakeFiles/beerec.dir/codegen:
 .PHONY : CMakeFiles/beerec.dir/codegen
 
 CMakeFiles/beerec.dir/compiler/main.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/compiler/main.c.obj: C:/Users/jer1337/Documents/projects/beerec/compiler/main.c
+CMakeFiles/beerec.dir/compiler/main.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/compiler/main.c
 CMakeFiles/beerec.dir/compiler/main.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/beerec.dir/compiler/main.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/compiler/main.c.obj -MF CMakeFiles\beerec.dir\compiler\main.c.obj.d -o CMakeFiles\beerec.dir\compiler\main.c.obj -c C:\Users\jer1337\Documents\projects\beerec\compiler\main.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/beerec.dir/compiler/main.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/compiler/main.c.obj -MF CMakeFiles\beerec.dir\compiler\main.c.obj.d -o CMakeFiles\beerec.dir\compiler\main.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\main.c
 
 CMakeFiles/beerec.dir/compiler/main.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/compiler/main.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\compiler\main.c > CMakeFiles\beerec.dir\compiler\main.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\main.c > CMakeFiles\beerec.dir\compiler\main.c.i
 
 CMakeFiles/beerec.dir/compiler/main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/compiler/main.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\compiler\main.c -o CMakeFiles\beerec.dir\compiler\main.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\main.c -o CMakeFiles\beerec.dir\compiler\main.c.s
 
 CMakeFiles/beerec.dir/compiler/compiler.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/compiler/compiler.c.obj: C:/Users/jer1337/Documents/projects/beerec/compiler/compiler.c
+CMakeFiles/beerec.dir/compiler/compiler.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/compiler/compiler.c
 CMakeFiles/beerec.dir/compiler/compiler.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/beerec.dir/compiler/compiler.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/compiler/compiler.c.obj -MF CMakeFiles\beerec.dir\compiler\compiler.c.obj.d -o CMakeFiles\beerec.dir\compiler\compiler.c.obj -c C:\Users\jer1337\Documents\projects\beerec\compiler\compiler.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/beerec.dir/compiler/compiler.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/compiler/compiler.c.obj -MF CMakeFiles\beerec.dir\compiler\compiler.c.obj.d -o CMakeFiles\beerec.dir\compiler\compiler.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c
 
 CMakeFiles/beerec.dir/compiler/compiler.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/compiler/compiler.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\compiler\compiler.c > CMakeFiles\beerec.dir\compiler\compiler.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c > CMakeFiles\beerec.dir\compiler\compiler.c.i
 
 CMakeFiles/beerec.dir/compiler/compiler.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/compiler/compiler.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\compiler\compiler.c -o CMakeFiles\beerec.dir\compiler\compiler.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c -o CMakeFiles\beerec.dir\compiler\compiler.c.s
 
 CMakeFiles/beerec.dir/src/lexer/lexer.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/src/lexer/lexer.c.obj: C:/Users/jer1337/Documents/projects/beerec/src/lexer/lexer.c
+CMakeFiles/beerec.dir/src/lexer/lexer.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/lexer/lexer.c
 CMakeFiles/beerec.dir/src/lexer/lexer.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/beerec.dir/src/lexer/lexer.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/lexer/lexer.c.obj -MF CMakeFiles\beerec.dir\src\lexer\lexer.c.obj.d -o CMakeFiles\beerec.dir\src\lexer\lexer.c.obj -c C:\Users\jer1337\Documents\projects\beerec\src\lexer\lexer.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/beerec.dir/src/lexer/lexer.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/lexer/lexer.c.obj -MF CMakeFiles\beerec.dir\src\lexer\lexer.c.obj.d -o CMakeFiles\beerec.dir\src\lexer\lexer.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c
 
 CMakeFiles/beerec.dir/src/lexer/lexer.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/lexer/lexer.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\src\lexer\lexer.c > CMakeFiles\beerec.dir\src\lexer\lexer.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c > CMakeFiles\beerec.dir\src\lexer\lexer.c.i
 
 CMakeFiles/beerec.dir/src/lexer/lexer.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/lexer/lexer.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\src\lexer\lexer.c -o CMakeFiles\beerec.dir\src\lexer\lexer.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c -o CMakeFiles\beerec.dir\src\lexer\lexer.c.s
 
 CMakeFiles/beerec.dir/src/parser/parser.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/src/parser/parser.c.obj: C:/Users/jer1337/Documents/projects/beerec/src/parser/parser.c
+CMakeFiles/beerec.dir/src/parser/parser.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/parser/parser.c
 CMakeFiles/beerec.dir/src/parser/parser.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/beerec.dir/src/parser/parser.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/parser/parser.c.obj -MF CMakeFiles\beerec.dir\src\parser\parser.c.obj.d -o CMakeFiles\beerec.dir\src\parser\parser.c.obj -c C:\Users\jer1337\Documents\projects\beerec\src\parser\parser.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/beerec.dir/src/parser/parser.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/parser/parser.c.obj -MF CMakeFiles\beerec.dir\src\parser\parser.c.obj.d -o CMakeFiles\beerec.dir\src\parser\parser.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\parser\parser.c
 
 CMakeFiles/beerec.dir/src/parser/parser.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/parser/parser.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\src\parser\parser.c > CMakeFiles\beerec.dir\src\parser\parser.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\parser\parser.c > CMakeFiles\beerec.dir\src\parser\parser.c.i
 
 CMakeFiles/beerec.dir/src/parser/parser.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/parser/parser.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\src\parser\parser.c -o CMakeFiles\beerec.dir\src\parser\parser.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\parser\parser.c -o CMakeFiles\beerec.dir\src\parser\parser.c.s
 
 CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj: C:/Users/jer1337/Documents/projects/beerec/src/analyzer/analyzer.c
+CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/analyzer/analyzer.c
 CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj -MF CMakeFiles\beerec.dir\src\analyzer\analyzer.c.obj.d -o CMakeFiles\beerec.dir\src\analyzer\analyzer.c.obj -c C:\Users\jer1337\Documents\projects\beerec\src\analyzer\analyzer.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj -MF CMakeFiles\beerec.dir\src\analyzer\analyzer.c.obj.d -o CMakeFiles\beerec.dir\src\analyzer\analyzer.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\analyzer\analyzer.c
 
 CMakeFiles/beerec.dir/src/analyzer/analyzer.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/analyzer/analyzer.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\src\analyzer\analyzer.c > CMakeFiles\beerec.dir\src\analyzer\analyzer.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\analyzer\analyzer.c > CMakeFiles\beerec.dir\src\analyzer\analyzer.c.i
 
 CMakeFiles/beerec.dir/src/analyzer/analyzer.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/analyzer/analyzer.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\src\analyzer\analyzer.c -o CMakeFiles\beerec.dir\src\analyzer\analyzer.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\analyzer\analyzer.c -o CMakeFiles\beerec.dir\src\analyzer\analyzer.c.s
 
 CMakeFiles/beerec.dir/src/utils/utils.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/src/utils/utils.c.obj: C:/Users/jer1337/Documents/projects/beerec/src/utils/utils.c
+CMakeFiles/beerec.dir/src/utils/utils.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/utils/utils.c
 CMakeFiles/beerec.dir/src/utils/utils.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/beerec.dir/src/utils/utils.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/utils/utils.c.obj -MF CMakeFiles\beerec.dir\src\utils\utils.c.obj.d -o CMakeFiles\beerec.dir\src\utils\utils.c.obj -c C:\Users\jer1337\Documents\projects\beerec\src\utils\utils.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/beerec.dir/src/utils/utils.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/utils/utils.c.obj -MF CMakeFiles\beerec.dir\src\utils\utils.c.obj.d -o CMakeFiles\beerec.dir\src\utils\utils.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c
 
 CMakeFiles/beerec.dir/src/utils/utils.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/utils/utils.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\src\utils\utils.c > CMakeFiles\beerec.dir\src\utils\utils.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c > CMakeFiles\beerec.dir\src\utils\utils.c.i
 
 CMakeFiles/beerec.dir/src/utils/utils.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/utils/utils.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\src\utils\utils.c -o CMakeFiles\beerec.dir\src\utils\utils.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\utils.c -o CMakeFiles\beerec.dir\src\utils\utils.c.s
 
 CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj: C:/Users/jer1337/Documents/projects/beerec/src/utils/logger/logger.c
+CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/utils/logger/logger.c
 CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj -MF CMakeFiles\beerec.dir\src\utils\logger\logger.c.obj.d -o CMakeFiles\beerec.dir\src\utils\logger\logger.c.obj -c C:\Users\jer1337\Documents\projects\beerec\src\utils\logger\logger.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj -MF CMakeFiles\beerec.dir\src\utils\logger\logger.c.obj.d -o CMakeFiles\beerec.dir\src\utils\logger\logger.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\logger\logger.c
 
 CMakeFiles/beerec.dir/src/utils/logger/logger.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/utils/logger/logger.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\src\utils\logger\logger.c > CMakeFiles\beerec.dir\src\utils\logger\logger.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\logger\logger.c > CMakeFiles\beerec.dir\src\utils\logger\logger.c.i
 
 CMakeFiles/beerec.dir/src/utils/logger/logger.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/utils/logger/logger.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\src\utils\logger\logger.c -o CMakeFiles\beerec.dir\src\utils\logger\logger.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\logger\logger.c -o CMakeFiles\beerec.dir\src\utils\logger\logger.c.s
 
 CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj: C:/Users/jer1337/Documents/projects/beerec/src/utils/string_builder/string_builder.c
+CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/utils/string_builder/string_builder.c
 CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj -MF CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.obj.d -o CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.obj -c C:\Users\jer1337\Documents\projects\beerec\src\utils\string_builder\string_builder.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj -MF CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.obj.d -o CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\string_builder\string_builder.c
 
 CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\src\utils\string_builder\string_builder.c > CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\string_builder\string_builder.c > CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.i
 
 CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\src\utils\string_builder\string_builder.c -o CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\utils\string_builder\string_builder.c -o CMakeFiles\beerec.dir\src\utils\string_builder\string_builder.c.s
 
 CMakeFiles/beerec.dir/src/modules/modules.c.obj: CMakeFiles/beerec.dir/flags.make
-CMakeFiles/beerec.dir/src/modules/modules.c.obj: C:/Users/jer1337/Documents/projects/beerec/src/modules/modules.c
+CMakeFiles/beerec.dir/src/modules/modules.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/modules/modules.c
 CMakeFiles/beerec.dir/src/modules/modules.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/beerec.dir/src/modules/modules.c.obj"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/modules/modules.c.obj -MF CMakeFiles\beerec.dir\src\modules\modules.c.obj.d -o CMakeFiles\beerec.dir\src\modules\modules.c.obj -c C:\Users\jer1337\Documents\projects\beerec\src\modules\modules.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/beerec.dir/src/modules/modules.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/modules/modules.c.obj -MF CMakeFiles\beerec.dir\src\modules\modules.c.obj.d -o CMakeFiles\beerec.dir\src\modules\modules.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\modules\modules.c
 
 CMakeFiles/beerec.dir/src/modules/modules.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/modules/modules.c.i"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\projects\beerec\src\modules\modules.c > CMakeFiles\beerec.dir\src\modules\modules.c.i
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\modules\modules.c > CMakeFiles\beerec.dir\src\modules\modules.c.i
 
 CMakeFiles/beerec.dir/src/modules/modules.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/modules/modules.c.s"
-	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\projects\beerec\src\modules\modules.c -o CMakeFiles\beerec.dir\src\modules\modules.c.s
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\modules\modules.c -o CMakeFiles\beerec.dir\src\modules\modules.c.s
+
+CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj: CMakeFiles/beerec.dir/flags.make
+CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj: C:/Users/jer1337/Documents/GitHub/beere/beerec/src/modules/handler/module-handler.c
+CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj: CMakeFiles/beerec.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building C object CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj -MF CMakeFiles\beerec.dir\src\modules\handler\module-handler.c.obj.d -o CMakeFiles\beerec.dir\src\modules\handler\module-handler.c.obj -c C:\Users\jer1337\Documents\GitHub\beere\beerec\src\modules\handler\module-handler.c
+
+CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.i"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\jer1337\Documents\GitHub\beere\beerec\src\modules\handler\module-handler.c > CMakeFiles\beerec.dir\src\modules\handler\module-handler.c.i
+
+CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.s"
+	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\jer1337\Documents\GitHub\beere\beerec\src\modules\handler\module-handler.c -o CMakeFiles\beerec.dir\src\modules\handler\module-handler.c.s
 
 # Object files for target beerec
 beerec_OBJECTS = \
@@ -207,7 +221,8 @@ beerec_OBJECTS = \
 "CMakeFiles/beerec.dir/src/utils/utils.c.obj" \
 "CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj" \
 "CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj" \
-"CMakeFiles/beerec.dir/src/modules/modules.c.obj"
+"CMakeFiles/beerec.dir/src/modules/modules.c.obj" \
+"CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj"
 
 # External object files for target beerec
 beerec_EXTERNAL_OBJECTS =
@@ -221,11 +236,12 @@ beerec.exe: CMakeFiles/beerec.dir/src/utils/utils.c.obj
 beerec.exe: CMakeFiles/beerec.dir/src/utils/logger/logger.c.obj
 beerec.exe: CMakeFiles/beerec.dir/src/utils/string_builder/string_builder.c.obj
 beerec.exe: CMakeFiles/beerec.dir/src/modules/modules.c.obj
+beerec.exe: CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj
 beerec.exe: CMakeFiles/beerec.dir/build.make
 beerec.exe: CMakeFiles/beerec.dir/linkLibs.rsp
 beerec.exe: CMakeFiles/beerec.dir/objects1.rsp
 beerec.exe: CMakeFiles/beerec.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking C executable beerec.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking C executable beerec.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\beerec.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -237,6 +253,6 @@ CMakeFiles/beerec.dir/clean:
 .PHONY : CMakeFiles/beerec.dir/clean
 
 CMakeFiles/beerec.dir/depend:
-	$(CMAKE_COMMAND) -E cmake_depends "MinGW Makefiles" C:\Users\jer1337\Documents\projects\beerec C:\Users\jer1337\Documents\projects\beerec C:\Users\jer1337\Documents\projects\beerec\build C:\Users\jer1337\Documents\projects\beerec\build C:\Users\jer1337\Documents\projects\beerec\build\CMakeFiles\beerec.dir\DependInfo.cmake "--color=$(COLOR)"
+	$(CMAKE_COMMAND) -E cmake_depends "MinGW Makefiles" C:\Users\jer1337\Documents\GitHub\beere\beerec C:\Users\jer1337\Documents\GitHub\beere\beerec C:\Users\jer1337\Documents\GitHub\beere\beerec\build C:\Users\jer1337\Documents\GitHub\beere\beerec\build C:\Users\jer1337\Documents\GitHub\beere\beerec\build\CMakeFiles\beerec.dir\DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/beerec.dir/depend
 

@@ -1,0 +1,13 @@
+C:/Program Files/JetBrains/CLion 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/stdio.h:371:5:printf	80	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:9:13:peek	16	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:14:13:jmp	16	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:20:13:advance	16	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:30:12:is_end	16	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:40:12:is_alpha	16	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:50:12:is_digit	16	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:60:12:is_size	16	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:70:11:get_by_keyword_type	48	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:324:14:identifier	192	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:382:7:handle_literals	240	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:563:7:read_next_tkn	128	static
+C:\Users\jer1337\Documents\GitHub\beere\beerec\src\lexer\lexer.c:885:13:token_type_to_string	16	static

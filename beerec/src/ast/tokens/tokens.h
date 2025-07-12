@@ -15,15 +15,6 @@ typedef enum
 	TYPE_ANY_PTR, // any, needs to be a pointer... (fuck js)
 	TYPE_ARRAY,
 
-	/**
-	 * - Não usar em nenhum lugar além dos prototype methods, indica que o tipo é da field acessada.
-	 * 
-	 * Exemplo:
-	 *  let arr: int[] = { 0 } 
-	 *  arr.push(10) // o parametro do prototype method push seria int porque é uma array de int int
-	 */
-	TYPE_PROTOTYPE,
-
 	TYPE_CLASS,
 	
 	TYPE_VOID, // void, for functions

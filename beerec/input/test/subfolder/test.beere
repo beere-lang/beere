@@ -1,0 +1,6 @@
+import "other_module/new_module.beere" as new_module
+
+fn test_func()
+{
+	let test_var: int = 0
+}

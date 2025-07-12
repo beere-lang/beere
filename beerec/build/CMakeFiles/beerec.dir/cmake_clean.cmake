@@ -7,6 +7,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/beerec.dir/src/analyzer/analyzer.c.obj.d"
   "CMakeFiles/beerec.dir/src/lexer/lexer.c.obj"
   "CMakeFiles/beerec.dir/src/lexer/lexer.c.obj.d"
+  "CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj"
+  "CMakeFiles/beerec.dir/src/modules/handler/module-handler.c.obj.d"
   "CMakeFiles/beerec.dir/src/modules/modules.c.obj"
   "CMakeFiles/beerec.dir/src/modules/modules.c.obj.d"
   "CMakeFiles/beerec.dir/src/parser/parser.c.obj"

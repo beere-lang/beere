@@ -1,7 +1,7 @@
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
 
 #include "./logger/logger.h"
 
@@ -41,6 +41,46 @@ char* get_directory(char* path)
     }
 
     return copy;
+}
+
+char* resolve_path(char* abs_path, char* relative)
+{
+	char* buffer = malloc(2048);
+
+	snprintf(buffer, 2048, "%s/%s", abs_path, relative);
+
+	if (GetFullPathNameA(buffer, 2048, buffer, NULL) == 0) 
+	{
+        return NULL;
+    }
+
+	return buffer;
+}
+
+char* get_dot_mod_relative_path(char* mod_path, const char* relative)
+{
+	char* buffer = malloc(2048);
+
+	char temp[2048];
+	strcpy(temp, mod_path);
+
+	char* directory = get_directory(temp);
+
+	char* format = "%s%s";
+
+	if (directory[strlen(directory) - 1] != '/')
+	{
+		format = "%s/%s";
+	}
+
+	snprintf(buffer, 2048, format, directory, relative);
+
+	if (GetFullPathNameA(buffer, 2048, buffer, NULL) == 0) 
+	{
+        return NULL;
+    }
+
+	return buffer;
 }
 
 char* get_absolute_path(const char* relative_path)
