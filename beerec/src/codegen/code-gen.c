@@ -15,8 +15,12 @@ ConstantTable* constant_table;
 
 /**
  * TODO: 
+ * - Adicionar o entry point (função main)
  * - Gerar valores pra rodata (local constants)
  * - Implementar arrays melhor no code gen.
+ * 
+ * Estrategia pra arrays inicializadas globalmente:
+ *  - Alocar a array no entry point antes de tudo, ja que não é possivel realocar na data
  */
 
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area);
@@ -29,7 +33,7 @@ static void setup_data()
 	data_section = create_area();
 	AsmLine* data_line = create_line();
 
-	data_line->line = ".section  .data";
+	data_line->line = ".section	.data";
 	add_line_to_area(data_section, data_line);
 }
 
@@ -39,7 +43,7 @@ static void setup_bss()
 
 	AsmLine* bss_line = create_line();
 
-	bss_line->line = ".section  .bss";
+	bss_line->line = ".section	.bss";
 	add_line_to_area(data_section, bss_line);
 }
 
@@ -49,7 +53,7 @@ static void setup_rodata()
 
 	AsmLine* rodata_line = create_line();
 
-	rodata_line->line = ".section  .rodata";
+	rodata_line->line = ".section	.rodata";
 	add_line_to_area(rodata_section, rodata_line);
 }
 
@@ -112,7 +116,7 @@ static Constant* create_constant()
 	AsmArea* area = create_area();
 
 	char buff[64];
-	snprintf(buff, 64, "LC%d:", constant->number);
+	snprintf(buff, 64, ".LC%d:", constant->number);
 
 	add_line_to_area(area, generate_label(buff));
 	
@@ -257,17 +261,17 @@ char* get_type_size(VarType type)
 static uint32_t float_to_bits(float number)
 {
 	uint32_t bits;
-    memcpy(&bits, &number, sizeof(bits));
+	memcpy(&bits, &number, sizeof(bits));
 
-    return bits;
+   	return bits;
 }
 
 static uint64_t double_to_bits(double number)
 {
 	uint64_t bits;
-    memcpy(&bits, &number, sizeof(bits));
+	memcpy(&bits, &number, sizeof(bits));
 
-    return bits;
+	return bits;
 }
 
 static char* get_global_literal_value(Node* node)
@@ -322,9 +326,9 @@ static char* get_global_literal_value(Node* node)
 /**
  * TODO: Terminar isso...
  */
-static Constant* generate_global_array_constant(CodeGen* code_gen, Node* node)
+static void generate_global_array_initialization(CodeGen* code_gen, Node* node)
 {
-	return NULL;
+	
 }
 
 /**
@@ -343,7 +347,7 @@ static void generate_global_bss_variable(CodeGen* code_gen, Node* node, int scop
 	char* type_size = get_type_size(node->declare_node.declare.var_type->type);
 
 	char buffer[64];
-	snprintf(buffer, 64, "	.%s %s", type_size, "0");
+	snprintf(buffer, 64, ".%s %s", type_size, "0");
 
 	line->line = strdup(buffer);
 
@@ -366,7 +370,7 @@ static void generate_global_data_variable(CodeGen* code_gen, Node* node, int sco
 	}
 
 	char buffer[64];
-	snprintf(buffer, 64, "	.%s %s", type_size, value);
+	snprintf(buffer, 64, ".%s %s", type_size, value);
 
 	line->line = strdup(buffer);
 
