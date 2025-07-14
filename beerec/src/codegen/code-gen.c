@@ -226,7 +226,7 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 	AsmLine* line = create_line();
 	
 	char buffer[64];
-	snprintf(buffer, 64, "%smov [rbp %+d], eax", indent, offset);
+	snprintf(buffer, 64, "%smov	[rbp %+d], eax", indent, offset);
 
 	line->line = strdup(buffer);
 
