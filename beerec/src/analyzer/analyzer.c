@@ -869,6 +869,7 @@ Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* sco
 				return next;
 			}
 		}
+
 		if (next->type == SYMBOL_VARIABLE && is_variable) 
 		{
 			if (strcmp(identifier, next->symbol_variable->identifier) == 0)
@@ -876,6 +877,7 @@ Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* sco
 				return next;
 			}
 		}
+
 		if (next->type == SYMBOL_CLASS && is_class) 
 		{
 			if (strcmp(identifier, next->symbol_class->identifier) == 0)
@@ -883,6 +885,7 @@ Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* sco
 				return next;
 			}
 		}
+		
 		if (next->type == SYMBOL_MODULE && is_module) 
 		{
 			if (strcmp(identifier, next->symbol_module->identifier) == 0)
