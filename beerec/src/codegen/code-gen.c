@@ -357,7 +357,7 @@ static Constant* generate_constant(Node* node)
 
 	char* value = get_global_literal_value(node);
 
-	snprintf(buff, 64, "	%s %s", get_type_size(literal->literal_type->type), value);
+	snprintf(buff, 64, "	.%s %s", get_type_size(literal->literal_type->type), value);
 
 	free(value);
 	
@@ -379,7 +379,7 @@ static char* get_literal_value(Node* node, AsmArea* area)
 	{
 		case TYPE_BOOL:
 		{
-			return literal->bool_value ? "1" : "0";
+			return strdup(literal->bool_value ? "1" : "0");
 		}
 
 		case TYPE_INT:
@@ -644,7 +644,7 @@ static char* get_value(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* 
 	
 	if (node_value->type == NODE_LITERAL)
 	{
-		value = get_global_literal_value(node_value);
+		value = get_literal_value(node_value, area);
 	}
 
 	if (node_value->type == NODE_IDENTIFIER)
