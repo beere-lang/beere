@@ -5,6 +5,7 @@
 
 typedef struct Analyzer Analyzer;
 
+Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 void analyzer_global_analyze(Module* module, Node* node);
 void analyzer_init(Module* module, Node** node_list);
 

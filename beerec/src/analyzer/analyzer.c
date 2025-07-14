@@ -1,6 +1,5 @@
 /**
  * TODO:
- * - Implementar acesso a módulos
  * - Implementar super, caso ainda não foi implementado.
  * 
  * NEXT:
@@ -12,6 +11,10 @@
 
 /**
  * IMPORTANTE: Adicionar checks se algo (funçoes, variaveis globais, etc) dos modulos importados ja existem no modulo que importa.
+ */
+
+/**
+ * TODO: Adicionar declaração de statements (funções, classes) antes de definir.
  */
 
 #include <stdio.h>
@@ -846,7 +849,7 @@ static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTa
 	return NULL;
 }
 
-static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module)
+Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module)
 {
 	if (scope == NULL) 
 	{

@@ -35,6 +35,8 @@ SymbolType;
 
 struct SymbolVariable
 {
+	int is_export;
+	
 	Type* type;
 	const char* identifier;
 
@@ -47,6 +49,8 @@ struct SymbolVariable
 
 struct SymbolFunction
 {
+	int is_export;
+	
 	Type* return_type;
 	const char* identifier;
 
@@ -60,6 +64,8 @@ struct SymbolFunction
 
 struct SymbolClass
 {
+	int is_export;
+
 	SymbolTable* class_scope;
 
 	Symbol* constructor;
