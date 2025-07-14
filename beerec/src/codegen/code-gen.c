@@ -43,7 +43,7 @@ static void setup_bss()
 	AsmLine* bss_line = create_line();
 
 	bss_line->line = "section	.bss";
-	add_line_to_area(data_section, bss_line);
+	add_line_to_area(bss_section, bss_line);
 }
 
 static void setup_rodata()
@@ -157,7 +157,7 @@ static Constant* create_constant()
 	AsmArea* area = create_area();
 
 	char buff[64];
-	snprintf(buff, 64, ".LC%d:", constant->number);
+	snprintf(buff, 64, ".LC%d", constant->number);
 
 	add_line_to_area(area, generate_label(buff));
 	
