@@ -221,17 +221,13 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 	
 	code_gen_node(code_gen, node->declare_node.declare.default_value, scope_depth, area);
 
-	char* indent = repeat_tab(scope_depth);
-
 	AsmLine* line = create_line();
 	
 	char buffer[64];
-	snprintf(buffer, 64, "%smov	[rbp %+d], eax", indent, offset);
+	snprintf(buffer, 64, "	mov	[rbp %+d], eax", offset);
 
 	line->line = strdup(buffer);
 
-	free(indent);
-	
 	add_line_to_area(area, line);
 }
 
@@ -622,11 +618,7 @@ static void generate_load_var_to_reg(CodeGen* code_gen, Node* node, int scope_de
 		
 	char buff[64];
 
-	char* tabs = repeat_tab(scope_depth);
-
-	snprintf(buff, 64, "%smov	rax, %s", tabs, ref);
-
-	free(tabs);
+	snprintf(buff, 64, "	mov	rax, %s", ref);
 
 	AsmLine* reg_mov_line = create_line();
 	reg_mov_line->line = strdup(buff);
@@ -664,12 +656,8 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 	Node* left = node->variable_assign_node.variable_assign.left;
 	char* reference = get_local_variable_reference(left, code_gen->scope);
 	
-	char* tabs = repeat_tab(scope_depth);
-
 	char buff[64];
-	snprintf(buff, 64, "%smov	%s, %s", tabs, reference, value);
-
-	free(tabs);
+	snprintf(buff, 64, "	mov	%s, %s", reference, value);
 
 	free(value);
 
@@ -686,7 +674,7 @@ static void generate_global_variable_assign(CodeGen* code_gen, Node* node, int s
 	Node* left = node->variable_assign_node.variable_assign.left;
 	
 	char buff[64];
-	snprintf(buff, 64, "mov	[%s], %s", left->variable_node.variable.identifier, value);
+	snprintf(buff, 64, "	mov	[%s], %s", left->variable_node.variable.identifier, value);
 
 	AsmLine* line = create_line();
 	line->line = strdup(buff);
