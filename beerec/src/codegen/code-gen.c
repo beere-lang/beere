@@ -16,6 +16,7 @@ ConstantTable* constant_table;
 
 /**
  * TODO: 
+ * - Fixar variaveis globais (puta que pariu, que coisa feia)
  * - Adicionar suporte a parametros
  * - Adicionar suporte a function calls (com argumentos)
  * - Adicionar alinhamento
