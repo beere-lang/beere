@@ -764,6 +764,9 @@ void print_code_generated()
 	}
 }
 
+/**
+ * TODO: Arrumar isso, ta sem nexo.
+ */
 static void generate_literal(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
 	char* output = get_literal_value(node, area);
