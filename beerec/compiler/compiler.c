@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../src/analyzer/analyzer.h"
+#include "../src/codegen/code-gen.h"
 #include "../src/modules/modules.h"
 #include "../src/parser/parser.h"
 #include "../src/lexer/lexer.h"
@@ -155,6 +156,27 @@ static void free_content(char* content)
 	content = NULL;
 }
 
+static void generate_assembly(Node** nodes, Module* module)
+{
+	CodeGen* code_gen = malloc(sizeof(CodeGen));
+	setup_code_gen(code_gen, module);
+
+	Node* node = nodes[0];
+
+	int i = 0;
+
+	while (node != NULL)
+	{
+		code_gen_global(code_gen, node);
+		
+		i++;
+
+		node = nodes[i];
+	}
+
+	print_code_generated();
+}
+
 Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)
 {
 	if (file_path == NULL)
@@ -192,6 +214,8 @@ Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)
 	free_content(content);
 
 	analyze_nodes(module, node_list);
+
+	generate_assembly(node_list, module);
 
 	free_nodes(node_list); // Adicionar o code gen antes desse free.
 

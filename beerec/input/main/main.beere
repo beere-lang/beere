@@ -1,6 +1,4 @@
-import "mano/mano.beere" as mano
-
 fn main()
 {
-    mano.Mano.age = 10
+	let x: int = 0
 }

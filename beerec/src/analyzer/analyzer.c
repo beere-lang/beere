@@ -28,7 +28,7 @@
 #include "../symbols/symbols.h"
 #include "../utils/utils.h"
 
-static Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
+Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 static Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
 static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype);
 static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope);
@@ -2166,8 +2166,10 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 	Symbol* func_symbol = analyzer_add_symbol_to_scope(module, node, scope, NULL, 0);
 
 	func_symbol->is_prototype = 0;
-
+	
 	SymbolTable* block_scope = analyzer_create_scope(SYMBOL_FUNCTION, scope, func_symbol);
+
+	func_symbol->symbol_function->scope = block_scope;
 
 	if (scope->scope_kind == SYMBOL_CLASS)
 	{

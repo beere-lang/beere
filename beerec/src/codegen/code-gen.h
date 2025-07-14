@@ -43,4 +43,8 @@ struct ConstantTable
 	int constants_capacity;
 };
 
+void code_gen_global(CodeGen* code_gen, Node* node);
+void setup_code_gen(CodeGen* code_gen, Module* module);
+void print_code_generated();
+
 #endif

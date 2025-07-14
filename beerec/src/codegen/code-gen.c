@@ -83,8 +83,10 @@ static void setup_constant_table()
 	constant_table->constants_count = 0;
 }
 
-static void setup_code_gen(CodeGen* code_gen)
+void setup_code_gen(CodeGen* code_gen, Module* module)
 {
+	code_gen->scope = module->global_scope;
+	
 	setup_data();
 	setup_bss();
 	setup_rodata();
@@ -124,6 +126,26 @@ static AsmArea* create_area()
 	area->lines[0] = NULL;
 
 	return area;
+}
+
+static void add_constant_area_to_rodata(Constant* constant)
+{
+	AsmArea* constant_area = constant->area;
+
+	for (int i = 0; i < constant_area->lines_count; i++)
+	{
+		AsmLine* line = constant_area->lines[i];
+		add_line_to_area(rodata_section, line);
+	}
+}
+
+static void add_constants_to_rodata()
+{
+	for (int i = 0; i < constant_table->constants_count; i++)
+	{
+		Constant* constant = constant_table->constants[i];
+		add_constant_area_to_rodata(constant);
+	}
 }
 
 static void add_constant_to_table(Constant* constant)
@@ -224,7 +246,7 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 	AsmLine* line = create_line();
 	
 	char buffer[64];
-	snprintf(buffer, 64, "	mov	[rbp %+d], eax", offset);
+	snprintf(buffer, 64, "	mov	[rbp %+d], rax", offset);
 
 	line->line = strdup(buffer);
 
@@ -569,7 +591,16 @@ static void generate_function_declaration(CodeGen* code_gen, Node* node, int sco
 
 	Node* block = node->function_node.function.block_node;
 
+	char* identifier = node->function_node.function.identifier;
+
+	SymbolTable* temp = code_gen->scope;
+	
+	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 1, 0, 0);
+	code_gen->scope = symbol->symbol_function->scope;
+
 	generate_block_code(code_gen, block, scope_depth + 1, function_area);
+
+	code_gen->scope = temp;
 
 	generate_function_unsetup(function_area);
 
@@ -697,6 +728,58 @@ static void generate_variable_assign(CodeGen* code_gen, Node* node, int scope_de
 	}
 }
 
+void code_gen_global(CodeGen* code_gen, Node* node)
+{
+	code_gen_node(code_gen, node, 0, text_section);
+}
+
+void print_code_generated()
+{
+	add_constants_to_rodata();
+	
+	for (int i = 0; i < data_section->lines_count; i++)
+	{
+		printf("%s\n", data_section->lines[i]->line);
+	}
+	
+	printf("\n");
+
+	for (int i = 0; i < rodata_section->lines_count; i++)
+	{
+		printf("%s\n", rodata_section->lines[i]->line);
+	}
+
+	printf("\n");
+
+	for (int i = 0; i < bss_section->lines_count; i++)
+	{
+		printf("%s\n", bss_section->lines[i]->line);
+	}
+
+	printf("\n");
+
+	for (int i = 0; i < text_section->lines_count; i++)
+	{
+		printf("%s\n", text_section->lines[i]->line);
+	}
+}
+
+static void generate_literal(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
+{
+	char* output = get_literal_value(node, area);
+
+	AsmLine* line = create_line();
+	
+	char buff[50];
+	snprintf(buff, 50, "	mov	rax, %s", output);
+
+	free(output);
+
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+}
+
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
 	switch (node->type)
@@ -718,6 +801,13 @@ static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmAre
 		case NODE_VARIABLE_ASSIGN:
 		{
 			generate_variable_assign(code_gen, node, scope_depth, area);
+
+			return;
+		}
+
+		case NODE_LITERAL:
+		{
+			generate_literal(code_gen, node, scope_depth, area);
 
 			return;
 		}

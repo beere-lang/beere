@@ -18,4 +18,5 @@ add_executable(beerec
         src/utils/string_builder/string_builder.c
 		src/modules/modules.c
 		src/modules/handler/module-handler.c
+	src/codegen/code-gen.c
 )

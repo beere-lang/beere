@@ -56,6 +56,8 @@ struct SymbolFunction
 
 	Node* params_head;
 
+	SymbolTable* scope;
+
 	int is_virtual;
 	int is_override;
 	
