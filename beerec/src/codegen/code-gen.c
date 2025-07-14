@@ -16,6 +16,10 @@ ConstantTable* constant_table;
 
 /**
  * TODO: 
+ * - Adicionar suporte a parametros
+ * - Adicionar suporte a function calls (com argumentos)
+ * - Adicionar alinhamento
+ * - Reservar espaço suficiente pra stack armazenar variaveis locais
  * - Implementar arrays melhor no code gen.
  * 
  * Estrategia pra arrays inicializadas globalmente:
