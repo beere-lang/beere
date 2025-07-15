@@ -29,7 +29,7 @@
 #include "../utils/utils.h"
 
 Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
-static Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
+Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
 static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype);
 static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope);
 static void analyzer_check_arguments(Module* module, Node* params_head, Node* args_head, SymbolTable* scope);
@@ -1739,7 +1739,7 @@ static Type* analyzer_get_parameter_type(Node* node, SymbolTable* scope)
 	return node->param_node.param.argument_type;
 }
 
-static Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct)
+Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct)
 {
 	if (expression == NULL)
 	{

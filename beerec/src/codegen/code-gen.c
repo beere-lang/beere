@@ -27,6 +27,7 @@ ConstantTable* constant_table;
  *  - Alocar a array no entry point antes de tudo, ja que não é possivel realocar na data
  */
 
+static char* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary);
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area);
 static void add_line_to_area(AsmArea* area, AsmLine* line);
 static AsmArea* create_area();
@@ -246,12 +247,12 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 {
 	int offset = symbol->symbol_variable->offset;
 	
-	code_gen_node(code_gen, node->declare_node.declare.default_value, scope_depth, area);
+	char* reg = generate_expression(code_gen, node->declare_node.declare.default_value, scope_depth, area, 0, 0);
 
 	AsmLine* line = create_line();
 	
 	char buffer[64];
-	snprintf(buffer, 64, "	mov	[rbp %+d], rax", offset);
+	snprintf(buffer, 64, "	mov	[rbp %+d], %s", offset, reg);
 
 	line->line = strdup(buffer);
 
@@ -380,7 +381,7 @@ static Constant* generate_constant(Node* node)
 
 	char* value = get_global_literal_value(node);
 
-	snprintf(buff, 64, "	.%s %s", get_type_size(literal->literal_type->type), value);
+	snprintf(buff, 64, "	%s %s", get_type_size(literal->literal_type->type), value);
 
 	free(value);
 	
@@ -392,7 +393,7 @@ static Constant* generate_constant(Node* node)
 	return constant;
 }
 
-static char* get_literal_value(Node* node, AsmArea* area)
+static char* get_literal_value(Node* node, AsmArea* area, int force_reg, int prefer_second)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	
@@ -402,19 +403,66 @@ static char* get_literal_value(Node* node, AsmArea* area)
 	{
 		case TYPE_BOOL:
 		{
+			if (force_reg)
+			{
+				AsmLine* line = create_line();
+
+				char* temp = prefer_second ? "bl" : "al";
+
+				char _buff[64];
+				snprintf(_buff, 64, "	mov	%s, %s", temp, literal->bool_value ? "1" : "0");
+			
+				line->line = strdup(_buff);
+
+				add_line_to_area(area, line);
+				
+				return strdup(temp);
+			}
+			
 			return strdup(literal->bool_value ? "1" : "0");
 		}
 
 		case TYPE_INT:
 		{
+			if (force_reg)
+			{
+				AsmLine* line = create_line();
+
+				char* temp = prefer_second ? "rbx" : "rax";
+
+				char _buff[64];
+				snprintf(_buff, 64, "	mov	%s, %d", temp, literal->int_value);
+			
+				line->line = strdup(_buff);
+
+				add_line_to_area(area, line);
+				
+				return strdup(temp);
+			}
+			
 			snprintf(buff, 64, "%d", literal->int_value);
 			return strdup(buff);
 		}
 
 		case TYPE_CHAR:
 		{
-			snprintf(buff, 64, "%d", (int) literal->char_value);
+			if (force_reg)
+			{
+				AsmLine* line = create_line();
+
+				char* temp = prefer_second ? "bl" : "al";
+
+				char _buff[64];
+				snprintf(_buff, 64, "	mov	%s, %d", temp, (int) literal->char_value);
 			
+				line->line = strdup(_buff);
+
+				add_line_to_area(area, line);
+				
+				return strdup(temp);
+			}
+
+			snprintf(buff, 64, "%d", (int) literal->char_value);
 			return strdup(buff);
 		}
 
@@ -422,18 +470,40 @@ static char* get_literal_value(Node* node, AsmArea* area)
 		{
 			Constant* constant = generate_constant(node);
 			
-			snprintf(buff, 64, "[.LC%d]", constant->number);
+			char* temp = prefer_second ? "xmm1" : "xmm0";
 			
-			return strdup(buff);
+			snprintf(buff, 64, "[.LC%d]", constant->number);
+
+			AsmLine* line = create_line();
+
+			char _buff[64];
+			snprintf(_buff, 64, "	mov	%s, [.LC%d]", temp, constant->number);
+
+			line->line = strdup(_buff);
+
+			add_line_to_area(area, line);
+			
+			return strdup(temp);
 		}
 
 		case TYPE_DOUBLE:
 		{
 			Constant* constant = generate_constant(node);
 			
-			snprintf(buff, 64, "[.LC%d]", constant->number);
+			char* temp = prefer_second ? "xmm1" : "xmm0";
 			
-			return strdup(buff);
+			snprintf(buff, 64, "[.LC%d]", constant->number);
+
+			AsmLine* line = create_line();
+			
+			char _buff[64];
+			snprintf(_buff, 64, "	mov	%s, [.LC%d]", temp, constant->number);
+
+			line->line = strdup(_buff);
+
+			add_line_to_area(area, line);
+			
+			return strdup(temp);
 		}
 
 		default:
@@ -467,7 +537,7 @@ static void generate_global_bss_variable(CodeGen* code_gen, Node* node, int scop
 	char* type_size = get_type_size(node->declare_node.declare.var_type->type);
 
 	char buffer[64];
-	snprintf(buffer, 64, ".%s %s", type_size, "0");
+	snprintf(buffer, 64, "%s %s", type_size, "0");
 
 	line->line = strdup(buffer);
 
@@ -490,7 +560,7 @@ static void generate_global_data_variable(CodeGen* code_gen, Node* node, int sco
 	}
 
 	char buffer[64];
-	snprintf(buffer, 64, ".%s %s", type_size, value);
+	snprintf(buffer, 64, "%s %s", type_size, value);
 
 	line->line = strdup(buffer);
 
@@ -624,16 +694,16 @@ static char* get_local_variable_reference(Node* variable, SymbolTable* scope)
 	return strdup(buff);
 }
 
-static char* get_variable_reference(Node* variable, SymbolTable* scope)
+static char* get_variable_reference(char* _identifier, SymbolTable* scope)
 {
-	char* identifier = variable->variable_node.variable.identifier;
+	char* identifier = _identifier;
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, scope, 1, 0, 0, 0);
 
 	if (symbol->symbol_variable->is_global)
 	{
 		char buff[64];
 
-		snprintf(buff, 64, "[%s]", identifier);
+		snprintf(buff, 64, "%s", identifier);
 
 		return strdup(buff);
 	}
@@ -641,20 +711,21 @@ static char* get_variable_reference(Node* variable, SymbolTable* scope)
 	{
 		char buff[64];
 
-		snprintf(buff, 64, "[rbp%+d]", symbol->symbol_variable->offset);
+		snprintf(buff, 64, "rbp%+d", symbol->symbol_variable->offset);
 
 		return strdup(buff);
 	}
 }
 
-static void generate_load_var_to_reg(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
+static void generate_load_var_to_reg(CodeGen* code_gen, char* identifier, int scope_depth, AsmArea* area, int prefer_secondary)
 {
-	Node* node_value  = node->variable_assign_node.variable_assign.assign_value;
-	char* ref = get_variable_reference(node_value , code_gen->scope);
-		
+	char* ref = get_variable_reference(identifier, code_gen->scope);
+
 	char buff[64];
 
-	snprintf(buff, 64, "	mov	rax, %s", ref);
+	char* temp = prefer_secondary ? "rbx" : "rax";
+
+	snprintf(buff, 64, "	mov	%s, [%s]", temp, ref);
 
 	AsmLine* reg_mov_line = create_line();
 	reg_mov_line->line = strdup(buff);
@@ -664,22 +735,13 @@ static void generate_load_var_to_reg(CodeGen* code_gen, Node* node, int scope_de
 	add_line_to_area(area, reg_mov_line);
 }
 
-static char* get_value(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
+static char* get_value(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_second)
 {
-	Node* node_value = node->variable_assign_node.variable_assign.assign_value;
-
 	char* value = NULL;
 	
-	if (node_value->type == NODE_LITERAL)
+	if (node->type == NODE_LITERAL)
 	{
-		value = get_literal_value(node_value, area);
-	}
-
-	if (node_value->type == NODE_IDENTIFIER)
-	{
-		generate_load_var_to_reg(code_gen, node, scope_depth, area);
-
-		value = strdup("rax");
+		value = get_literal_value(node, area, force_reg, prefer_second);
 	}
 
 	return value;
@@ -687,15 +749,16 @@ static char* get_value(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* 
 
 static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
-	char* value = get_value(code_gen, node, scope_depth, area);
+	char* reg = generate_expression(code_gen, node->variable_assign_node.variable_assign.assign_value, scope_depth, area, 0, 0);
 
 	Node* left = node->variable_assign_node.variable_assign.left;
 	char* reference = get_local_variable_reference(left, code_gen->scope);
 	
 	char buff[64];
-	snprintf(buff, 64, "	mov	%s, %s", reference, value);
+	snprintf(buff, 64, "	mov	%s, %s", reference, reg);
 
-	free(value);
+	free(reg);
+	free(reference);
 
 	AsmLine* line = create_line();
 	line->line = strdup(buff);
@@ -705,15 +768,17 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 
 static void generate_global_variable_assign(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
-	char* value = get_value(code_gen, node, scope_depth, area);
+	char* reg = generate_expression(code_gen, node->variable_assign_node.variable_assign.assign_value, scope_depth, area, 0, 0);
 
 	Node* left = node->variable_assign_node.variable_assign.left;
 	
 	char buff[64];
-	snprintf(buff, 64, "	mov	[%s], %s", left->variable_node.variable.identifier, value);
+	snprintf(buff, 64, "	mov	[%s], %s", left->variable_node.variable.identifier, reg);
 
 	AsmLine* line = create_line();
 	line->line = strdup(buff);
+
+	free(reg);
 
 	add_line_to_area(area, line);
 }
@@ -772,6 +837,8 @@ void print_code_generated()
 /**
  * TODO: Arrumar isso, ta sem nexo.
  */
+
+/*
 static void generate_literal(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
 	char* output = get_literal_value(node, area);
@@ -787,6 +854,310 @@ static void generate_literal(CodeGen* code_gen, Node* node, int scope_depth, Asm
 
 	add_line_to_area(area, line);
 }
+*/
+
+static char* generate_multiply(CodeGen* code_gen, char* lreg, char* rreg, Node* node, AsmArea* area)
+{
+
+}
+
+static char* generate_add(CodeGen* code_gen, char* lreg, char* rreg, Node* node, AsmArea* area)
+{
+	AsmLine* line = create_line();
+
+	char buff[64];
+	
+	snprintf(buff, 64, "	add	%s, %s", lreg, rreg);
+
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+
+	return strdup(lreg);
+}
+
+static char* generate_subtract(CodeGen* code_gen, char* lreg, char* rreg, Node* node, AsmArea* area)
+{
+	AsmLine* line = create_line();
+
+	char buff[64];
+	
+	snprintf(buff, 64, "	sub	%s, %s", lreg, rreg);
+
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+
+	return strdup(lreg);
+}
+
+static char* generate_divided(CodeGen* code_gen, char* lreg, char* rreg, Node* node, AsmArea* area)
+{
+	
+}
+
+/**
+ * RUST: Chupa meu pau rust, eu tenho e você não tem...
+ */
+static char* generate_increment(CodeGen* code_gen, char* lreg,  Node* node, AsmArea* area)
+{
+	AsmLine* _line = create_line();
+
+	char _buff[64];
+	snprintf(_buff, 64, "	mov	rbx, [%s]", lreg);
+	
+	AsmLine* line = create_line();
+	
+	char buff[64];
+	snprintf(buff, 64, "	inc	[%s]", lreg);
+
+	_line->line = strdup(_buff);
+	line->line = strdup(buff);
+
+	add_line_to_area(area, _line);
+	add_line_to_area(area, line);
+
+	return strdup("rbx");
+}
+
+/**
+ * RUST: Chupa meu pau rust, eu tenho e você não tem...
+ */
+static char* generate_decrement(CodeGen* code_gen, char* lreg,  Node* node, AsmArea* area)
+{
+	AsmLine* _line = create_line();
+
+	char _buff[64];
+	snprintf(_buff, 64, "	mov	rax, [%s]", lreg);
+	
+	AsmLine* line = create_line();
+	
+	char buff[64];
+	snprintf(buff, 64, "	dec	[%s]", lreg);
+
+	_line->line = strdup(_buff);
+	line->line = strdup(buff);
+
+	add_line_to_area(area, _line);
+	add_line_to_area(area, line);
+
+	return strdup("rax");
+}
+
+static char* generate_operation(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int prefer_second)
+{
+	Node* left = node->operation_node.operation.left;
+	Node* right = node->operation_node.operation.right;
+	
+	Type* ltype = analyzer_return_type_of_expression(NULL, left, code_gen->scope, NULL, 0, 0);
+	Type* rtype = analyzer_return_type_of_expression(NULL, right, code_gen->scope, NULL, 0, 0);
+
+	char* lreg = NULL;
+	
+	if (node->operation_node.operation.op == TOKEN_OPERATOR_INCREMENT || node->operation_node.operation.op == TOKEN_OPERATOR_DECREMENT)
+	{
+		lreg = get_variable_reference(node->operation_node.operation.left->variable_node.variable.identifier, code_gen->scope);
+	}
+	else
+	{
+		lreg = generate_expression(code_gen, node->operation_node.operation.left, scope_depth, area, 1, 0);
+	}
+
+	char* rreg = generate_expression(code_gen, node->operation_node.operation.right, scope_depth, area, 0, 1);
+
+	switch (node->operation_node.operation.op)
+	{
+		case TOKEN_OPERATOR_PLUS:
+		{
+			char* r = generate_add(code_gen, lreg, rreg, node, area);
+			
+			free(lreg);
+			free(rreg);
+			
+			return r;
+		}
+
+		case TOKEN_OPERATOR_MINUS:
+		{
+			char* r = generate_subtract(code_gen, lreg, rreg,  node, area);
+			
+			free(lreg);
+			free(rreg);
+			
+			return r;
+		}
+
+		case TOKEN_OPERATOR_INCREMENT:
+		{
+			char* r = generate_increment(code_gen, lreg, node, area);
+			
+			free(lreg);
+			free(rreg);
+			
+			return r;
+		}
+
+		case TOKEN_OPERATOR_DECREMENT:
+		{	
+			char* r = generate_decrement(code_gen, lreg, node, area);
+
+			free(lreg);
+			free(rreg);
+
+			return r;
+		}
+
+		default:
+		{
+			exit(1);
+		}
+	}
+
+	free(lreg);
+	free(rreg);
+}
+
+static char* generate_cast(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int prefer_second)
+{
+	/**
+	 * TODO: Adicionar o modulo na struct do CodeGen.
+	 */
+	Type* type = analyzer_return_type_of_expression(NULL,  node->cast_statement_node.cast_node.expression, code_gen->scope, NULL, 0, 0);
+
+	char* reg = generate_expression(code_gen, node->cast_statement_node.cast_node.expression, scope_depth, area, 0, 0);
+
+	if (type->type == TYPE_DOUBLE && node->cast_statement_node.cast_node.cast_type->type == TYPE_INT)
+	{
+		AsmLine* line = create_line();
+		
+		char buff[64];
+		snprintf(buff, 64, "	cvtsd2si	rax, %s", reg);
+					
+		free(reg);
+			
+		line->line = strdup(buff);
+		
+		add_line_to_area(area, line);
+		
+		return strdup("rax");
+	}
+
+	if (type->type == TYPE_DOUBLE && node->cast_statement_node.cast_node.cast_type->type == TYPE_FLOAT)
+	{
+		AsmLine* line = create_line();
+		
+		char buff[64];
+		snprintf(buff, 64, "	cvtsd2ss	xmm0, %s", reg);
+					
+		free(reg);
+			
+		line->line = strdup(buff);
+		
+		add_line_to_area(area, line);
+		
+		return strdup("xmm0");
+	}
+
+	if (type->type == TYPE_FLOAT && node->cast_statement_node.cast_node.cast_type->type == TYPE_INT)
+	{
+		AsmLine* line = create_line();
+		
+		char buff[64];
+		snprintf(buff, 64, "	cvtss2si	rax, %s", reg);
+					
+		free(reg);
+			
+		line->line = strdup(buff);
+		
+		add_line_to_area(area, line);
+		
+		return strdup("rax");
+	}
+
+	if (type->type == TYPE_FLOAT && node->cast_statement_node.cast_node.cast_type->type == TYPE_DOUBLE)
+	{
+		AsmLine* line = create_line();
+		
+		char buff[64];
+		snprintf(buff, 64, "	cvtss2sd	xmm1, %s", reg);
+					
+		free(reg);
+			
+		line->line = strdup(buff);
+		
+		add_line_to_area(area, line);
+		
+		return strdup("xmm1");
+	}
+
+	if (type->type == TYPE_INT && node->cast_statement_node.cast_node.cast_type->type == TYPE_FLOAT)
+	{
+		AsmLine* line = create_line();
+		
+		char buff[64];
+		snprintf(buff, 64, "	cvtsi2ss	xmm0, %s", reg);
+			
+		free(reg);
+
+		line->line = strdup(buff);
+		
+		add_line_to_area(area, line);
+		
+		return strdup("xmm0");
+	}
+
+	if (type->type == TYPE_INT && node->cast_statement_node.cast_node.cast_type->type == TYPE_DOUBLE)
+	{
+		AsmLine* line = create_line();
+		
+		char buff[64];
+		snprintf(buff, 64, "	cvtsi2sd	xmm1, %s", reg);
+
+		free(reg);
+			
+		line->line = strdup(buff);
+		
+		add_line_to_area(area, line);
+		
+		return strdup("xmm1");
+	}
+
+	return NULL;
+}
+
+static char* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary)
+{
+	switch (node->type)
+	{
+		case NODE_IDENTIFIER:
+		{
+			generate_load_var_to_reg(code_gen, node->variable_node.variable.identifier, scope_depth, area, prefer_secondary);
+			
+			return prefer_secondary ? strdup("rbx") : strdup("rax");
+		}
+		
+		case NODE_LITERAL:
+		{
+			return get_value(code_gen, node, scope_depth, area, force_reg, prefer_secondary);
+		}
+
+		case NODE_OPERATION:
+		{
+			return generate_operation(code_gen, node, scope_depth, area, prefer_secondary);
+		}
+
+		case NODE_CAST:
+		{
+			return generate_cast(code_gen, node, scope_depth, area, prefer_secondary);
+		}
+
+		default:
+		{
+			printf("[CodeGen] [Debug] Expression node not implemented: %d...\n", node->type);
+			exit(1);
+		}
+	}
+}
 
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
@@ -795,6 +1166,13 @@ static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmAre
 		case NODE_DECLARATION:
 		{
 			generate_variable_declaration(code_gen, node, scope_depth, area);
+
+			return;
+		}
+
+		case NODE_OPERATION:
+		{
+			generate_operation(code_gen, node, scope_depth, area, 0);
 
 			return;
 		}
@@ -815,8 +1193,6 @@ static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmAre
 
 		case NODE_LITERAL:
 		{
-			generate_literal(code_gen, node, scope_depth, area);
-
 			return;
 		}
 
