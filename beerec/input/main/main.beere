@@ -1,6 +1,6 @@
+let i: int
+
 fn main()
 {
-	let i: int = 1
-	
-	let x: int = 10 + i
+
 }

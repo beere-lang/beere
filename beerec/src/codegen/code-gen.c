@@ -534,15 +534,13 @@ static void generate_global_bss_variable(CodeGen* code_gen, Node* node, int scop
 	AsmLine* label = generate_label(node->declare_node.declare.identifier);
 	AsmLine* line = create_line();
 
-	char* type_size = get_type_size(node->declare_node.declare.var_type->type);
-
 	char buffer[64];
-	snprintf(buffer, 64, "%s %s", type_size, "0");
+	snprintf(buffer, 64, "	resb %d", analyzer_get_type_size(node->declare_node.declare.var_type, code_gen->scope));
 
 	line->line = strdup(buffer);
 
-	add_line_to_area(area, label);
-	add_line_to_area(area, line);
+	add_line_to_area(bss_section, label);
+	add_line_to_area(bss_section, line);
 }
 
 static void generate_global_data_variable(CodeGen* code_gen, Node* node, int scope_depth, Symbol* symbol, AsmArea* area)
@@ -560,14 +558,14 @@ static void generate_global_data_variable(CodeGen* code_gen, Node* node, int sco
 	}
 
 	char buffer[64];
-	snprintf(buffer, 64, "%s %s", type_size, value);
+	snprintf(buffer, 64, "	%s %s", type_size, value);
 
 	line->line = strdup(buffer);
 
 	free(value);
 
-	add_line_to_area(area, label);
-	add_line_to_area(area, line);
+	add_line_to_area(data_section, label);
+	add_line_to_area(data_section, line);
 }
 
 static void generate_global_variable_declaration(CodeGen* code_gen, Node* node, int scope_depth, Symbol* symbol, AsmArea* area)
@@ -833,28 +831,6 @@ void print_code_generated()
 		printf("%s\n", text_section->lines[i]->line);
 	}
 }
-
-/**
- * TODO: Arrumar isso, ta sem nexo.
- */
-
-/*
-static void generate_literal(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
-{
-	char* output = get_literal_value(node, area);
-
-	AsmLine* line = create_line();
-	
-	char buff[50];
-	snprintf(buff, 50, "	mov	rax, %s", output);
-
-	free(output);
-
-	line->line = strdup(buff);
-
-	add_line_to_area(area, line);
-}
-*/
 
 static char* generate_multiply(CodeGen* code_gen, char* lreg, char* rreg, Node* node, AsmArea* area)
 {

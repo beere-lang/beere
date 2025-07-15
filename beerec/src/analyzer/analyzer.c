@@ -38,7 +38,7 @@ static int check_module_has_symbol(Module* module, char* identifier, SymbolType 
 static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scope);
 static Node* analyzer_get_function_from_class(Symbol* class, char* func_name);
 static Node* analyzer_get_member_from_class(Symbol* class, char* member_name);
-static int analyzer_get_type_size(Type* type, SymbolTable* scope);
+int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_is_class_assignable(Symbol* from, Symbol* to);
 static void analyzer_create_cast(Node** node, Type* preferred);
 static int analyzer_get_list_size(Node* list_head);
@@ -428,7 +428,7 @@ static int analyzer_get_class_size(Type* type, SymbolTable* scope)
 	return total_size;
 }
 
-static int analyzer_get_type_size(Type* type, SymbolTable* scope)
+int analyzer_get_type_size(Type* type, SymbolTable* scope)
 {
 	switch (type->type) 
 	{
