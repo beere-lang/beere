@@ -16,7 +16,7 @@ ConstantTable* constant_table;
 
 /**
  * TODO: 
- * - Fixar variaveis globais (puta que pariu, que coisa feia)
+ * - Usar os opcodes corretos caso contenha float / double no registrador / memoria
  * - Adicionar suporte a parametros
  * - Adicionar suporte a function calls (com argumentos)
  * - Adicionar alinhamento
@@ -477,7 +477,7 @@ static char* get_literal_value(Node* node, AsmArea* area, int force_reg, int pre
 			AsmLine* line = create_line();
 
 			char _buff[64];
-			snprintf(_buff, 64, "	mov	%s, [.LC%d]", temp, constant->number);
+			snprintf(_buff, 64, "	movss	%s, [.LC%d]", temp, constant->number);
 
 			line->line = strdup(_buff);
 
@@ -497,7 +497,7 @@ static char* get_literal_value(Node* node, AsmArea* area, int force_reg, int pre
 			AsmLine* line = create_line();
 			
 			char _buff[64];
-			snprintf(_buff, 64, "	mov	%s, [.LC%d]", temp, constant->number);
+			snprintf(_buff, 64, "	movsd	%s, [.LC%d]", temp, constant->number);
 
 			line->line = strdup(_buff);
 
