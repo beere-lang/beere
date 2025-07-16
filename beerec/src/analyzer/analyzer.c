@@ -2199,6 +2199,8 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 	}
 
 	analyzer_analyze_node(module, function_node->block_node, block_scope, &local_offset);
+
+	func_symbol->symbol_function->total_offset = local_offset;
 }
 
 static void analyzer_create_cast(Node** node, Type* preferred)

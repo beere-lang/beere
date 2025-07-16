@@ -58,6 +58,8 @@ struct SymbolFunction
 
 	SymbolTable* scope;
 
+	int total_offset;
+
 	int is_virtual;
 	int is_override;
 	

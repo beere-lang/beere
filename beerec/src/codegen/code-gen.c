@@ -643,9 +643,9 @@ static void generate_function_unsetup(AsmArea* area)
 	AsmLine* stack_unsetup = create_line();
 	AsmLine* ret = create_line();
 
-	base_unsetup->line = "	mov	rsp, rbp";
-	stack_unsetup->line = "	pop	rbp";
-	ret->line = "	ret";
+	base_unsetup->line = strdup("	mov	rsp, rbp");
+	stack_unsetup->line = strdup("	pop	rbp");
+	ret->line = strdup("	ret");
 
 	add_line_to_area(area, base_unsetup);
 	add_line_to_area(area, stack_unsetup);
@@ -660,24 +660,39 @@ static void generate_param_setup(AsmArea* area)
 	
 }
 
+static void generate_stack_space(int offset, AsmArea* area)
+{
+	AsmLine* line = create_line();
+	
+	char buff[50];
+	
+	snprintf(buff, 50, "	sub	rsp, %d", offset); // diminui o valor da memoria de rsp (pra "alocar" memoria pra stack)
+	
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+}
+
 static void generate_function_declaration(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
 	AsmArea* function_area = create_area();
 	AsmLine* label_line = generate_label(strdup(node->function_node.function.identifier));
 
+	char* identifier = node->function_node.function.identifier;
+	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 1, 0, 0);
+	
 	add_line_to_area(function_area, label_line);
 
 	generate_function_setup(function_area);
+
+	generate_stack_space(symbol->symbol_function->total_offset * (-1), function_area);
 
 	generate_param_setup(function_area);
 
 	Node* block = node->function_node.function.block_node;
 
-	char* identifier = node->function_node.function.identifier;
-
 	SymbolTable* temp = code_gen->scope;
 	
-	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 1, 0, 0);
 	code_gen->scope = symbol->symbol_function->scope;
 
 	generate_block_code(code_gen, block, scope_depth + 1, function_area);
