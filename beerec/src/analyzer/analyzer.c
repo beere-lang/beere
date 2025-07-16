@@ -301,6 +301,16 @@ static PrototypeMethod* analyzer_is_prototype_call(Type* from_type, char* method
 // | Parte principal do analyzer a seguir |
 // +--------------------------------------+
 
+static int align_offset(int offset)
+{
+	if (offset % 8 == 0)
+	{
+		return offset;
+	}
+
+	return ((offset / 8) + 1) * 8;
+}
+
 static SymbolTable* analyzer_setup_scope(SymbolType scope_kind, SymbolTable* parent, Symbol* owner_statement)
 {
 	SymbolTable* scope = malloc(sizeof(SymbolTable));
@@ -1984,6 +1994,8 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 		printf("[Analyzer] [Debug] Local variable \"%s\", adding offset...\n", node->declare_node.declare.identifier);
 
 		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
+		size = align_offset(size);
+
 		*offset -= size;
 	}
 
@@ -2221,8 +2233,6 @@ static Type* cpy_type(Type* type)
 		
 		**curr = *t;
 		t = t->base;
-
-		printf("Copying: %d...\n", (**curr).type);
 
 		curr = &ret->base;
 	}
