@@ -260,12 +260,21 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 {
 	int offset = symbol->symbol_variable->offset;
 	
+	Type* type = analyzer_return_type_of_expression(NULL, node->declare_node.declare.default_value, code_gen->scope, NULL, 0, 0);
+
+	char* _temp = "mov";
+
+	if (type->type == TYPE_FLOAT || type->type == TYPE_DOUBLE)
+	{
+		_temp = type->type == TYPE_DOUBLE ? "movsd" : "movss";
+	}
+	
 	AsmReturn* ret = generate_expression(code_gen, node->declare_node.declare.default_value, scope_depth, area, 0, 0, 0);
 
 	AsmLine* line = create_line();
 	
 	char buffer[64];
-	snprintf(buffer, 64, "	mov	[rbp %+d], %s", offset, ret->reg);
+	snprintf(buffer, 64, "	%s	[rbp%+d], %s", _temp, offset, ret->reg);
 
 	line->line = strdup(buffer);
 
@@ -588,8 +597,6 @@ static void generate_global_data_variable(CodeGen* code_gen, Node* node, int sco
 
 	if (value == NULL)
 	{
-		printf("Oi...\n");
-	
 		exit(1);
 	}
 
@@ -851,8 +858,17 @@ static void generate_global_variable_assign(CodeGen* code_gen, Node* node, int s
 
 	Node* left = node->variable_assign_node.variable_assign.left;
 	
+	Type* type = analyzer_return_type_of_expression(NULL, node->variable_assign_node.variable_assign.assign_value, code_gen->scope, NULL, 0, 0);
+
+	char* _temp = "mov";
+
+	if (type->type == TYPE_FLOAT || type->type == TYPE_DOUBLE)
+	{
+		_temp = type->type == TYPE_DOUBLE ? "movsd" : "movss";
+	}
+	
 	char buff[64];
-	snprintf(buff, 64, "	mov	[rip + %s], %s", left->variable_node.variable.identifier, ret->reg);
+	snprintf(buff, 64, "	%s	[rip + %s], %s", _temp, left->variable_node.variable.identifier, ret->reg);
 
 	AsmLine* line = create_line();
 	line->line = strdup(buff);
@@ -1628,17 +1644,20 @@ static char* get_return_type_reg(Type* type)
 
 static int already_in_reg(const char* reg1, const char* reg2)
 {
-	for (int i = 0; all_families[i] != NULL; i++) {
+	for (int i = 0; all_families[i] != NULL; i++) 
+	{
 		const char** family = all_families[i];
 		
 		int found1 = 0;
 		int found2 = 0;
 
-		for (int j = 0; family[j] != NULL; j++) {
+		for (int j = 0; family[j] != NULL; j++) 
+		{
 			if (strcmp(reg1, family[j]) == 0)
 			{
 				found1 = 1;
 			}
+
 			if (strcmp(reg2, family[j]) == 0)
 			{
 				found2 = 1;

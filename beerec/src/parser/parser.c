@@ -339,7 +339,6 @@ static Node* parse_literal(Parser* parser)
 		Token* token_identifier = peek_tkn(parser);
 
 		char* identifier = strndup(token_identifier->start, token_identifier->length);
-
 		advance_tkn(parser);
 
 		if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_PAREN) 

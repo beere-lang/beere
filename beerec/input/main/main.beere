@@ -5,5 +5,5 @@ fn sum(n1: int, n2: int): int
 
 fn main()
 {
-    sum(10, 20)
+    let res: int = sum(10, 20)
 }
