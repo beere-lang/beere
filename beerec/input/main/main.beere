@@ -1,6 +1,9 @@
-let i: int
+fn sum(n1: int, n2: int): int
+{
+    return n1 + n2
+}
 
 fn main()
 {
-    let x: int = 0 + 0.0F
+    sum(10, 20)
 }

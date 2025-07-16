@@ -60,6 +60,8 @@ struct SymbolFunction
 
 	int total_offset;
 
+	int total_param_offset;
+
 	int is_virtual;
 	int is_override;
 	

@@ -301,6 +301,11 @@ static PrototypeMethod* analyzer_is_prototype_call(Type* from_type, char* method
 // | Parte principal do analyzer a seguir |
 // +--------------------------------------+
 
+/**
+ * Offset alinhado pra 8
+ * 
+ * Exemplo: 7 --> 8, 14 --> 16, 9 --> 16
+ */
 static int align_offset(int offset)
 {
 	if (offset % 8 == 0)
@@ -2019,7 +2024,7 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 	{
 		int size = analyzer_get_type_size(next->param_node.param.argument_type, scope);
 
-		*offset += size;
+		*offset += align_offset(size);
 
 		if (analyzer_find_symbol_only_from_scope(next->param_node.param.identifier, scope, 0, 0, 0) != NULL)
 		{
@@ -2201,6 +2206,7 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 	analyzer_analyze_node(module, function_node->block_node, block_scope, &local_offset);
 
 	func_symbol->symbol_function->total_offset = local_offset;
+	func_symbol->symbol_function->total_param_offset = param_offset - 8;
 }
 
 static void analyzer_create_cast(Node** node, Type* preferred)

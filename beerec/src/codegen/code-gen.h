@@ -3,6 +3,25 @@
 
 #include "../symbols/symbols.h"
 
+static const char* rax_family[] = {"rax", "eax", "ax", "al", "ah", NULL};
+static const char* rbx_family[] = {"rbx", "ebx", "bx", "bl", "bh", NULL};
+static const char* rcx_family[] = {"rcx", "ecx", "cx", "cl", "ch", NULL};
+static const char* rdx_family[] = {"rdx", "edx", "dx", "dl", "dh", NULL};
+static const char* rsi_family[] = {"rsi", "esi", "si", "sil", NULL};
+static const char* rdi_family[] = {"rdi", "edi", "di", "dil", NULL};
+static const char* rsp_family[] = {"rsp", "esp", "sp", "spl", NULL};
+static const char* rbp_family[] = {"rbp", "ebp", "bp", "bpl", NULL};
+static const char* r8_family[]  = {"r8", "r8d", "r8w", "r8b", NULL};
+static const char* r9_family[]  = {"r9", "r9d", "r9w", "r9b", NULL};
+
+static const char** all_families[] = 
+{
+    rax_family, rbx_family, rcx_family, rdx_family,
+    rsi_family, rdi_family, rsp_family, rbp_family,
+    r8_family, r9_family,
+    NULL
+};
+
 typedef struct CodeGen CodeGen;
 typedef struct AsmLine AsmLine;
 typedef struct AsmSlice AsmSlice;
