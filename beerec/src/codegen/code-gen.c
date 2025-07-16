@@ -1561,18 +1561,26 @@ static AsmReturn* find_function_reg(Type* type, AsmArea* area, int prefer_second
 
 static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea* area, int actual_offset, int prefer_second, int arg)
 {
-	Node* params_head = node->function_call_node.function_call.arguments->head;
+	int has_params = 0;
+	int s_offset = 0;
 
-	int s_offset = generate_setup_arguments(code_gen, params_head, area);
-	int offset = s_offset + actual_offset;
-
-	if (offset % 16 != 0)
+	if (node->function_call_node.function_call.arguments != NULL)
 	{
-		AsmLine* line = create_line();
-		line->line = strdup("	sub	rsp, 8");
-		s_offset += 8;
-
-		add_line_to_area(area, line);
+		has_params = 1;
+		
+		Node* params_head = node->function_call_node.function_call.arguments->head;
+	
+		s_offset = generate_setup_arguments(code_gen, params_head, area);
+		int offset = s_offset + actual_offset;
+	
+		if (offset % 16 != 0)
+		{
+			AsmLine* line = create_line();
+			line->line = strdup("	sub	rsp, 8");
+			s_offset += 8;
+	
+			add_line_to_area(area, line);
+		}
 	}
 
 	char buff[80];
@@ -1590,12 +1598,15 @@ static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea*
 
 	AsmLine* _line = create_line();
 	
-	snprintf(_buff, 32, "	add	rsp, %d", s_offset);
+	if (has_params)
+	{
+		snprintf(_buff, 32, "	add	rsp, %d", s_offset);
 
-	_line->line = strdup(_buff);
+		_line->line = strdup(_buff);
 
-	add_line_to_area(area, _line);
-
+		add_line_to_area(area, _line);
+	}
+	
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 1, 0, 0);
 	Type* type = symbol->symbol_function->return_type;
 

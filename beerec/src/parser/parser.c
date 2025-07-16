@@ -2192,7 +2192,7 @@ void free_type(Type* type, Node* node)
 
 void free_node_list(NodeList* list)
 {
-	if (!list) 
+	if (list == NULL) 
 	{
 		return;
 	}
@@ -2287,7 +2287,6 @@ void free_node(Node* node)
 			if (node->function_call_node.function_call.arguments != NULL)
 			{
 				free_node_list(node->function_call_node.function_call.arguments);
-				free(node->function_call_node.function_call.arguments);
 			}
 
 			break;
