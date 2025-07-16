@@ -31,16 +31,17 @@
 Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
 static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype);
-static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope);
+static Node* analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope);
 static void analyzer_check_arguments(Module* module, Node* params_head, Node* args_head, SymbolTable* scope);
 static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope, int* offset);
 static int check_module_has_symbol(Module* module, char* identifier, SymbolType type);
 static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scope);
 static Node* analyzer_get_function_from_class(Symbol* class, char* func_name);
 static Node* analyzer_get_member_from_class(Symbol* class, char* member_name);
-int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_is_class_assignable(Symbol* from, Symbol* to);
+static Node* _analyzer_create_cast(Node** node, Type* preferred);
 static void analyzer_create_cast(Node** node, Type* preferred);
+int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_get_list_size(Node* list_head);
 
 // +--------------------------------------------------------------------------------------------------------------+
@@ -1909,7 +1910,7 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 	return 0;
 }
 
-static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope)
+static Node* analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope)
 {
 	Type* type = analyzer_return_type_of_expression(module, expression, scope, NULL, 0, NULL);
 
@@ -1919,7 +1920,7 @@ static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* e
 		{
 			printf("[Analyzer] [Debug] Not casting, types are the same...\n");
 
-			return;
+			return expression;
 		}
 	}
 
@@ -1931,11 +1932,13 @@ static void analyzer_implictly_cast_all(Module* module, Type* preffered, Node* e
 
 	if (!analyzer_is_the_same(type, preffered))
 	{
-		analyzer_create_cast(&expression, preffered);
+		return _analyzer_create_cast(&expression, preffered);
 	}
 	else
 	{
 		printf("[Analyzer] [Debug] Not casting, types are the same...\n");
+
+		return expression;
 	}
 }
 
@@ -1992,7 +1995,7 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 	{
 		analyzer_analyze_node(module, expression, scope, NULL);
 
-		analyzer_implictly_cast_all(module, node->declare_node.declare.var_type, expression, scope);
+		node->declare_node.declare.default_value = analyzer_implictly_cast_all(module, node->declare_node.declare.var_type, expression, scope);
 	}
 }
 
@@ -2203,6 +2206,49 @@ static void analyzer_create_cast(Node** node, Type* preferred)
 	cast->cast_statement_node.cast_node.expression = *node;
 
 	*node = cast;
+}
+
+static Type* cpy_type(Type* type)
+{
+	Type* ret = NULL;
+	
+	Type* t = type;
+	Type** curr = &ret;
+
+	while (t != NULL)
+	{
+		*curr = malloc(sizeof(Type));
+		
+		**curr = *t;
+		t = t->base;
+
+		printf("Copying: %d...\n", (**curr).type);
+
+		curr = &ret->base;
+	}
+
+	return ret;
+}
+
+static Node* _analyzer_create_cast(Node** node, Type* preferred)
+{
+	printf("[Analyzer] [Debug] Creating a cast node, casting type: %d\n", preferred->type);
+	
+	Node* cast = malloc(sizeof(Node));
+
+	if (cast == NULL)
+	{
+		printf("[Analyzer] [Debug] Failed to alllocate memory for cast node...\n");
+		exit(1);
+	}
+
+	cast->type = NODE_CAST;
+	cast->cast_statement_node.cast_node.cast_type = cpy_type(preferred);
+	cast->cast_statement_node.cast_node.expression = *node;
+
+	*node = cast;
+
+	return cast;
 }
 
 static void analyzer_implictly_cast_operation(Module* module, Node* node, SymbolTable* scope)

@@ -43,6 +43,13 @@ struct ConstantTable
 	int constants_capacity;
 };
 
+typedef struct
+{
+	char* reg;
+	Type* type;
+}
+AsmReturn;
+
 void code_gen_global(CodeGen* code_gen, Node* node);
 void setup_code_gen(CodeGen* code_gen, Module* module);
 void print_code_generated();

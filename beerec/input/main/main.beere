@@ -2,5 +2,5 @@ let i: int
 
 fn main()
 {
-
+    let x: int = 0 + 0.0F
 }

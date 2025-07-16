@@ -161,6 +161,7 @@ Type* create_type(VarType type_enum, char* class_name)
 static Type* chain_type(Type* type, VarType type_enum, char* class_name)
 {
 	type->base = create_type(type_enum, class_name);
+
 	return type->base->base;
 }
 
@@ -224,7 +225,8 @@ static Type* handle_type_declaration(Parser* parser) {
 		result = create_type(type->var_type, NULL);
 	}
    
-	while (peek_tkn(parser)->token_type == TOKEN_CHAR_STAR || peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACKET) {
+	while (peek_tkn(parser)->token_type == TOKEN_CHAR_STAR || peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACKET) 
+	{
 		handle_ptr_array(parser, &result);
 	}
 
@@ -2164,14 +2166,21 @@ static Node* parse_unary(Parser* parser)
 	return parse_primary(parser);
 }
 
-void free_type(Type* type)
+void free_type(Type* type, Node* node)
 {
 	if (type == NULL)
 	{
 		return;
 	}
 
-	free_type(type->base);
+	if (type->type > 28 || type->type < 0)
+	{
+		type = NULL;
+
+		return;
+	}
+
+	free_type(type->base, node);
 	
 	if (type->class_name != NULL)
 	{
@@ -2235,7 +2244,7 @@ void free_node(Node* node)
 				free_node(node->declare_node.declare.default_value);
 			}
 
-			free_type(node->declare_node.declare.var_type);
+			free_type(node->declare_node.declare.var_type, node);
 
 			break;
 		}
@@ -2375,7 +2384,7 @@ void free_node(Node* node)
 				free(node->literal_node.literal.string_value);
 			}
 			
-			free_type(node->literal_node.literal.literal_type);
+			free_type(node->literal_node.literal.literal_type, node);
 
 			break;
 		}
@@ -2406,7 +2415,7 @@ void free_node(Node* node)
 
 		case NODE_PARAMETER:
 		{
-			free_type(node->param_node.param.argument_type);
+			free_type(node->param_node.param.argument_type, node);
 
 			free(node->param_node.param.identifier);
 
@@ -2444,7 +2453,7 @@ void free_node(Node* node)
 		{
 			free_node(node->cast_statement_node.cast_node.expression);
 
-			free_type(node->cast_statement_node.cast_node.cast_type);
+			free_type(node->cast_statement_node.cast_node.cast_type, node);
 
 			break;
 		}
@@ -2453,7 +2462,7 @@ void free_node(Node* node)
 		{
 			free_node_list(node->array_literal_node.array_literal.values);
 
-			free_type(node->array_literal_node.array_literal.array_type);
+			free_type(node->array_literal_node.array_literal.array_type, node);
 
 			break;
 		}
