@@ -1,9 +1,13 @@
-fn sum(n1: int, n2: int): int
-{
-    return n1 + n2
-}
+let global_ptr: int*
 
-fn main()
+fn test_reassign()
 {
-    let res: int = sum(10, 20)
+    let var1: int = 100
+    let var2: int = 200
+
+    global_ptr = &var1
+    let val1: int = *global_ptr  // val1 = 100
+
+    global_ptr = &var2
+    let val2: int = *global_ptr  // val2 = 200
 }
