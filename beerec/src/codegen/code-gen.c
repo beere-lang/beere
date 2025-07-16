@@ -19,6 +19,8 @@ int actual_offset;
 
 /**
  * TODO: 
+ * - Revisar e deixar o codigo mais bonito (variaveis inuteis, nomes ruins, etc)
+ * - Implementar C e modulos.
  * - Implementar arrays melhor no code gen.
  * 
  * Estrategia pra arrays inicializadas globalmente:
