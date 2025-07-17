@@ -883,8 +883,6 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 		i++;
 	}
 
-	printf("%d\n", ptr->type);
-
 	flag_assign = 1;
 
 	char* ref = generate_expression(code_gen, ptr, 0, area, 0, 0, 0)->reg;
@@ -1466,12 +1464,17 @@ static AsmReturn* generate_dereference(CodeGen* code_gen, Node* node, AsmArea* a
 		ptr = ptr->dereference_node.dereference.ptr;
 		i++;
 	}
-
+	
 	AsmReturn* ret = generate_expression(code_gen, ptr, 0, area, 1, 0, 0);
 
 	char* reg = prefer_secondary ? "rbx" : "rax";
 
 	char* curr = ret->reg;
+
+	if (flag_assign)
+	{
+		i--;
+	}
 	
 	while (i > 0)
 	{
@@ -1488,6 +1491,17 @@ static AsmReturn* generate_dereference(CodeGen* code_gen, Node* node, AsmArea* a
 	}
 
 	Type* type = analyzer_return_type_of_expression(NULL, ptr, code_gen->scope, NULL, 0, NULL);
+	
+	if (flag_assign)
+	{
+		char buff[32];
+		snprintf(buff, 32, "[%s]", curr);
+		
+		AsmReturn* final = create_asm_return(buff, type);
+
+		return final;
+	}
+
 	AsmReturn* final = create_asm_return(curr, type);
 
 	return final;
@@ -1775,7 +1789,14 @@ static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_d
 				else
 				{
 					char buff[32];
-					snprintf(buff, 32, "[%s]", ref);
+					if (flag_assign)
+					{
+						snprintf(buff, 32, "%s", ref);
+					}
+					else
+					{
+						snprintf(buff, 32, "[%s]", ref);
+					}
 					
 					ref = buff;
 				}
