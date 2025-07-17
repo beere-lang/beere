@@ -18,7 +18,8 @@ ConstantTable* constant_table;
 int actual_offset;
 
 /**
- * TODO: 
+ * TODO:
+ * - Implementar arrays pra variaveis globais.
  * - Mudar pro sistema de argumentos e parametros do windows (registradores nos primeiros parametro ** mais rapidoo **)
  * - Revisar e deixar o codigo mais bonito (variaveis inuteis, nomes ruins, etc)
  * - Implementar classes IMPORTANTE: Tudo que envolve find_symbol do analyzer vai ter que ser alterado (não pega symbol de classes automaticamente).
@@ -1632,9 +1633,32 @@ static AsmReturn* generate_array_push(CodeGen* code_gen, Node* node, int scope_d
 /**
  * TODO: Implementar melhor prototype pra isso no analyzer e parser (nodes)
  */
-static AsmReturn* generate_array_length(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
+static AsmReturn* generate_array_pop(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
+
+}
+
+/**
+ * TODO: Implementar melhor prototype pra isso no analyzer e parser (nodes)
+ */
+static AsmReturn* generate_array_length(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int prefer_second)
+{
+	char* temp = prefer_second ? "ebx" : "eax";
+
+	Node* arr = node->array_length_node.array_length.array;
+	AsmReturn* ret = generate_expression(code_gen, arr, 0, area, 1, 0, 0);
+
+	AsmLine* line = create_line();
+
+	char buff[50];
+	snprintf(buff, 50, "	mov	%s, [%s]", temp, ret->reg);
+
+	line->line = strdup(buff);
+	add_line_to_area(area, line);
 	
+	AsmReturn* res = create_asm_return(temp, create_type(TYPE_INT, NULL));
+
+	return res;
 }
 
 static AsmReturn* generate_array_access(CodeGen* code_gen, Node* node, AsmArea* area)
@@ -2040,6 +2064,12 @@ static char* get_return_type_reg(Type* type)
 		case TYPE_DOUBLE:
 		{
 			return strdup("xmm0");
+		}
+
+		case TYPE_ARRAY:
+		case TYPE_PTR:
+		{
+			return strdup("rax");
 		}
 
 		default:

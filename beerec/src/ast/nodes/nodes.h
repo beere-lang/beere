@@ -90,13 +90,6 @@ ReturnNode;
 
 typedef struct
 {
-	Node* array;
-	Node* expr;
-}
-PushArrayNode;
-
-typedef struct
-{
 	Type* literal_type;
 
 	union
@@ -255,6 +248,25 @@ typedef struct
 }
 BlockNode;
 
+typedef struct
+{
+	Node* array;
+	Node* expr;
+}
+PushArrayNode;
+
+typedef struct
+{
+	Node* array;
+}
+PopArrayNode;
+
+typedef struct
+{
+	Node* array;
+}
+ArrayLengthNode;
+
 typedef enum
 {
 	NODE_SWITCH_CASE_BLOCK, // 0
@@ -287,8 +299,9 @@ typedef enum
 	NODE_THIS, // 26
 	NODE_ARRAY_ACCESS, // 27
 	NODE_ARRAY_LITERAL, // 28
-	NODE_ARRAY_PUSH,
-	NODE_ARRAY_POP
+	NODE_ARRAY_PUSH, // 29
+	NODE_ARRAY_POP, // 30
+	NODE_ARRAY_LENGTH // 31
 }
 NodeType;
 
@@ -454,6 +467,24 @@ struct Node
 			SuperNode super;
 		}
 		super_node;
+
+		struct
+		{
+			PushArrayNode array_push;
+		}
+		array_push_node;
+		
+		struct
+		{
+			PopArrayNode array_pop;
+		}
+		array_pop_node;
+		
+		struct
+		{
+			ArrayLengthNode array_length;
+		}
+		array_length_node;
 	};
 };
 
