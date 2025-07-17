@@ -21,7 +21,7 @@ int actual_offset;
  * TODO: 
  * - Mudar pro sistema de argumentos e parametros do windows (registradores nos primeiros parametro ** mais rapidoo **)
  * - Revisar e deixar o codigo mais bonito (variaveis inuteis, nomes ruins, etc)
- * - Implementar classes.
+ * - Implementar classes IMPORTANTE: Tudo que envolve find_symbol do analyzer vai ter que ser alterado (não pega symbol de classes automaticamente).
  * - Implementar C e modulos.
  * 
  * Estrategia pra arrays inicializadas globalmente:
@@ -282,20 +282,6 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 		line->line = strdup(buffer);
 	
 		add_line_to_area(area, line);
-
-		if (node->declare_node.declare.var_type->type == TYPE_ARRAY)
-		{
-			int count = elements_count(node->declare_node.declare.default_value->array_literal_node.array_literal.values);
-			char buff[64];
-			
-			AsmLine* line = create_line();
-			
-			snprintf(buff, 64, "	mov	[rbp%+d], %d", offset + 8, count);
-
-			line->line = strdup(buff);
-
-			add_line_to_area(area, line);
-		}
 	}
 	else
 	{
@@ -308,15 +294,8 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 			snprintf(buff, 64, "	mov	[rbp%+d], 0", offset);
 
 			_line->line = strdup(buff);
-			
-			AsmLine* line = create_line();
-			
-			snprintf(buff, 64, "	mov	[rbp%+d], 0", offset + 8);
-
-			line->line = strdup(buff);
 
 			add_line_to_area(area, _line);
-			add_line_to_area(area, line);
 		}
 	}
 }
@@ -362,8 +341,6 @@ char* get_type_size(VarType type)
 
 		default:
 		{
-			printf("Oi...\n");
-	
 			exit(1);
 		}
 	}
@@ -429,8 +406,6 @@ static char* get_global_literal_value(Node* node)
 
 		default:
 		{
-			printf("Oi...\n");
-	
 			exit(1);
 		}
 	}
@@ -589,8 +564,6 @@ static char* get_literal_value(Node* node, AsmArea* area, int force_reg, int pre
 
 		default:
 		{
-			printf("Oi...\n");
-	
 			exit(1);
 		}
 	}
@@ -936,18 +909,6 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 	line->line = strdup(buff);
 
 	add_line_to_area(area, line);
-
-	if (type->type == TYPE_ARRAY)
-	{
-		AsmLine* line = create_line();
-		
-		char buff[64];
-		snprintf(buff, 64, "	mov	[%s + 8], 0", ref); // zera a quantidade de elementos.
-
-		line->line = strdup(buff);
-		
-		add_line_to_area(area, line);
-	}
 }
 
 static void generate_global_variable_assign(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
@@ -1336,8 +1297,6 @@ static AsmReturn* generate_operation(CodeGen* code_gen, Node* node, int scope_de
 
 		default:
 		{
-			printf("Oi...\n");
-
 			exit(1);
 		}
 	}
@@ -1561,16 +1520,21 @@ static void generate_array_value(CodeGen* code_gen, Node* expr, AsmArea* area, c
 	AsmReturn* ret = generate_expression(code_gen, expr, 0, area, force_reg, force_sec, 0);
 	char buff[128];
 
-	int mem_offset = offset * type_size;
+	int mem_offset = 8 + (offset * type_size);
 
-	if (offset != 0)
-	{
-		snprintf(buff, 64, "	mov	[%s + %d], %s", adress_reg, mem_offset, ret->reg);
-	}
-	else
-	{
-		snprintf(buff, 64, "	mov	[%s], %s", adress_reg, ret->reg);
-	}
+	snprintf(buff, 64, "	mov	[%s + %d], %s", adress_reg, mem_offset, ret->reg);
+
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+}
+
+static void setup_array_count(AsmArea* area, char* adress_reg, int count)
+{
+	AsmLine* line = create_line();
+
+	char buff[32];
+	snprintf(buff, 32, "	mov	[%s], %d", adress_reg, count);
 
 	line->line = strdup(buff);
 
@@ -1582,10 +1546,21 @@ static void generate_array_values(CodeGen* code_gen, Node* node, AsmArea* area, 
 	NodeList* values = node->array_literal_node.array_literal.values;
 	Node* curr = values->head;
 	
+	setup_array_count(area, adress_reg, elements_size);
 	int i = 0;
 
 	while (i < elements_size)
 	{
+		if (i == 0)
+		{
+			generate_array_value(code_gen, curr, area, adress_reg, i, type_size);
+
+			curr = curr->next;
+			i++;
+
+			continue;
+		}
+		
 		generate_array_value(code_gen, curr, area, adress_reg, i, type_size);
 
 		curr = curr->next;
@@ -1607,7 +1582,7 @@ static int generate_malloc_align_stack_to_call(AsmArea* area, int count, int typ
 	}
 
 	char buff[64];
-	snprintf(buff, 64, "	mov	rcx, %d", count * type_size);
+	snprintf(buff, 64, "	mov	rcx, %d", 8 + (count * type_size));
 
 	AsmLine* line = create_line();
 	line->line = strdup(buff);
@@ -1644,6 +1619,62 @@ static AsmReturn* generate_array_literal(CodeGen* code_gen, Node* node, int scop
 	AsmReturn* ret = create_asm_return("rax", node->array_literal_node.array_literal.array_type);
 
 	return ret;
+}
+
+/**
+ * TODO: Implementar melhor prototype pra isso no analyzer e parser (nodes)
+ */
+static AsmReturn* generate_array_push(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
+{
+
+}
+
+/**
+ * TODO: Implementar melhor prototype pra isso no analyzer e parser (nodes)
+ */
+static AsmReturn* generate_array_length(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
+{
+	
+}
+
+static AsmReturn* generate_array_access(CodeGen* code_gen, Node* node, AsmArea* area)
+{
+	Node* arr = node->acess_array_node.acess_array.array;
+	Node* index_expr = node->acess_array_node.acess_array.index_expr;
+	
+	AsmReturn* ret = generate_expression(code_gen, arr, 0, area, 1, 0, 0);
+	AsmReturn* expr_ret = generate_expression(code_gen, index_expr, 0, area, 1, 1, 0);
+
+	AsmLine* line = create_line();
+	char buff[64];
+
+	char* index = expr_ret->reg;
+
+	AsmLine* _line = create_line();
+	
+	Type* element_type = ret->type->base;
+	int element_size = analyzer_get_type_size(ret->type->base, code_gen->scope);
+
+	snprintf(buff, 64, "	imul	%s, %d", index, element_size);
+	_line->line = strdup(buff);
+
+	add_line_to_area(area, _line);
+
+	AsmLine* __line = create_line();
+
+	snprintf(buff, 64, "	add	%s, 8", index);
+	__line->line = strdup(buff);
+
+	add_line_to_area(area, __line);
+	
+	snprintf(buff, 64, "	mov	rdi, [%s+%s]", ret->reg, index);
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+
+	AsmReturn* res = create_asm_return("rdi", element_type);
+
+	return res;
 }
 
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg)
@@ -1728,6 +1759,11 @@ static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_d
 		case NODE_ADRESS_OF:
 		{
 			return generate_adress_of(code_gen, node, area, prefer_secondary);
+		}
+
+		case NODE_ARRAY_ACCESS:
+		{
+			return generate_array_access(code_gen, node, area);
 		}
 
 		default:

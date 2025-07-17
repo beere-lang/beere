@@ -495,7 +495,7 @@ int analyzer_get_type_size(Type* type, SymbolTable* scope)
 
 		case TYPE_ARRAY:
 		{
-			return 12; // 8 bytes pro ponteiro que vai apontar pra array na heap e 4 bytes pro length da array em run-time.
+			return 8; // 8 bytes pro ponteiro que vai apontar pra array na heap.
 		}
 
 		case TYPE_CLASS:

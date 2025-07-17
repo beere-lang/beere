@@ -90,6 +90,13 @@ ReturnNode;
 
 typedef struct
 {
+	Node* array;
+	Node* expr;
+}
+PushArrayNode;
+
+typedef struct
+{
 	Type* literal_type;
 
 	union
@@ -279,7 +286,9 @@ typedef enum
 	NODE_CREATE_INSTANCE, // 25
 	NODE_THIS, // 26
 	NODE_ARRAY_ACCESS, // 27
-	NODE_ARRAY_LITERAL // 28
+	NODE_ARRAY_LITERAL, // 28
+	NODE_ARRAY_PUSH,
+	NODE_ARRAY_POP
 }
 NodeType;
 

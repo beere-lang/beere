@@ -1,16 +1,6 @@
-fn sum(n1: int, n2: int): int
-{
-    return n1 + n2
-}
-
 fn main()
 {
-    let z: int = 10
+    let arr: int[] = new int[] { 10 }
 
-    let arr: int[] = new int[] { 9, 20, z, 50 }
-
-    let x: int = 10
-    let y: int = 20
-
-    let sum_: int = sum(x, y)
+    let x: int = arr[0]
 }
