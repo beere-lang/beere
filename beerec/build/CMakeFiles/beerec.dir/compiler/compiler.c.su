@@ -1,8 +1,0 @@
-C:/Program Files/JetBrains/CLion 2025.1.1/bin/mingw/x86_64-w64-mingw32/include/stdio.h:371:5:printf	80	static
-C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c:11:6:free_nodes	64	static
-C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c:36:6:analyze_nodes	64	static
-C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c:61:8:parse_tokens	96	static
-C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c:92:8:tokenize_code	160	static
-C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c:136:13:free_tokens	48	static
-C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c:147:13:free_content	48	static
-C:\Users\jer1337\Documents\GitHub\beere\beerec\compiler\compiler.c:158:9:compile	96	static

@@ -1,3 +1,0 @@
-C:/Users/jer1337/Documents/GitHub/beere/beerec/build/CMakeFiles/beerec.dir
-C:/Users/jer1337/Documents/GitHub/beere/beerec/build/CMakeFiles/edit_cache.dir
-C:/Users/jer1337/Documents/GitHub/beere/beerec/build/CMakeFiles/rebuild_cache.dir
