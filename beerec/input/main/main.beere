@@ -1,13 +1,16 @@
-let global_ptr: int*
-
-fn test_reassign()
+fn sum(n1: int, n2: int): int
 {
-    let var1: int = 100
-    let var2: int = 200
+    return n1 + n2
+}
 
-    global_ptr = &var1
-    let val1: int = *global_ptr  // val1 = 100
+fn main()
+{
+    let z: int = 10
 
-    global_ptr = &var2
-    let val2: int = *global_ptr  // val2 = 200
+    let arr: int[] = new int[] { 9, 20, z, 50 }
+
+    let x: int = 10
+    let y: int = 20
+
+    let sum_: int = sum(x, y)
 }
