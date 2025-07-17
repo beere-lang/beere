@@ -16,9 +16,11 @@ AsmArea* text_section;
 ConstantTable* constant_table;
 
 int actual_offset;
+int flag_assign = 0;
 
 /**
  * TODO:
+ * - Fixar ponteiros e suas referencia no assign
  * - Implementar arrays pra variaveis globais.
  * - Mudar pro sistema de argumentos e parametros do windows (registradores nos primeiros parametro ** mais rapidoo **)
  * - Revisar e deixar o codigo mais bonito (variaveis inuteis, nomes ruins, etc)
@@ -272,8 +274,15 @@ static void generate_local_variable_declaration(CodeGen* code_gen, Node* node, i
 		{
 			_temp = type->type == TYPE_DOUBLE ? "movsd" : "movss";
 		}
+
+		int force_reg = 1;
+
+		if (type->type == TYPE_INT)
+		{
+			force_reg = 0;
+		}
 		
-		AsmReturn* ret = generate_expression(code_gen, node->declare_node.declare.default_value, scope_depth, area, 1, 0, 0);
+		AsmReturn* ret = generate_expression(code_gen, node->declare_node.declare.default_value, scope_depth, area, force_reg, 0, 0);
 	
 		AsmLine* line = create_line();
 		
@@ -874,7 +883,13 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 		i++;
 	}
 
-	char* ref = get_variable_reference(ptr->variable_node.variable.identifier, code_gen->scope)->reg;
+	printf("%d\n", ptr->type);
+
+	flag_assign = 1;
+
+	char* ref = generate_expression(code_gen, ptr, 0, area, 0, 0, 0)->reg;
+
+	flag_assign = 0;
 	
 	while (i > 0)
 	{
@@ -890,11 +905,16 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 		i--;
 	}
 
-	AsmReturn* ret = generate_expression(code_gen, node->variable_assign_node.variable_assign.assign_value, scope_depth, area, 1, 0, 0);
-
-	printf("reg: %s...\n", ret->reg);
-	
 	Type* type = analyzer_return_type_of_expression(NULL, node->variable_assign_node.variable_assign.assign_value, code_gen->scope, NULL, 0, 0);
+	
+	int force_reg = 1;
+
+	if (type->type == TYPE_INT)
+	{
+		force_reg = 0;
+	}
+
+	AsmReturn* ret = generate_expression(code_gen, node->variable_assign_node.variable_assign.assign_value, scope_depth, area, force_reg, 0, 0);
 
 	char* _temp = "mov";
 
@@ -904,7 +924,7 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 	}
 
 	char buff[64];
-	snprintf(buff, 64, "	%s	[%s], %s", _temp, ref, ret->reg);
+	snprintf(buff, 64, "	%s	%s, %s", _temp, ref, ret->reg);
 
 	AsmLine* line = create_line();
 	line->line = strdup(buff);
@@ -974,16 +994,23 @@ static void generate_variable_assign(CodeGen* code_gen, Node* node, int scope_de
 		ptr = ptr->dereference_node.dereference.ptr;
 	}
 
-	char* identifier = ptr->variable_node.variable.identifier;
-	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 1, 0, 0, 0);
-
-	if (!symbol->symbol_variable->is_global)
+	if (ptr->type == NODE_IDENTIFIER)
 	{
-		generate_local_variable_assign(code_gen, node, scope_depth, area);
+		char* identifier = ptr->variable_node.variable.identifier;
+		Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 1, 0, 0, 0);
+
+		if (!symbol->symbol_variable->is_global)
+		{
+			generate_local_variable_assign(code_gen, node, scope_depth, area);
+		}
+		else
+		{
+			generate_global_variable_assign(code_gen, node, scope_depth, area);
+		}
 	}
 	else
 	{
-		generate_global_variable_assign(code_gen, node, scope_depth, area);
+		generate_local_variable_assign(code_gen, node, scope_depth, area);
 	}
 }
 
@@ -1661,6 +1688,9 @@ static AsmReturn* generate_array_length(CodeGen* code_gen, Node* node, int scope
 	return res;
 }
 
+/**
+ * TODO: Caso o tipo for float ou double, o mov do elemento pro registrador vai dar merda, arrumar
+ */
 static AsmReturn* generate_array_access(CodeGen* code_gen, Node* node, AsmArea* area)
 {
 	Node* arr = node->acess_array_node.acess_array.array;
@@ -1690,6 +1720,15 @@ static AsmReturn* generate_array_access(CodeGen* code_gen, Node* node, AsmArea* 
 	__line->line = strdup(buff);
 
 	add_line_to_area(area, __line);
+	
+	if (flag_assign)
+	{
+		snprintf(buff, 64, "[%s+%s]", ret->reg, index);
+		
+		AsmReturn* res = create_asm_return(buff, element_type);
+	
+		return res;
+	}
 	
 	snprintf(buff, 64, "	mov	rdi, [%s+%s]", ret->reg, index);
 	line->line = strdup(buff);

@@ -1,6 +1,6 @@
 fn main()
 {
-    let arr: int[] = new int[] { 10 }
+    let x: int[] = new int[] { 0 }
 
-    let x: int = arr[0]
+    x[0] = 10
 }
