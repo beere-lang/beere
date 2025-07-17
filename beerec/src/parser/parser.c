@@ -2469,10 +2469,26 @@ void free_node(Node* node)
 		{
 			free(node->import_statement_node.import_node.identifier);
 			free(node->import_statement_node.import_node.import_path);
+
+			break;
 		}
 
 		case NODE_BREAK:
 		{
+			break;
+		}
+
+		case NODE_DEREFERENCE:
+		{
+			free_node(node->dereference_node.dereference.ptr);
+
+			break;
+		}
+
+		case NODE_ADRESS_OF:
+		{
+			free_node(node->adress_of_node.adress_of.expression);
+			
 			break;
 		}
 
