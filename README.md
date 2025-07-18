@@ -8,7 +8,7 @@ Beere is a simple, fast, and low-level programming language, designed for system
 
 - 🚀 Fast native compilation to x86_64 Assembly  
 - 🔒 Manual memory management with safety checks  
-- 🧠 Simple and clean syntax — no hidden behavior  
+- 🧠 Simple and clean syntax 
 - 🧰 Optional object-oriented features (classes, vtables)  
 - 🔗 Easy C interoperability (`extern "C" fn`)  
 - 📦 Lightweight module system and package manager (WIP)
