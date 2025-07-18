@@ -64,6 +64,26 @@ struct ConstantTable
 
 typedef struct
 {
+	char* class_name;
+
+	int has_constructor;
+	int has_v_table;
+}
+AsmClassInfo;
+
+typedef struct
+{
+	AsmClassInfo** classes;
+
+	int class_count;
+	int class_capacity;
+}
+ClassTable;
+
+
+
+typedef struct
+{
 	char* reg;
 	Type* type;
 }

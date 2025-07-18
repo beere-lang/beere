@@ -45,6 +45,7 @@ struct SymbolVariable
 
 	int offset;
 	int is_static;
+	int is_class_global;
 };
 
 struct SymbolFunction
@@ -66,10 +67,14 @@ struct SymbolFunction
 	int is_override;
 	
 	int is_static;
+
+	int method_id; // usado em classes (v table - virtual e override)
 };
 
 struct SymbolClass
 {
+	int class_id;
+
 	int is_export;
 
 	SymbolTable* class_scope;
@@ -84,6 +89,9 @@ struct SymbolClass
 
 	int field_count;
 	int func_count;
+
+	int total_offset;
+	int offset;
 };
 
 struct SymbolModule

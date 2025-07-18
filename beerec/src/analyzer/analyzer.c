@@ -44,6 +44,8 @@ static void analyzer_create_cast(Node** node, Type* preferred);
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_get_list_size(Node* list_head);
 
+int class_count;
+
 // +--------------------------------------------------------------------------------------------------------------+
 // | Prototype methods são metodos que vem "imbutidos" na linguagem porém que você acessa por alguma variavel	  |
 // | 												       							                              |
@@ -438,7 +440,14 @@ static int analyzer_get_class_size(Type* type, SymbolTable* scope)
 
 	for (int i = 0; i < class_symbol->symbol_class->field_count; i++)
 	{
-		total_size += analyzer_get_type_size(class_symbol->symbol_class->fields[i]->declare_node.declare.var_type, scope);
+		Node* field = class_symbol->symbol_class->fields[i];
+
+		if (field->declare_node.declare.is_static)
+		{
+			continue;
+		}
+		
+		total_size += analyzer_get_type_size(field->declare_node.declare.var_type, scope);
 	}
 
 	return total_size;
@@ -750,6 +759,13 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 
 	symbol->symbol_class->func_count = node->class_node.class_node.func_count;
 	symbol->symbol_class->field_count = node->class_node.class_node.var_count;
+	
+	symbol->symbol_class->total_offset = 0;
+	symbol->symbol_class->offset = 0;
+
+	symbol->symbol_class->class_id = class_count;
+
+	class_count++;
 
 	symbol->is_export = node->class_node.class_node.is_export;
 
@@ -2004,7 +2020,19 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 		*offset -= size;
 	}
 
-	analyzer_add_symbol_to_scope(module, node, scope, offset, 0);
+	Symbol* symbol = analyzer_add_symbol_to_scope(module, node, scope, offset, 0);
+
+	if (!node->declare_node.declare.is_static && scope->scope_kind == SYMBOL_CLASS)
+	{
+		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
+		
+		Symbol* class_symbol = scope->owner_statement;
+		class_symbol->symbol_class->total_offset += size;
+
+		symbol->symbol_variable->offset = class_symbol->symbol_class->offset;
+		symbol->symbol_variable->is_class_global = 1;
+		class_symbol->symbol_class->offset += size;
+	}
 	
 	Node* expression = node->declare_node.declare.default_value;
 

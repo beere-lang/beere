@@ -13,10 +13,18 @@ AsmArea* bss_section;
 AsmArea* rodata_section;
 AsmArea* text_section;
 
-ConstantTable* constant_table;
+ConstantTable* constant_table = NULL;
+ClassTable* asm_class_table = NULL;
 
 int actual_offset;
+
 int flag_assign = 0;
+int constructor_flag = 0;
+int member_access_flag = 0;
+
+char* class_func_flag = NULL;
+
+char* arg_registers[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 
 /**
  * TODO:
@@ -34,6 +42,7 @@ int flag_assign = 0;
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg);
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg);
 static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_second, int arg);
+static int generate_setup_arguments(CodeGen* code_gen, Node* head, AsmArea* area, int jump_size);
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area);
 static void add_line_to_area(AsmArea* area, AsmLine* line);
 static int elements_count(NodeList* list);
@@ -106,6 +115,15 @@ static void setup_constant_table()
 	constant_table->constants_count = 0;
 }
 
+static void setup_class_table()
+{
+	asm_class_table = malloc(sizeof(ClassTable));
+
+	asm_class_table->classes = malloc(sizeof(AsmClassInfo*) * 4);
+	asm_class_table->class_capacity = 4;
+	asm_class_table->class_count = 0;
+}
+
 void setup_code_gen(CodeGen* code_gen, Module* module)
 {
 	code_gen->scope = module->global_scope;
@@ -116,6 +134,7 @@ void setup_code_gen(CodeGen* code_gen, Module* module)
 	setup_text();
 	setup_entry_point();
 	setup_constant_table();
+	setup_class_table();
 }
 
 static AsmLine* create_line()
@@ -130,7 +149,7 @@ static AsmLine* generate_label(char* name)
 {
 	AsmLine* line = create_line();
 	
-	char buff[50];
+	char buff[64];
 	sprintf(buff, "%s:", name);
 	
 	line->line = strdup(buff);
@@ -189,6 +208,49 @@ static void add_constant_to_table(Constant* constant)
 	constant_table->constants[constant_table->constants_count] = constant;
 	constant_table->constants_count++;
 	constant_table->constants[constant_table->constants_count] = NULL;
+}
+
+static void add_class_to_table(AsmClassInfo* class)
+{
+	if (asm_class_table->class_capacity <= asm_class_table->class_count + 1)
+	{
+		asm_class_table->class_capacity *= 2;
+
+		asm_class_table->classes = realloc(asm_class_table->classes, sizeof(Constant*) * asm_class_table->class_capacity);
+
+		if (asm_class_table->classes == NULL)
+		{
+			printf("[CodeGen] [Debug] Failed to realloc memory for constant table...\n");
+			exit(1);
+		}
+	}
+
+	asm_class_table->classes[asm_class_table->class_count] = class;
+	asm_class_table->class_count++;
+	asm_class_table->classes[asm_class_table->class_count] = NULL;
+}
+
+static int check_class(char* identifier, int has_constructor, int has_vtable)
+{
+	for (int i = 0; i < asm_class_table->class_count; i++)
+	{
+		AsmClassInfo* curr = asm_class_table->classes[i];
+		
+		if (strcmp(identifier, curr->class_name) == 0)
+		{
+			if (has_constructor)
+			{
+				return curr->has_constructor;
+			}
+
+			if (has_vtable)
+			{
+				return curr->has_v_table;
+			}
+		}
+	}
+
+	return 0;
 }
 
 /**
@@ -733,9 +795,10 @@ static void generate_function_declaration(CodeGen* code_gen, Node* node, int sco
 	AsmArea* function_area = create_area();
 	AsmLine* label_line = generate_label(strdup(node->function_node.function.identifier));
 
-	char* identifier = node->function_node.function.identifier;
-	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 1, 0, 0);
+	char* identifier = (class_func_flag != NULL) ? class_func_flag : node->function_node.function.identifier;
 
+	Symbol* symbol = (!constructor_flag) ? analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 1, 0, 0) : code_gen->scope->owner_statement->symbol_class->constructor;
+	
 	add_line_to_area(function_area, label_line);
 
 	generate_function_setup(function_area);
@@ -1495,7 +1558,7 @@ static AsmReturn* generate_dereference(CodeGen* code_gen, Node* node, AsmArea* a
 	if (flag_assign)
 	{
 		char buff[32];
-		snprintf(buff, 32, "[%s]", curr);
+		snprintf(buff, 32, member_access_flag ? "%s" : "[%s]", curr);
 		
 		AsmReturn* final = create_asm_return(buff, type);
 
@@ -1623,6 +1686,22 @@ static int generate_malloc_align_stack_to_call(AsmArea* area, int count, int typ
 		res = 1;
 	}
 
+	return res;
+}
+
+static int arr_generate_malloc_align_stack_to_call(AsmArea* area, int count, int type_size)
+{
+	int res = 0;
+	
+	if ((actual_offset + 8) % 16 == 0) // adiciona 8 pra instruçao call (sub rsp, 8 implicitamente)
+	{
+		AsmLine* line = create_line();
+		line->line = strdup("	sub	rsp, 8");
+		
+		add_line_to_area(area, line);
+		res = 1;
+	}
+
 	char buff[64];
 	snprintf(buff, 64, "	mov	rcx, %d", 8 + (count * type_size));
 
@@ -1641,7 +1720,7 @@ static AsmReturn* generate_array_literal(CodeGen* code_gen, Node* node, int scop
 	int count = elements_count(node->array_literal_node.array_literal.values);
 	int type_size = analyzer_get_type_size(type->base, code_gen->scope);
 
-	int align = generate_malloc_align_stack_to_call(area, count, type_size);
+	int align = arr_generate_malloc_align_stack_to_call(area, count, type_size);
 
 	AsmLine* line = create_line();
 	line->line = strdup("	call	malloc");
@@ -1754,6 +1833,143 @@ static AsmReturn* generate_array_access(CodeGen* code_gen, Node* node, AsmArea* 
 	return res;
 }
 
+static AsmReturn* generate_member_access(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_secondary)
+{
+	int pointer_access = node->member_access_node.member_access.ptr_acess;
+	char* member_name = node->member_access_node.member_access.member_name;
+	
+	flag_assign = 1;
+	member_access_flag = 1;
+	
+	AsmReturn* object = generate_expression(code_gen, node->member_access_node.member_access.object, 0, area, 1, 1, 0);
+	
+	member_access_flag = 0;
+	flag_assign = 0;
+
+	Type* type = object->type;
+	char* reg = object->reg;
+
+	AsmLine* line = create_line();
+
+	int offset = 16;
+
+	if (type->type == TYPE_PTR)
+	{
+		type = type->base;
+	}
+
+	Symbol* symbol_class = analyzer_find_symbol_from_scope(type->class_name, code_gen->scope, 0, 0, 1, 0);
+	
+	SymbolTable* scope = symbol_class->symbol_class->class_scope;
+
+	Symbol* symbol = analyzer_find_symbol_from_scope(member_name, scope, 1, 0, 0, 0);
+
+	offset += symbol->symbol_variable->offset;
+
+	char buff[50];
+	snprintf(buff, 50, "	mov	rdi, [%s+%d]", reg, offset);
+
+	line->line = strdup(buff);
+	add_line_to_area(area, line);
+
+	AsmReturn* ret = create_asm_return("rdi", symbol->symbol_variable->type);
+
+	return ret;
+}
+
+static AsmReturn* generate_create_instance(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_secondary)
+{
+	char* class_name = node->create_instance_node.create_instance.class_name;
+	Type* type = create_type(TYPE_CLASS, class_name);
+
+	/*==-------------------------------------------------==*/
+
+	AsmLine* size_line = create_line();
+
+	int size = analyzer_get_type_size(type, code_gen->scope);
+
+	char buff[64];
+
+	// Porque do + 16: o objeto da classe é formado por: ponteiro pra vtable: (8 bytes), 
+	// id da classe (4 bytes do int + 4 bytes de alinhamento) 
+	// e o resto que são as fields.
+	snprintf(buff, 64, "	mov	rdi, %d", size + 16);
+
+	size_line->line = strdup(buff);
+
+	add_line_to_area(area, size_line);
+
+	/*==-------------------------------------------------==*/
+	
+	int align = generate_malloc_align_stack_to_call(area, 0, size + 8);
+	
+	AsmLine* line = create_line();
+
+	snprintf(buff, 64, "	call	malloc");
+
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+
+	if (align)
+	{
+		AsmLine* line = create_line();
+		line->line = strdup("	add	rsp, 8");
+		
+		add_line_to_area(area, line);
+	}
+
+	/*==-------------------------------------------------==*/
+
+	AsmLine* v_mov_line = create_line();
+
+	if (check_class(class_name, 0, 1))
+	{
+		snprintf(buff, 64, "	mov	[rax], .%s_vtable", class_name);
+	}
+	else
+	{
+		snprintf(buff, 64, "	mov	[rax], 0");
+	}
+
+	v_mov_line->line = strdup(buff);
+
+	add_line_to_area(area, v_mov_line);
+
+	/*==-------------------------------------------------==*/
+
+	AsmLine* mov_line = create_line();
+
+	mov_line->line = strdup("	mov	rdi, rax");
+
+	NodeList* args = node->create_instance_node.create_instance.constructor_args;
+
+	if (args != NULL)
+	{
+		generate_setup_arguments(code_gen, args->head, area, 1);
+	}
+	
+	add_line_to_area(area, mov_line);
+
+	/*==-------------------------------------------------==*/
+
+	if (check_class(class_name, 1, 0))
+	{
+		AsmLine* constructor_line = create_line();
+	
+		snprintf(buff, 64, "	call	.%s_::ctr", class_name);
+		constructor_line->line = strdup(buff);
+	
+		add_line_to_area(area, constructor_line);
+	}
+
+	/*==-------------------------------------------------==*/
+
+	AsmReturn* ret = create_asm_return("rax", type);
+
+	return ret;
+}
+
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg)
 {
 	switch (node->type)
@@ -1776,32 +1992,27 @@ static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_d
 			
 				Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, code_gen->scope, 1, 0, 0, 0);
 				
-				/**
-				 * TODO: ass code, precisa ser melhorado...
-				 */ 
+				char* ref_str = NULL;
+
 				if (symbol->symbol_variable->is_global)
 				{
-					char buff[32];
-					snprintf(buff, 32, "rip + %s", node->variable_node.variable.identifier);
-					
-					ref = buff;
+					char buff[64];
+					snprintf(buff, sizeof(buff), "rip + %s", node->variable_node.variable.identifier);
+					ref_str = strdup(buff);  // Aloca string dinamicamente
 				}
 				else
 				{
-					char buff[32];
 					if (flag_assign)
-					{
-						snprintf(buff, 32, "%s", ref);
-					}
+						ref_str = strdup(ret->reg);
 					else
 					{
-						snprintf(buff, 32, "[%s]", ref);
+						char buff[64];
+						snprintf(buff, sizeof(buff), "[%s]", ret->reg);
+						ref_str = strdup(buff);
 					}
-					
-					ref = buff;
 				}
 
-				AsmReturn* asm_return = create_asm_return(ref, ret->type);
+				AsmReturn* asm_return = create_asm_return(ref_str, ret->type);
 				return asm_return;
 			}
 		}
@@ -1850,6 +2061,16 @@ static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_d
 			return generate_array_access(code_gen, node, area);
 		}
 
+		case NODE_MEMBER_ACCESS:
+		{
+			return generate_member_access(code_gen, node, area, prefer_secondary);
+		}
+
+		case NODE_CREATE_INSTANCE:
+		{
+			return generate_create_instance(code_gen, node, area, prefer_secondary);
+		}
+
 		default:
 		{
 			printf("[CodeGen] [Debug] Expression node not implemented: %d...\n", node->type);
@@ -1877,37 +2098,88 @@ static void handle_float_double_argument(CodeGen* code_gen, Node* node, AsmArea*
 	add_line_to_area(area, _line);
 }
 
-static int generate_setup_arguments(CodeGen* code_gen, Node* head, AsmArea* area)
+static void generate_stack_args(CodeGen* code_gen, Node* head, Node* arg, AsmArea* area, int floating, int doub)
+{
+	if (floating)
+	{
+		handle_float_double_argument(code_gen, arg, area, doub);
+
+		return;
+	}
+	
+	AsmLine* line = create_line();
+	
+	char buff[32];
+	
+	AsmReturn* ret = generate_expression(code_gen, arg->argument_node.argument.value, 0, area, 1, 0, 1);
+	
+	snprintf(buff, 32, "	push	%s", ret->reg);
+	line->line = strdup(buff);
+	
+	add_line_to_area(area, line);
+}
+
+static void generate_register_args(CodeGen* code_gen, Node* head, Node* arg, AsmArea* area, int count, int floating)
+{
+	if (floating)
+	{
+		AsmReturn* ret = generate_expression(code_gen, arg->argument_node.argument.value, 0, area, 0, 0, 1);
+			
+		AsmLine* line = create_line();
+		
+		char buff[32];	
+		snprintf(buff, 32, "	mov	xmm%d, %s", count, ret->reg);
+		
+		line->line = strdup(buff);
+		
+		add_line_to_area(area, line);
+
+		return;
+	}
+	
+	AsmReturn* ret = generate_expression(code_gen, arg->argument_node.argument.value, 0, area, 0, 0, 1);
+			
+	AsmLine* line = create_line();
+	
+	char buff[32];	
+	snprintf(buff, 32, "	mov	%s, %s", arg_registers[count], ret->reg);
+	
+	line->line = strdup(buff);
+	
+	add_line_to_area(area, line);
+}
+
+static int generate_setup_arguments(CodeGen* code_gen, Node* head, AsmArea* area, int jump_size)
 {
 	Node* next = head;
 
 	int final_soffset = 0;
+	int count = 0;
+
+	while (jump_size > 0)
+	{
+		count++;
+		jump_size--;
+	}
 	
 	while (next != NULL)
 	{
 		Type* type = analyzer_return_type_of_expression(NULL, next->argument_node.argument.value, code_gen->scope, NULL, 0, 0);
-		
-		if (type->type == TYPE_FLOAT || type->type == TYPE_DOUBLE)
+		int floating = (type->type == TYPE_FLOAT || type->type == TYPE_DOUBLE);
+
+		if (count <= 6)
 		{
-			handle_float_double_argument(code_gen, next, area, type->type == TYPE_DOUBLE);
+			generate_register_args(code_gen, head, next, area, count, floating);
 		}
 		else
 		{
-			AsmLine* line = create_line();
+			generate_stack_args(code_gen, head, next, area, floating, (type->type == TYPE_DOUBLE));
 
-			char buff[32];
-
-			AsmReturn* ret = generate_expression(code_gen, next->argument_node.argument.value, 0, area, 1, 0, 1);
-
-			snprintf(buff, 32, "	push	%s", ret->reg);
-
-			line->line = strdup(buff);
-
-			add_line_to_area(area, line);
+			final_soffset += 8;
 		}
 		
-		final_soffset += 8;
 		next = next->next;
+		count++;
 	}
 
 	return final_soffset;
@@ -2053,7 +2325,7 @@ static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea*
 		
 		Node* params_head = node->function_call_node.function_call.arguments->head;
 	
-		s_offset = generate_setup_arguments(code_gen, params_head, area);
+		s_offset = generate_setup_arguments(code_gen, params_head, area, 0);
 		int offset = s_offset + actual_offset;
 	
 		if ((offset + 8) % 16 == 0)
@@ -2206,6 +2478,195 @@ static void generate_return(CodeGen* code_gen, Node* node, int scope_depth, AsmA
 	add_line_to_area(area, line);
 }
 
+static void add_method_to_v_table(CodeGen* code_gen, Node* method, AsmArea* v_table, char* class_identifier)
+{
+	AsmLine* line = create_line();
+
+	char _buff[64];
+	snprintf(_buff, 64, ".%s_%s", class_identifier, method->function_node.function.identifier);
+	
+	char buff[64];
+	snprintf(buff, 64, "	dq %s", _buff);
+
+	line->line = strdup(buff);
+	add_line_to_area(v_table, line);
+}
+
+static void add_v_table_to_data(AsmArea* v_table)
+{
+	for (int i = 0; i < v_table->lines_count; i++)
+	{
+		AsmLine* curr = v_table->lines[i];
+		add_line_to_area(data_section, curr);
+	}
+}
+
+static AsmArea* generate_class_v_table(CodeGen* code_gen, char* class_name)
+{
+	AsmArea* area = create_area();
+
+	char buff[64];
+	snprintf(buff, 64, ".%s_vtable:", class_name);
+	AsmLine* label = generate_label(buff);
+
+	label->line = strdup(buff);
+	add_line_to_area(area, label);
+
+	return area;
+}
+
+static void generate_class_method(CodeGen* code_gen, Node* method, char* class_identifier, int constructor)
+{
+	char* identifier = strdup(method->function_node.function.identifier);
+	
+	char buff[64];
+	snprintf(buff, 64, ".%s_%s", class_identifier, constructor ? "::ctr" : identifier);
+	
+	class_func_flag = method->function_node.function.identifier;
+
+	method->function_node.function.identifier = strdup(buff);
+	
+	if (constructor)
+	{
+		constructor_flag = 1;
+	}
+	
+	generate_function_declaration(code_gen, method, 0, text_section);
+
+	if (constructor)
+	{
+		constructor_flag = 0;
+	}
+
+	class_func_flag = NULL;
+
+	free(method->function_node.function.identifier);
+	method->function_node.function.identifier = identifier;
+}
+
+static void generate_class_methods(CodeGen* code_gen, Node** methods, int method_count, AsmArea* v_table, char* class_identifier)
+{
+	for (int i = 0; i < method_count; i++)
+	{
+		Node* curr = methods[i];
+
+		if (curr == NULL)
+		{
+			continue; // constructor
+		}
+		
+		if (curr->function_node.function.is_override || curr->function_node.function.is_virtual)
+		{
+			add_method_to_v_table(code_gen, curr, v_table, class_identifier);
+		}
+
+		generate_class_method(code_gen, curr, class_identifier, 0);
+	}
+}
+
+static void generate_class_field(CodeGen* code_gen, Node* field, char* class_identifier)
+{
+	char* identifier = field->declare_node.declare.identifier;
+	int bss = field->declare_node.declare.default_value == NULL;
+	
+	AsmArea* data = bss ? bss_section : data_section;
+	
+	char buff[64];
+	snprintf(buff, 64, ".%s_%s", class_identifier, identifier);
+	AsmLine* label = generate_label(buff);
+
+	label->line = strdup(buff);
+	add_line_to_area(data, label);
+
+	AsmLine* line = create_line();
+	
+	Type* type = field->declare_node.declare.var_type;
+
+	char* size_def = bss ? strdup("resb") : get_type_size(type->type);
+	
+	if (bss)
+	{
+		int size = analyzer_get_type_size(type, code_gen->scope);
+		snprintf(buff, 64, "	%s %d", size_def, size);
+	}
+	else
+	{
+		char* ret = get_global_literal_value(field->declare_node.declare.default_value);
+		snprintf(buff, 64, "	%s %s", size_def, ret);
+
+		free(ret);
+	}
+
+	line->line = strdup(buff);
+
+	add_line_to_area(data, line);
+}
+
+/**
+ * Só fields 'static' vão estar aqui, o resto é associado na instancia da classe
+ */
+static void generate_class_fields(CodeGen* code_gen, Node** fields, int field_count, char* class_identifier)
+{
+	for (int i = 0; i < field_count; i++)
+	{
+		Node* curr = fields[i];
+		
+		if (!curr->declare_node.declare.is_static)
+		{
+			continue;
+		}
+
+		generate_class_field(code_gen, curr, class_identifier);
+	}
+}
+
+static void generate_class(CodeGen* code_gen, Node* node, AsmArea* area)
+{
+	char* identifier = node->class_node.class_node.identifer;
+
+	SymbolTable* temp = code_gen->scope;
+	Node* constructor = node->class_node.class_node.constructor;
+	
+	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 0, 1, 0);
+	code_gen->scope = symbol->symbol_class->class_scope;
+
+	AsmArea* v_table = generate_class_v_table(code_gen, identifier);
+
+	Node** fields = node->class_node.class_node.var_declare_list;
+	int field_count = node->class_node.class_node.var_count;
+
+	generate_class_fields(code_gen, fields, field_count, identifier);
+
+	Node** methods = node->class_node.class_node.func_declare_list;
+	int method_count = node->class_node.class_node.func_count;
+
+	AsmClassInfo* info = malloc(sizeof(AsmClassInfo));
+	info->class_name = strdup(identifier);
+	info->has_constructor = 0;
+	info->has_v_table = 0;
+	
+	if (constructor != NULL)
+	{
+		generate_class_method(code_gen, constructor, identifier, 1);
+	}
+	
+	generate_class_methods(code_gen, methods, method_count, v_table, identifier);
+
+	code_gen->scope = temp;
+	
+	if (v_table->lines_count == 1)
+	{
+		add_class_to_table(info);
+
+		return;
+	}
+
+	info->has_v_table = 1;
+	add_v_table_to_data(v_table);
+
+	add_class_to_table(info);
+}
+
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
 	switch (node->type)
@@ -2248,6 +2709,13 @@ static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmAre
 		case NODE_RETURN:
 		{
 			generate_return(code_gen, node, scope_depth, area);
+
+			return;
+		}
+		
+		case NODE_CLASS:
+		{
+			generate_class(code_gen, node, area);
 
 			return;
 		}
