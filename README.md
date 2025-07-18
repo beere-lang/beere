@@ -6,12 +6,12 @@ Beere is a simple, fast, and low-level programming language, designed for system
 
 ## Features
 
-- 🚀 Fast native compilation to x86_64 Assembly  
-- 🔒 Manual memory management with safety checks  
-- 🧠 Simple and clean syntax 
-- 🧰 Optional object-oriented features (classes, vtables)  
-- 🔗 Easy C interoperability (`extern "C" fn`)  
-- 📦 Lightweight module system and package manager (WIP)
+- Fast native compilation to x86_64 Assembly  
+- Manual memory management with safety checks  
+- Simple and clean syntax 
+- Optional object-oriented features (classes, vtables)  
+- Easy C interoperability (`extern "C" fn`)  
+- Lightweight module system and package manager (WIP)
 
 ## Hello World
 
@@ -31,4 +31,4 @@ beerec path/to/entry/point path/to/dotmod/file
 
 ## Status
 
-⚠️ Beere is under active development.
+> ⚠️ Beere is under active development.
