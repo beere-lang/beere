@@ -16,7 +16,8 @@ Beere is a simple, fast, and low-level programming language, designed for system
 ## Hello World
 
 ```beere
-fn main() {
+fn main()
+{
     print("Hello, World!")
 }
 ```
