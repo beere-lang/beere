@@ -1907,10 +1907,13 @@ Node* setup_parse_function(Parser* parser, int is_public, int is_static, int is_
 
 Node* setup_parse_variable(Parser* parser, int is_public, int is_static, int is_const)
 {
+	if ((parser->inside_class && is_const) || !parser->inside_class)
+	{
+		advance_tkn(parser);
+	}
+	
 	VisibilityType visibility = (is_public) ? VISIBILITY_PUBLIC : VISIBILITY_PRIVATE;
 	
-	advance_tkn(parser);
-
 	expect_tkn(parser, (TokenType[]) { TOKEN_IDENTIFIER }, 1);
 	Token* identifier_token = consume_token(parser);
 
@@ -1945,7 +1948,11 @@ Node* handle_function_and_variable_parse(Parser* parser)
 		advance_tkn(parser);
 	}
 
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_LET || peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST)
+	if ((peek_tkn(parser)->token_type == TOKEN_KEYWORD_LET || peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST) && !parser->inside_class)
+	{
+		return setup_parse_variable(parser, is_public, is_static, (peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST));
+	}
+	else if ((peek_tkn(parser)->token_type == TOKEN_IDENTIFIER || peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST) && parser->inside_class)
 	{
 		return setup_parse_variable(parser, is_public, is_static, (peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST));
 	}

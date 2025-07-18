@@ -1,6 +1,6 @@
 class Base
 {
-    public let val: int = 10
+    public val: int = 10
 }
 
 fn main()
