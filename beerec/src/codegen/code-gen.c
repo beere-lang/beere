@@ -33,7 +33,7 @@ AsmArea* ref_post_area = NULL;
 /**
  * TODO - Completo:
  *  - Finalizar arrays e dar suporte pra arrays em variaveis globais (alocar no entry point)
- *  - Finalizar OOP.
+ *  - Finalizar OOP (chamada de funções, v-table).
  *  - Adicionar loops (while e for)
  *  - Adicionar strings (dinamicas)
  *  - Adicionar o array push e o array pop no analyzer (só substituir prototype call quando for push ou pop em alguma array pela node respective)
