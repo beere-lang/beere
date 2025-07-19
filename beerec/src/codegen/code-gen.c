@@ -26,13 +26,15 @@ char* class_func_flag = NULL;
 
 char* arg_registers[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 
+int ifs_count = 0;
+
+AsmArea* ref_post_area = NULL;
+
 /**
  * TODO:
- * - Fixar ponteiros e suas referencia no assign
+ * - Terminar classes.
+ * - Terminar o gerenciamento de parametros.
  * - Implementar arrays pra variaveis globais.
- * - Mudar pro sistema de argumentos e parametros do windows (registradores nos primeiros parametro ** mais rapidoo **)
- * - Revisar e deixar o codigo mais bonito (variaveis inuteis, nomes ruins, etc)
- * - Implementar classes IMPORTANTE: Tudo que envolve find_symbol do analyzer vai ter que ser alterado (não pega symbol de classes automaticamente).
  * - Implementar C e modulos.
  * 
  * Estrategia pra arrays inicializadas globalmente:
@@ -732,15 +734,22 @@ static void add_function_area_to_text_section(AsmArea* area)
 	}
 }
 
-static void generate_block_code(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int offset)
+static void generate_block_code(CodeGen* code_gen, Node* node, int scope_depth, AsmArea** area, int offset)
 {
 	Node* next = node->block_node.block.statements->head;
 
 	while (next != NULL)
 	{
-		code_gen_node(code_gen, next, scope_depth, area);
-
+		code_gen_node(code_gen, next, scope_depth, *area);
 		next = next->next;
+
+		if (ref_post_area != NULL)
+		{
+			add_function_area_to_text_section(*area);
+
+			*area = ref_post_area;
+			ref_post_area = NULL;
+		}
 	}
 }
 
@@ -812,7 +821,7 @@ static void generate_function_declaration(CodeGen* code_gen, Node* node, int sco
 	code_gen->scope = symbol->symbol_function->scope;
 
 	actual_offset = symbol->symbol_function->total_offset * (-1) + 8; // +8 == push
-	generate_block_code(code_gen, block, scope_depth + 1, function_area, actual_offset);
+	generate_block_code(code_gen, block, scope_depth + 1, &function_area, actual_offset);
 
 	code_gen->scope = temp;
 
@@ -1321,6 +1330,160 @@ static AsmReturn* generate_decrement(CodeGen* code_gen, AsmReturn* lreg,  Node* 
 	return NULL;
 }
 
+static AsmReturn* generate_and(CodeGen* code_gen, AsmReturn* lreg, AsmReturn* rreg,  Node* node, AsmArea* area, int prefer_second)
+{
+	AsmLine* line = create_line();
+
+	char* temp = (lreg->reg[0] == 'a' && lreg->reg[1] == 'l') ? "eax" : "ebx";
+	char* _temp = (rreg->reg[0] == 'a' && rreg->reg[1] == 'l') ? "eax" : "ebx";
+
+	char buff[64];
+	snprintf(buff, 64, "	or	%s, %s", temp, _temp);
+
+	line->line = strdup(buff);
+
+	AsmReturn* ret = create_asm_return(lreg->reg, create_type(TYPE_BOOL, NULL));
+
+	add_line_to_area(area, line);
+	
+	return ret;
+}
+
+static AsmReturn* generate_or(CodeGen* code_gen, AsmReturn* lreg, AsmReturn* rreg,  Node* node, AsmArea* area, int prefer_second)
+{
+	AsmLine* line = create_line();
+
+	char* temp = (lreg->reg[0] == 'a' && lreg->reg[1] == 'l') ? "eax" : "ebx";
+	char* _temp = (rreg->reg[0] == 'a' && rreg->reg[1] == 'l') ? "eax" : "ebx";
+
+	char buff[64];
+	snprintf(buff, 64, "	or	%s, %s", temp, _temp);
+
+	line->line = strdup(buff);
+
+	AsmReturn* ret = create_asm_return(lreg->reg, create_type(TYPE_BOOL, NULL));
+
+	add_line_to_area(area, line);
+	
+	return ret;
+}
+
+static AsmReturn* generate_equals(CodeGen* code_gen, AsmReturn* lreg, AsmReturn* rreg,  Node* node, AsmArea* area, int prefer_second)
+{
+	char* temp = prefer_second ? "bl" : "al";
+	char* _temp = prefer_second ? "ebx" : "eax";
+	
+	AsmLine* cmp_line = create_line();
+	AsmLine* set_line = create_line();
+	AsmLine* mov_line = create_line();
+
+	char buff[64];
+
+	snprintf(buff, 64, "	cmp	%s, %s", lreg->reg, rreg->reg);
+	cmp_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	sete	%s", temp);
+	set_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	movzx	%s, %s", _temp, temp);
+	mov_line->line = strdup(buff);
+
+	add_line_to_area(area, cmp_line);
+	add_line_to_area(area, set_line);
+	add_line_to_area(area, mov_line);
+
+	AsmReturn* ret = create_asm_return(temp, create_type(TYPE_BOOL, NULL));
+	
+	return ret;
+}
+
+static AsmReturn* generate_not_equals(CodeGen* code_gen, AsmReturn* lreg, AsmReturn* rreg,  Node* node, AsmArea* area, int prefer_second)
+{
+	char* temp = prefer_second ? "bl" : "al";
+	char* _temp = prefer_second ? "ebx" : "eax";
+	
+	AsmLine* cmp_line = create_line();
+	AsmLine* set_line = create_line();
+	AsmLine* mov_line = create_line();
+
+	char buff[64];
+
+	snprintf(buff, 64, "	cmp	%s, %s", lreg->reg, rreg->reg);
+	cmp_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	setne	%s", temp);
+	set_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	movzx	%s, %s", _temp, temp);
+	mov_line->line = strdup(buff);
+
+	add_line_to_area(area, cmp_line);
+	add_line_to_area(area, set_line);
+	add_line_to_area(area, mov_line);
+
+	AsmReturn* ret = create_asm_return(temp, create_type(TYPE_BOOL, NULL));
+	
+	return ret;
+}
+
+static AsmReturn* generate_less(CodeGen* code_gen, AsmReturn* lreg, AsmReturn* rreg,  Node* node, AsmArea* area, int prefer_second)
+{
+	char* temp = prefer_second ? "bl" : "al";
+	char* _temp = prefer_second ? "ebx" : "eax";
+	
+	AsmLine* cmp_line = create_line();
+	AsmLine* set_line = create_line();
+	AsmLine* mov_line = create_line();
+
+	char buff[64];
+
+	snprintf(buff, 64, "	cmp	%s, %s", lreg->reg, rreg->reg);
+	cmp_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	setl	%s", temp);
+	set_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	movzx	%s, %s", _temp, temp);
+	mov_line->line = strdup(buff);
+
+	add_line_to_area(area, cmp_line);
+	add_line_to_area(area, set_line);
+	add_line_to_area(area, mov_line);
+
+	AsmReturn* ret = create_asm_return(temp, create_type(TYPE_BOOL, NULL));
+	
+	return ret;
+}
+
+static AsmReturn* generate_greater(CodeGen* code_gen, AsmReturn* lreg, AsmReturn* rreg,  Node* node, AsmArea* area, int prefer_second)
+{
+	char* temp = prefer_second ? "bl" : "al";
+	char* _temp = prefer_second ? "ebx" : "eax";
+	
+	AsmLine* cmp_line = create_line();
+	AsmLine* set_line = create_line();
+	AsmLine* mov_line = create_line();
+
+	char buff[64];
+
+	snprintf(buff, 64, "	cmp	%s, %s", lreg->reg, rreg->reg);
+	cmp_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	setg	%s", temp);
+	set_line->line = strdup(buff);
+
+	snprintf(buff, 64, "	movzx	%s, %s", _temp, temp);
+	mov_line->line = strdup(buff);
+	
+	add_line_to_area(area, cmp_line);
+	add_line_to_area(area, set_line);
+	add_line_to_area(area, mov_line);
+
+	AsmReturn* ret = create_asm_return(temp, create_type(TYPE_BOOL, NULL));
+	
+	return ret;
+}
+
 static AsmReturn* generate_operation(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int prefer_second, int arg)
 {
 	Node* left = node->operation_node.operation.left;
@@ -1377,6 +1540,56 @@ static AsmReturn* generate_operation(CodeGen* code_gen, Node* node, int scope_de
 		case TOKEN_OPERATOR_DECREMENT:
 		{	
 			AsmReturn* r = generate_decrement(code_gen, lreg, node, area, prefer_second);
+
+			free(lreg);
+			free(rreg);
+
+			return r;
+		}
+
+		case TOKEN_OPERATOR_OR:
+		{
+			AsmReturn* r = generate_or(code_gen, lreg, rreg, node, area, prefer_second);
+
+			free(lreg);
+			free(rreg);
+
+			return r;
+		}
+
+		case TOKEN_OPERATOR_AND:
+		{
+			AsmReturn* r = generate_and(code_gen, lreg, rreg, node, area, prefer_second);
+
+			free(lreg);
+			free(rreg);
+
+			return r;
+		}
+
+		case TOKEN_OPERATOR_GREATER:
+		{
+			AsmReturn* r = generate_greater(code_gen, lreg, rreg, node, area, prefer_second);
+
+			free(lreg);
+			free(rreg);
+
+			return r;
+		}
+
+		case TOKEN_OPERATOR_LESS:
+		{
+			AsmReturn* r = generate_less(code_gen, lreg, rreg, node, area, prefer_second);
+
+			free(lreg);
+			free(rreg);
+
+			return r;
+		}
+
+		case TOKEN_OPERATOR_EQUALS:
+		{
+			AsmReturn* r = generate_equals(code_gen, lreg, rreg, node, area, prefer_second);
 
 			free(lreg);
 			free(rreg);
@@ -2667,6 +2880,182 @@ static void generate_class(CodeGen* code_gen, Node* node, AsmArea* area)
 	add_class_to_table(info);
 }
 
+static void generate_post(CodeGen* code_gen, Node* then, AsmArea* area, int id)
+{
+	AsmArea* post_area = create_area();
+	
+	char buff[50];
+	
+	/* ------------------------------------------------------------- */
+	
+	char _buff[64];
+	snprintf(_buff, 64, ".if_post_%d", id);
+	
+	AsmLine* label = generate_label(_buff);
+	add_line_to_area(post_area, label);
+
+	/* ------------------------------------------------------------- */
+
+	ref_post_area = post_area;
+}
+
+static AsmArea* generate_then(CodeGen* code_gen, Node* expr, Node* then, AsmArea* area, int id)
+{
+	AsmArea* then_area = create_area();
+	AsmReturn* ret = generate_expression(code_gen, expr, 0, area, 0, 0, 0);
+
+	char buff[50];
+	
+	/* ------------------------------------------------------------- */
+	
+	char _buff[64];
+	snprintf(_buff, 64, ".if_then_%d", id);
+	
+	AsmLine* label = generate_label(_buff);
+	add_line_to_area(then_area, label);
+
+	/* ------------------------------------------------------------- */
+	
+	AsmLine* test_line = create_line();
+	
+	snprintf(buff, 50, "	test	%s, %s", ret->reg, ret->reg);
+	test_line->line = strdup(buff);
+
+	add_line_to_area(area, test_line);
+
+	/* ------------------------------------------------------------- */
+	
+	AsmLine* jmp_line = create_line();
+
+	snprintf(buff, 50, "	jnz	%s", _buff);
+	jmp_line->line = strdup(buff);
+
+	add_line_to_area(area, jmp_line);
+
+	/* ------------------------------------------------------------- */
+
+	Node* next = then->block_node.block.statements->head;
+
+	while (next != NULL)
+	{
+		code_gen_node(code_gen, next, 0, then_area);
+		next = next->next;
+	}
+
+	AsmLine* ret_line = create_line();
+
+	snprintf(buff, 50, "	jmp	.if_post_%d", ifs_count);
+	ret_line->line = strdup(buff);
+
+	add_line_to_area(then_area, ret_line);
+
+	return then_area;
+}
+
+static void merge_area(AsmArea* area, AsmArea* _area)
+{
+	for (int i = 0; i < _area->lines_count; i++)
+	{
+		AsmLine* curr = _area->lines[i];
+
+		add_line_to_area(area, curr);
+	}
+}
+
+static AsmArea* generate_else(CodeGen* code_gen, Node* else_, AsmArea* area, int if_, int id)
+{
+	AsmArea* else_area = create_area();
+	
+	char buff[50];
+	char _buff[64];
+
+	Node* next = NULL;
+
+	if (else_->type == NODE_IF)
+	{
+		IfNode* nested_if = &else_->if_statement_node.if_statement;
+		
+		code_gen->scope = nested_if->then_scope;
+
+		AsmArea* then_area = generate_then(code_gen, nested_if->condition_top, nested_if->then_branch, area, id + 1);
+		merge_area(text_section, then_area);
+
+		if (nested_if->else_branch != NULL)
+		{
+			code_gen->scope = nested_if->else_scope;
+			
+			AsmArea* _else_area = generate_else(code_gen, nested_if->else_branch, area, 0, id);
+			merge_area(text_section, _else_area);
+
+			return else_area;
+		}
+	}
+	else
+	{
+		if (!if_)
+		{
+			snprintf(_buff, 64, ".if_else_%d", id);
+			
+			AsmLine* label = generate_label(_buff);
+			add_line_to_area(else_area, label);
+		}
+		
+		next = else_->block_node.block.statements->head;
+
+		while (next != NULL)
+		{
+			code_gen_node(code_gen, next, 0, else_area);
+			next = next->next;
+		}
+
+		if (!if_)
+		{
+			AsmLine* jmp_line = create_line();
+
+			snprintf(buff, 50, "	jmp	%s", _buff);
+			jmp_line->line = strdup(buff);
+
+			add_line_to_area(area, jmp_line);
+		}
+	}
+
+	AsmLine* ret_line = create_line();
+
+	snprintf(buff, 50, "	jmp	.if_post_%d", ifs_count);
+	ret_line->line = strdup(buff);
+
+	add_line_to_area(else_area, ret_line);
+
+	return else_area;
+}
+
+static void generate_if(CodeGen* code_gen, Node* node, AsmArea* area)
+{
+	int id = ifs_count;
+	
+	IfNode* if_node = &node->if_statement_node.if_statement;
+	
+	SymbolTable* temp = code_gen->scope = if_node->then_scope;
+	
+	code_gen->scope = if_node->then_scope;
+	AsmArea* then_area = generate_then(code_gen, if_node->condition_top, if_node->then_branch, area, id);
+
+	merge_area(text_section, then_area);
+	
+	if (if_node->else_branch != NULL)
+	{
+		code_gen->scope = if_node->else_scope;
+		AsmArea* else_area = generate_else(code_gen, if_node->else_branch, area, 0, id);
+
+		merge_area(text_section, else_area);
+	}
+	
+	code_gen->scope = temp;
+	generate_post(code_gen, if_node->else_branch, area, id);
+
+	ifs_count++;
+}
+
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
 {
 	switch (node->type)
@@ -2716,6 +3105,13 @@ static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmAre
 		case NODE_CLASS:
 		{
 			generate_class(code_gen, node, area);
+
+			return;
+		}
+
+		case NODE_IF:
+		{
+			generate_if(code_gen, node, area);
 
 			return;
 		}

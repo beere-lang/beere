@@ -425,7 +425,7 @@ static Node* parse_literal(Parser* parser)
 	}
 	else 
 	{
-		printf("[Parser] [Debug] Invalid syntax in expression, exiting: %s...", token_type_to_string(peek_tkn(parser)->token_type));
+		printf("[Parser] [Debug] Invalid syntax in expression, exiting: %s, %s...", token_type_to_string(peek_tkn(parser)->token_type), token_type_to_string(peek_ahead(parser)->token_type));
 		exit(1);
 	}
 
@@ -1055,7 +1055,10 @@ static Node* parse_if(Parser* parser)
 		else
 		{
 			else_statements = parse_block(parser);
+			advance_tkn(parser);
 		}
+
+		skip_end_lines(parser);
 
 		node->if_statement_node.if_statement.else_branch = else_statements;
 	}

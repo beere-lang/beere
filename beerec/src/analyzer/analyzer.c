@@ -459,7 +459,7 @@ int analyzer_get_type_size(Type* type, SymbolTable* scope)
 	{
 		case TYPE_BOOL:
 		{
-			return 4;
+			return 1;
 		}
 
 		case TYPE_INT:
@@ -2511,6 +2511,7 @@ static void analyzer_handle_if(Module* module, Node* node, SymbolTable* scope, i
 	}
 
 	SymbolTable* then_scope = analyzer_create_scope(SYMBOL_IF, scope, NULL);
+	node->if_statement_node.if_statement.then_scope = then_scope; // pro codegen
 	
 	analyzer_analyze_node(module, node->if_statement_node.if_statement.then_branch, then_scope, offset);
 
@@ -2518,6 +2519,8 @@ static void analyzer_handle_if(Module* module, Node* node, SymbolTable* scope, i
 	{
 		SymbolTable* else_scope = analyzer_create_scope(SYMBOL_ELSE, scope, NULL);
 		analyzer_analyze_node(module, node->if_statement_node.if_statement.else_branch, else_scope, offset);
+
+		node->if_statement_node.if_statement.else_scope = else_scope; // pro codegen
 	}
 }
 

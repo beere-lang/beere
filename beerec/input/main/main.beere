@@ -1,13 +1,4 @@
-class Base
-{
-    public val: int = 10
-}
-
 fn main()
 {
-    let d: Base* = new Base()
-    let b: Base* = d
-
-    let pb: Base** = &b
-    let obj: Base* = *pb
+    let x: int = 0
 }

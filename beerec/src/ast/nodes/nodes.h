@@ -6,6 +6,7 @@
 
 typedef struct Node Node;
 typedef struct NodeList NodeList;
+typedef struct SymbolTable SymbolTable;
 
 typedef enum
 {
@@ -16,6 +17,9 @@ VisibilityType;
 
 typedef struct
 {
+	SymbolTable* then_scope;
+	SymbolTable* else_scope;
+	
 	Node* condition_top;
 	Node* then_branch;
 	Node* else_branch;
