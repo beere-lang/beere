@@ -116,6 +116,7 @@ static void setup_entry_point()
 	entry_line->line = "global	main";
 
 	add_line_to_area(text_section, entry_line);
+	add_line_to_area(text_section, NULL);
 }
 
 static void setup_constant_table()
@@ -1126,6 +1127,11 @@ void print_code_generated()
 
 	for (int i = 0; i < text_section->lines_count; i++)
 	{
+		if (text_section->lines[i] == NULL)
+		{
+			printf("\n");
+			continue;
+		}
 		printf("%s\n", text_section->lines[i]->line);
 	}
 }
