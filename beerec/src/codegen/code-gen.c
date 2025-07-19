@@ -31,15 +31,24 @@ int ifs_count = 0;
 AsmArea* ref_post_area = NULL;
 
 /**
- * TODO:
- * - Terminar classes.
- * - Terminar o gerenciamento de parametros.
- * - Implementar arrays pra variaveis globais.
- * - Implementar C e modulos.
- * 
- * Estrategia pra arrays inicializadas globalmente:
- *  - Alocar a array no entry point antes de tudo, ja que não é possivel realocar na data
+ * TODO - Completo:
+ *  - Finalizar arrays e dar suporte pra arrays em variaveis globais (alocar no entry point)
+ *  - Finalizar OOP.
+ *  - Adicionar loops (while e for)
+ *  - Adicionar strings (dinamicas)
+ *  - Adicionar o array push e o array pop no analyzer (só substituir prototype call quando for push ou pop em alguma array pela node respective)
+ *  - Implementar modulos e fazer a linkagem correta
+ *  - Adicionar interoperabilidade com C
+ *  - Adicionar o package manager (Beeagle)
+ *  - Adicionar o print (só mover a array de char da string pro rdi e dar syscall)
+ *  - Criar a lib 'std'
  */
+
+ /**
+  * TODO - Pre Release:
+  *  - Logs melhores
+  *  - Adicionar o optimizer nas nodes
+  */
 
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg);
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg);
