@@ -32,6 +32,7 @@ AsmArea* ref_post_area = NULL;
 
 /**
  * TODO - Completo:
+ *  - Terminar de implementar todas as operações (*, /, +=, -=, *=, /=, >=, <=)
  *  - Finalizar arrays e dar suporte pra arrays em variaveis globais (alocar no entry point)
  *  - Finalizar OOP (chamada de funções, v-table).
  *  - Adicionar loops (while e for)
