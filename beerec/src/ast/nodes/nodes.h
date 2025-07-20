@@ -136,6 +136,9 @@ typedef struct
 {
 	Node* callee;
 	NodeList* arguments;
+
+	int is_prototype;
+	int prototype_id;
 }
 FunctionCallNode;
 

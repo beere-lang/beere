@@ -1130,6 +1130,7 @@ static Node* parse_func_call(Parser* parser, Node* callee_expr)
 
 	node->function_call_node.function_call.arguments = args;
 	node->function_call_node.function_call.callee = callee_expr;
+	node->function_call_node.function_call.is_prototype = 0;
 
 	return node;
 }
@@ -1189,7 +1190,7 @@ static Node* parse_func(
 	node->function_node.function.block_node = statements;
 	node->function_node.function.is_constructor = is_constructor;
 	node->function_node.function.only_declaration = (statements == NULL);
-
+	
 	parser_info(statements ? "Normal function found..." : "Only declaration function found...");
 
 	return node;

@@ -71,6 +71,25 @@ struct SymbolFunction
 	int method_id; // usado em classes (v table - virtual e override)
 };
 
+typedef struct
+{
+	char* method_name;
+	char* class_name;
+
+	int method_index;
+}
+MethodEntry;
+
+
+typedef struct
+{
+	MethodEntry** entries;
+
+	int entries_count;
+	int entries_capacity;
+}
+ClassVTable;
+
 struct SymbolClass
 {
 	int class_id;
@@ -92,6 +111,8 @@ struct SymbolClass
 
 	int total_offset;
 	int offset;
+
+	ClassVTable* class_v_table;
 };
 
 struct SymbolModule

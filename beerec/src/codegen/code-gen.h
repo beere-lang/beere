@@ -52,6 +52,9 @@ struct Constant
 	int number;
 
 	AsmArea* area;
+
+	char* value;
+	VarType type;
 };
 
 struct ConstantTable

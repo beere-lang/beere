@@ -13,6 +13,8 @@ AsmArea* bss_section;
 AsmArea* rodata_section;
 AsmArea* text_section;
 
+int pop_counts = 0;
+
 ConstantTable* constant_table = NULL;
 ClassTable* asm_class_table = NULL;
 
@@ -34,10 +36,8 @@ AsmArea* ref_post_area = NULL;
  * TODO - Completo:
  *  - Terminar de implementar todas as operações (*, /, +=, -=, *=, /=, >=, <=)
  *  - Finalizar arrays e dar suporte pra arrays em variaveis globais (alocar no entry point)
- *  - Finalizar OOP (chamada de funções, v-table).
  *  - Adicionar loops (while e for)
  *  - Adicionar strings (dinamicas)
- *  - Adicionar o array push e o array pop no analyzer (só substituir prototype call quando for push ou pop em alguma array pela node respective)
  *  - Implementar modulos e fazer a linkagem correta
  *  - Adicionar interoperabilidade com C
  *  - Adicionar o package manager (Beeagle)
@@ -51,12 +51,14 @@ AsmArea* ref_post_area = NULL;
   *  - Adicionar o optimizer nas nodes
   */
 
+static AsmReturn* generate_array_literal(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg);
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg);
 static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_secondary, int arg);
 static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_second, int arg);
 static int generate_setup_arguments(CodeGen* code_gen, Node* head, AsmArea* area, int jump_size);
 static void code_gen_node(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area);
 static void add_line_to_area(AsmArea* area, AsmLine* line);
+static void merge_area(AsmArea* area, AsmArea* _area);
 static int elements_count(NodeList* list);
 static AsmArea* create_area();
 static AsmLine* create_line();
@@ -266,9 +268,6 @@ static int check_class(char* identifier, int has_constructor, int has_vtable)
 	return 0;
 }
 
-/**
- * TODO: Adicionar um check, pra caso o valor e o tipo seja o mesmo de uma ja existente, ela usa a ja existente
- */
 static Constant* create_constant()
 {
 	Constant* constant = malloc(sizeof(Constant));
@@ -282,8 +281,6 @@ static Constant* create_constant()
 	add_line_to_area(area, generate_label(buff));
 	
 	constant->area = area;
-
-	add_constant_to_table(constant);
 
 	return constant;
 }
@@ -489,6 +486,14 @@ static char* get_global_literal_value(Node* node)
 			return strdup(buff);
 		}
 
+		case TYPE_ARRAY:
+		{
+			uint64_t bits = double_to_bits(literal->double_value);
+			snprintf(buff, 64, "0x%016llX", (unsigned long long) bits);
+			
+			return strdup(buff);
+		}
+
 		default:
 		{
 			exit(1);
@@ -496,17 +501,46 @@ static char* get_global_literal_value(Node* node)
 	}
 }
 
+static Constant* check_if_cache(char* value, VarType type)
+{
+	for (int i = 0; i < constant_table->constants_count; i++)
+	{
+		Constant* curr = constant_table->constants[i];
+
+		if (strcmp(curr->value, value) == 0 && curr->type == type)
+		{
+			return curr;
+		}
+	}
+
+	return NULL;
+}
+
 static Constant* generate_constant(Node* node)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	
 	Constant* constant = create_constant();
+
 	AsmArea* area = constant->area;
 
 	char buff[64];
 
 	char* value = get_global_literal_value(node);
 
+	constant->type = literal->literal_type->type;
+	constant->value = value;
+
+	Constant* cache = check_if_cache(constant->value, constant->type);
+
+	if (cache != NULL)
+	{
+		free(constant);
+		free(value);
+
+		return cache;
+	}
+	
 	snprintf(buff, 64, "	%s %s", get_type_size(literal->literal_type->type), value);
 
 	free(value);
@@ -515,6 +549,8 @@ static Constant* generate_constant(Node* node)
 	literal_line->line = strdup(buff);
 
 	add_line_to_area(area, literal_line);
+
+	add_constant_to_table(constant);
 
 	return constant;
 }
@@ -686,7 +722,17 @@ static void generate_global_bss_variable(CodeGen* code_gen, Node* node, int scop
 
 static void generate_global_data_variable(CodeGen* code_gen, Node* node, int scope_depth, Symbol* symbol, AsmArea* area)
 {
-	AsmLine* label = generate_label(node->declare_node.declare.identifier);
+	char* identifier = node->declare_node.declare.identifier;
+
+	if (node->declare_node.declare.is_static)
+	{
+		char buff[64];
+		snprintf(buff, 64, ".static_%s", identifier);
+
+		identifier = strdup(buff);
+	}
+	
+	AsmLine* label = generate_label(identifier);
 	AsmLine* line = create_line();
 
 	char* type_size = get_type_size(node->declare_node.declare.var_type->type);
@@ -726,7 +772,7 @@ static void generate_variable_declaration(CodeGen* code_gen, Node* node, int sco
 	char* identifier = node->declare_node.declare.identifier;
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 1, 0, 0, 0);
 
-	if (!symbol->symbol_variable->is_global)
+	if (!symbol->symbol_variable->is_global && !node->declare_node.declare.is_static)
 	{
 		generate_local_variable_declaration(code_gen, node, scope_depth, symbol, area);
 	}
@@ -858,11 +904,18 @@ static AsmReturn* get_variable_reference(char* _identifier, SymbolTable* scope)
 	char* identifier = _identifier;
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, scope, 1, 0, 0, 0);
 
-	if (symbol->symbol_variable->is_global)
+	if (symbol->symbol_variable->is_global || symbol->symbol_variable->is_static)
 	{
 		char buff[64];
 
-		snprintf(buff, 64, "%s", identifier);
+		if (symbol->symbol_variable->is_static)
+		{
+			snprintf(buff, 64, ".static_%s", identifier);
+		}
+		else
+		{
+			snprintf(buff, 64, "%s", identifier);
+		}
 
 		AsmReturn* asm_return = create_asm_return(buff, symbol->symbol_variable->type);
 		
@@ -888,7 +941,13 @@ static AsmReturn* generate_load_var_to_reg(CodeGen* code_gen, char* identifier, 
 
 	char buff[64];
 
-	char* temp = prefer_secondary ? "rbx" : "rax";
+	char* temp = prefer_secondary ? "rdx" : "rcx";
+	
+	if (flag_assign)
+	{
+		temp = prefer_secondary ? "r13" : "r12";
+	}
+
 	char* _temp = "mov";
 
 	/**
@@ -994,8 +1053,8 @@ static void generate_local_variable_assign(CodeGen* code_gen, Node* node, int sc
 	{
 		force_reg = 0;
 	}
-
-	AsmReturn* ret = generate_expression(code_gen, node->variable_assign_node.variable_assign.assign_value, scope_depth, area, force_reg, 0, 0);
+	
+	AsmReturn* ret = generate_expression(code_gen, node->variable_assign_node.variable_assign.assign_value, scope_depth, area, force_reg, 1, 0);
 
 	char* _temp = "mov";
 
@@ -1080,7 +1139,7 @@ static void generate_variable_assign(CodeGen* code_gen, Node* node, int scope_de
 		char* identifier = ptr->variable_node.variable.identifier;
 		Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 1, 0, 0, 0);
 
-		if (!symbol->symbol_variable->is_global)
+		if (!symbol->symbol_variable->is_global && !symbol->symbol_variable->is_static)
 		{
 			generate_local_variable_assign(code_gen, node, scope_depth, area);
 		}
@@ -1130,6 +1189,7 @@ void print_code_generated()
 		if (text_section->lines[i] == NULL)
 		{
 			printf("\n");
+			
 			continue;
 		}
 		printf("%s\n", text_section->lines[i]->line);
@@ -1618,9 +1678,6 @@ static AsmReturn* generate_operation(CodeGen* code_gen, Node* node, int scope_de
 			exit(1);
 		}
 	}
-
-	free(lreg);
-	free(rreg);
 }
 
 static AsmReturn* generate_cast(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int force_reg, int prefer_second, int arg)
@@ -1982,14 +2039,6 @@ static AsmReturn* generate_array_push(CodeGen* code_gen, Node* node, int scope_d
 /**
  * TODO: Implementar melhor prototype pra isso no analyzer e parser (nodes)
  */
-static AsmReturn* generate_array_pop(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area)
-{
-
-}
-
-/**
- * TODO: Implementar melhor prototype pra isso no analyzer e parser (nodes)
- */
 static AsmReturn* generate_array_length(CodeGen* code_gen, Node* node, int scope_depth, AsmArea* area, int prefer_second)
 {
 	char* temp = prefer_second ? "ebx" : "eax";
@@ -2062,19 +2111,57 @@ static AsmReturn* generate_array_access(CodeGen* code_gen, Node* node, AsmArea* 
 	return res;
 }
 
+static Symbol* find_member_from_class(Symbol* class, char* member_name, int is_fn, int is_var)
+{
+	if (class == NULL)
+	{
+		return NULL;
+	}
+
+	if (is_fn)
+	{
+		for (int i = 0; i < class->symbol_class->func_count; i++)
+		{
+			Node* curr = class->symbol_class->functions[i];
+
+			if (strcmp(curr->function_node.function.identifier, member_name) == 0)
+			{
+				Symbol* temp = analyzer_find_symbol_from_scope(curr->function_node.function.identifier, class->symbol_class->class_scope, 0, 1, 0, 0);
+				
+				return temp;
+			}
+		}
+	}
+
+	if (is_var)
+	{
+		for (int i = 0; i < class->symbol_class->field_count; i++)
+		{
+			Node* curr = class->symbol_class->fields[i];
+
+			if (strcmp(curr->variable_node.variable.identifier, member_name) == 0)
+			{
+				Symbol* temp = analyzer_find_symbol_from_scope(curr->variable_node.variable.identifier, class->symbol_class->class_scope, 1, 0, 0, 0);
+				
+				return temp;
+			}
+		}
+	}
+
+	return find_member_from_class(class->symbol_class->super, member_name, is_fn, is_var);
+}
+
 static AsmReturn* generate_member_access(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_secondary)
 {
 	int pointer_access = node->member_access_node.member_access.ptr_acess;
 	char* member_name = node->member_access_node.member_access.member_name;
 	
-	flag_assign = 1;
 	member_access_flag = 1;
 	
-	AsmReturn* object = generate_expression(code_gen, node->member_access_node.member_access.object, 0, area, 1, 1, 0);
+	AsmReturn* object = generate_expression(code_gen, node->member_access_node.member_access.object, 0, area, 1, prefer_secondary, 0);
 	
 	member_access_flag = 0;
-	flag_assign = 0;
-
+	
 	Type* type = object->type;
 	char* reg = object->reg;
 
@@ -2091,25 +2178,70 @@ static AsmReturn* generate_member_access(CodeGen* code_gen, Node* node, AsmArea*
 	
 	SymbolTable* scope = symbol_class->symbol_class->class_scope;
 
-	Symbol* symbol = analyzer_find_symbol_from_scope(member_name, scope, 1, 0, 0, 0);
+	int is_fn = node->member_access_node.member_access.is_function;
+	Symbol* symbol = find_member_from_class(symbol_class, member_name, is_fn, !is_fn);
 
 	offset += symbol->symbol_variable->offset;
 
+	if (!flag_assign)
+	{
+		char buff[50];
+		snprintf(buff, 50, "	mov	rdi, [%s+%d]", reg, offset);
+	
+		line->line = strdup(buff);
+		add_line_to_area(area, line);
+	
+		AsmReturn* ret = create_asm_return("rdi", !is_fn ? symbol->symbol_variable->type : symbol->symbol_function->return_type);
+	
+		return ret;
+	}
+
 	char buff[50];
-	snprintf(buff, 50, "	mov	rdi, [%s+%d]", reg, offset);
-
-	line->line = strdup(buff);
-	add_line_to_area(area, line);
-
-	AsmReturn* ret = create_asm_return("rdi", symbol->symbol_variable->type);
-
+	snprintf(buff, 50, "[%s+%d]", reg, offset);
+	
+	AsmReturn* ret = create_asm_return(buff, !is_fn ? symbol->symbol_variable->type : symbol->symbol_function->return_type);
+	
 	return ret;
+}
+
+static void initialize_class_fields(CodeGen* code_gen, Symbol* class, char* class_ref, AsmArea* area)
+{
+	if (class == NULL)
+	{
+		return;
+	}
+
+	initialize_class_fields(code_gen, class->symbol_class->super, class_ref, area);
+	
+	for (int i = 0; i < class->symbol_class->field_count; i++)
+	{
+		Node* curr = class->symbol_class->fields[i];
+		Symbol* field = analyzer_find_symbol_from_scope(curr->declare_node.declare.identifier, class->symbol_class->class_scope, 1, 0, 0, 0);
+	
+		if (curr->declare_node.declare.default_value == NULL || curr->declare_node.declare.is_static)
+		{
+			continue;
+		}
+
+		AsmReturn* ret = generate_expression(code_gen, curr->declare_node.declare.default_value, 0, area, 0, 0, 0);
+
+		AsmLine* line = create_line();
+
+		char buff[50];
+		snprintf(buff, 50, "	mov	[%s+%d], %s", class_ref, field->symbol_variable->offset + 16, ret->reg);
+
+		line->line = strdup(buff);
+
+		add_line_to_area(area, line);
+	}
 }
 
 static AsmReturn* generate_create_instance(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_secondary)
 {
 	char* class_name = node->create_instance_node.create_instance.class_name;
 	Type* type = create_type(TYPE_CLASS, class_name);
+
+	Symbol* class = analyzer_find_symbol_from_scope(class_name, code_gen->scope, 0, 0, 1, 0);
 
 	/*==-------------------------------------------------==*/
 
@@ -2165,6 +2297,10 @@ static AsmReturn* generate_create_instance(CodeGen* code_gen, Node* node, AsmAre
 
 	add_line_to_area(area, v_mov_line);
 
+	/*==-------------------------------------------------==*/
+
+	initialize_class_fields(code_gen, class, strdup("rax"), area);
+	
 	/*==-------------------------------------------------==*/
 
 	AsmLine* mov_line = create_line();
@@ -2223,11 +2359,12 @@ static AsmReturn* generate_expression(CodeGen* code_gen, Node* node, int scope_d
 				
 				char* ref_str = NULL;
 
-				if (symbol->symbol_variable->is_global)
+				if (symbol->symbol_variable->is_global || symbol->symbol_variable->is_static)
 				{
 					char buff[64];
 					snprintf(buff, sizeof(buff), "rip + %s", node->variable_node.variable.identifier);
-					ref_str = strdup(buff);  // Aloca string dinamicamente
+
+					ref_str = strdup(buff);
 				}
 				else
 				{
@@ -2540,10 +2677,212 @@ static AsmReturn* find_function_reg(Type* type, AsmArea* area, int prefer_second
 	}
 }
 
-/**
- * TODO: Remover 'actual_offset', ele é inutil agora.
- */
-static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_second, int arg)
+static void generate_array_pop_fn(CodeGen* code_gen, Node* node)
+{
+	AsmArea* area = create_area();
+	
+	char buff[128];
+	
+	/* ------------------------------------------------- */
+
+	AsmLine* start_label_line = create_line();
+	snprintf(buff, 128, ".start_pop:");
+
+	start_label_line->line = strdup(buff);
+	add_line_to_area(area, start_label_line);
+
+	/* ------------------------------------------------- */
+	
+	AsmLine* length_line = create_line();
+	snprintf(buff, 128, "	mov	eax, [rdi]"); // length
+
+	length_line->line = strdup(buff);
+	add_line_to_area(area, length_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* dec_line = create_line();
+	snprintf(buff, 128, "	dec	eax");
+
+	dec_line->line = strdup(buff);
+	add_line_to_area(area, dec_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* length_up_line = create_line();
+	snprintf(buff, 128, "	mov	[rdi], eax");
+
+	length_up_line->line = strdup(buff);
+	add_line_to_area(area, length_up_line);
+
+	/* ------------------------------------------------- */
+	
+	AsmLine* capacity_line = create_line();
+	snprintf(buff, 128, "	mov	ebx, [rdi+4]"); // capacity
+
+	capacity_line->line = strdup(buff);
+	add_line_to_area(area, capacity_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* shr_line = create_line();
+	snprintf(buff, 128, "	shr	ebx, 2"); // 25% || / 4 || >> 2
+
+	shr_line->line = strdup(buff);
+	add_line_to_area(area, shr_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* cmp_line = create_line();
+	snprintf(buff, 128, "	cmp	eax, ebx");
+
+	cmp_line->line = strdup(buff);
+	add_line_to_area(area, cmp_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* jge_line = create_line();
+	snprintf(buff, 128, "	jle	.end_pop"); // length <= capacity / 4 
+
+	jge_line->line = strdup(buff);
+	add_line_to_area(area, jge_line);
+	
+	/* ------------------------------------------------- */
+
+	AsmLine* shl_line = create_line();
+	snprintf(buff, 128, "	shl	ebx, 1");
+
+	shl_line->line = strdup(buff);
+	add_line_to_area(area, shl_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* update_line = create_line();
+	snprintf(buff, 128, "	mov	[rdi+4], ebx");
+
+	update_line->line = strdup(buff);
+	add_line_to_area(area, update_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* arg_2_line = create_line();
+	snprintf(buff, 128, "	mov	rsi, ebx");
+
+	arg_2_line->line = strdup(buff);
+	add_line_to_area(area, arg_2_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* imul_line = create_line();
+	snprintf(buff, 128, "	imul	rsi, rcx"); // rcx == type_size
+
+	imul_line->line = strdup(buff);
+	add_line_to_area(area, imul_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* realloc_line = create_line();
+	snprintf(buff, 128, "	call	realloc");
+
+	realloc_line->line = strdup(buff);
+	add_line_to_area(area, realloc_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* new_ptr = create_line();
+	snprintf(buff, 128, "	mov	rdi, rax");
+
+	new_ptr->line = strdup(buff);
+	add_line_to_area(area, new_ptr);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* end_label_line = create_line();
+	snprintf(buff, 128, ".end_pop:");
+
+	end_label_line->line = strdup(buff);
+	add_line_to_area(area, end_label_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* ret_line = create_line();
+	snprintf(buff, 128, "	ret");
+
+	ret_line->line = strdup(buff);
+	add_line_to_area(area, ret_line);
+
+	/* ------------------------------------------------- */
+
+	merge_area(text_section, area);
+}
+
+static AsmReturn* generate_array_pop(CodeGen* code_gen, Node* node, AsmArea* area)
+{
+	if (pop_counts <= 0)
+	{
+		generate_array_pop_fn(code_gen, node);
+		pop_counts++;
+	}
+
+	char buff[64];
+
+	/* ------------------------------------------------- */
+
+	Node* var = node->function_call_node.function_call.callee->member_access_node.member_access.object;
+	AsmReturn* reg = generate_expression(code_gen, var, 0, area, 0, 0, 0);
+	
+	AsmLine* mov_line = create_line();
+	snprintf(buff, 64, "	mov	rdi, %s", reg->reg);
+
+	mov_line->line = strdup(buff);
+	add_line_to_area(area, mov_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* rcx_line = create_line();
+	snprintf(buff, 64, "	mov	rcx, %d", analyzer_get_type_size(reg->type->base, code_gen->scope));
+
+	rcx_line->line = strdup(buff);
+	add_line_to_area(area, rcx_line);
+
+	/* ------------------------------------------------- */
+	
+	AsmLine* call_line = create_line();
+	snprintf(buff, 64, "	call	.start_pop");
+
+	call_line->line = strdup(buff);
+	add_line_to_area(area, call_line);
+
+	/* ------------------------------------------------- */
+
+	AsmLine* new_ptr = create_line();
+	snprintf(buff, 64, "	mov	%s, rdi", reg->reg);
+
+	new_ptr->line = strdup(buff);
+	add_line_to_area(area, new_ptr);
+
+	/* ------------------------------------------------- */
+
+	AsmReturn* ret = create_asm_return("rdi", create_type(TYPE_ARRAY, NULL));
+	return ret;
+}
+
+static AsmReturn* handle_prototype_call(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_second, int arg, int id)
+{
+	printf("%d\n", id);
+	
+	switch (id)
+	{
+		case 0:
+		{
+			return generate_array_pop(code_gen, node, area);
+		}
+	}
+
+	return NULL;
+}
+
+static AsmReturn* generate_basic_method_call(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_second, int arg)
 {
 	int has_params = 0;
 	int s_offset = 0;
@@ -2600,6 +2939,195 @@ static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea*
 	}
 
 	return find_function_reg(type, area, prefer_second, arg);
+}
+
+static Node* find_function_from_class(Symbol* class, char* function_name, char** identifier_ref)
+{
+	if (class == NULL)
+	{
+		return NULL;
+	}
+	
+	for (int i = 0; i < class->symbol_class->func_count; i++)
+	{
+		Node* curr = class->symbol_class->functions[i];
+
+		if (strcmp(curr->function_node.function.identifier, function_name) == 0)
+		{
+			free(*identifier_ref);
+			*identifier_ref = strdup(class->symbol_class->identifier);
+
+			return curr;
+		}
+	}
+
+	return find_function_from_class(class->symbol_class->super, function_name, identifier_ref);
+}
+
+static AsmReturn* generate_class_method_call(CodeGen* code_gen, char* identifier, Node* function, NodeList* args, AsmArea* area, int prefer_second, int arg)
+{
+	int has_params = 0;
+	int s_offset = 0;
+
+	if (args != NULL)
+	{
+		has_params = 1;
+		
+		Node* params_head = function->function_call_node.function_call.arguments->head;
+	
+		s_offset = generate_setup_arguments(code_gen, params_head, area, 0);
+		int offset = s_offset + actual_offset;
+	
+		if ((offset + 8) % 16 == 0)
+		{	
+			AsmLine* line = create_line();
+			line->line = strdup("	sub	rsp, 8");
+			s_offset += 8;
+	
+			add_line_to_area(area, line);
+		}
+	}
+
+	char buff[80];
+
+	AsmLine* line = create_line();
+	
+	snprintf(buff, 32, "	call	%s", identifier);
+
+	line->line = strdup(buff);
+
+	add_line_to_area(area, line);
+
+	char _buff[80];
+
+	AsmLine* _line = create_line();
+	
+	if (has_params)
+	{
+		snprintf(_buff, 32, "	add	rsp, %d", s_offset);
+
+		_line->line = strdup(_buff);
+
+		add_line_to_area(area, _line);
+	}
+	
+	Type* type = function->function_node.function.return_type;
+
+	if (type->type == TYPE_VOID)
+	{
+		return NULL;
+	}
+
+	return find_function_reg(type, area, prefer_second, arg);
+}
+
+static AsmReturn* generate_member_access_method_call(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_second, int arg)
+{
+	Node* callee = node->function_call_node.function_call.callee;
+	
+	flag_assign = 1;
+	
+	AsmReturn* object = generate_expression(code_gen, callee->member_access_node.member_access.object, 0, area, 0, 0, 0);
+	
+	flag_assign = 0;
+
+  	Type* type = analyzer_return_type_of_expression(NULL, callee->member_access_node.member_access.object, code_gen->scope, NULL, 0, 0);
+
+	int ptr = 0;
+
+	if (type->type == TYPE_PTR)
+	{
+		ptr = 1;
+		type = type->base;
+	}
+
+	Symbol* obj_symbol = analyzer_find_symbol_from_scope(type->class_name, code_gen->scope, 0, 0, 1, 0);
+
+	char* identifier = strdup(obj_symbol->symbol_class->identifier);
+
+	Node* function = find_function_from_class(obj_symbol, callee->member_access_node.member_access.member_name, &identifier);
+	
+	if (function->function_node.function.is_override || function->function_node.function.is_virtual)
+	{
+		char* reg_buff = malloc(256);
+		
+		AsmLine* reg_line = create_line();
+
+		snprintf(reg_buff, 256, "	mov	rax, [%s]", object->reg);
+		reg_line->line = strdup(reg_buff);
+
+		add_line_to_area(area, reg_line);
+		
+		if (ptr)
+		{
+			AsmLine* line = create_line();
+			line->line = strdup("	mov	rax, [rax]");
+
+			add_line_to_area(area, line);
+		}
+
+		int i = 0;
+
+		while (i < obj_symbol->symbol_class->class_v_table->entries_count)
+		{
+			MethodEntry* curr = obj_symbol->symbol_class->class_v_table->entries[i];
+
+			if (strcmp(curr->method_name, function->function_node.function.identifier) == 0)
+			{
+				break;
+			}
+
+			i++;
+		}
+
+		char* buff = malloc(256);
+		
+		AsmLine* again_line = create_line();
+		
+		if (i == 0)
+		{
+			snprintf(buff, 256, "	mov	rax, [rax]");
+		}
+		else
+		{
+			snprintf(buff, 256, "	mov	rax, [rax+%d]", i * 8);
+		}
+
+		again_line->line = strdup(buff);
+
+		add_line_to_area(area, again_line);
+
+		free(reg_buff);
+		free(buff);
+
+		return generate_class_method_call(code_gen, strdup("rax"), function, node->function_call_node.function_call.arguments, area, 0, 0);
+	}
+	else
+	{
+		char buff[100];
+		snprintf(buff, 100, ".%s_%s", identifier, function->function_node.function.identifier);
+
+		return generate_class_method_call(code_gen, strdup(buff), function, node->function_call_node.function_call.arguments, area, 0, 0);
+	}
+}
+
+static AsmReturn* generate_function_call(CodeGen* code_gen, Node* node, AsmArea* area, int prefer_second, int arg)
+{
+	if (node->function_call_node.function_call.is_prototype)
+	{
+		printf("Found prototype...\n");
+
+		return handle_prototype_call(code_gen, node, area, prefer_second, arg, node->function_call_node.function_call.prototype_id);
+	}
+
+	if (node->function_call_node.function_call.callee->type == NODE_MEMBER_ACCESS)
+	{
+		return generate_member_access_method_call(code_gen, node, area, prefer_second, arg);
+	}
+	else
+	{
+		return generate_basic_method_call(code_gen, node, area, prefer_second, arg);
+	}
 }
 
 static char* get_return_type_reg(Type* type)
@@ -2707,12 +3235,12 @@ static void generate_return(CodeGen* code_gen, Node* node, int scope_depth, AsmA
 	add_line_to_area(area, line);
 }
 
-static void add_method_to_v_table(CodeGen* code_gen, Node* method, AsmArea* v_table, char* class_identifier)
+static void add_method_to_v_table(CodeGen* code_gen, MethodEntry* method, AsmArea* v_table)
 {
 	AsmLine* line = create_line();
 
 	char _buff[64];
-	snprintf(_buff, 64, ".%s_%s", class_identifier, method->function_node.function.identifier);
+	snprintf(_buff, 64, ".%s_%s", method->class_name, method->method_name);
 	
 	char buff[64];
 	snprintf(buff, 64, "	dq %s", _buff);
@@ -2730,16 +3258,23 @@ static void add_v_table_to_data(AsmArea* v_table)
 	}
 }
 
-static AsmArea* generate_class_v_table(CodeGen* code_gen, char* class_name)
+static AsmArea* generate_class_v_table(CodeGen* code_gen, Symbol* class)
 {
 	AsmArea* area = create_area();
 
 	char buff[64];
-	snprintf(buff, 64, ".%s_vtable:", class_name);
+	snprintf(buff, 64, ".%s_vtable:", class->symbol_class->identifier);
 	AsmLine* label = generate_label(buff);
 
 	label->line = strdup(buff);
 	add_line_to_area(area, label);
+
+	for (int i = 0; i < class->symbol_class->class_v_table->entries_count; i++)
+	{
+		MethodEntry* curr = class->symbol_class->class_v_table->entries[i];
+
+		add_method_to_v_table(code_gen, curr, area);
+	}
 
 	return area;
 }
@@ -2778,15 +3313,11 @@ static void generate_class_methods(CodeGen* code_gen, Node** methods, int method
 	for (int i = 0; i < method_count; i++)
 	{
 		Node* curr = methods[i];
+		Symbol* symbol = analyzer_find_symbol_from_scope(curr->function_node.function.identifier, code_gen->scope, 0, 1, 0, 0);
 
 		if (curr == NULL)
 		{
 			continue; // constructor
-		}
-		
-		if (curr->function_node.function.is_override || curr->function_node.function.is_virtual)
-		{
-			add_method_to_v_table(code_gen, curr, v_table, class_identifier);
 		}
 
 		generate_class_method(code_gen, curr, class_identifier, 0);
@@ -2858,8 +3389,8 @@ static void generate_class(CodeGen* code_gen, Node* node, AsmArea* area)
 	
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, code_gen->scope, 0, 0, 1, 0);
 	code_gen->scope = symbol->symbol_class->class_scope;
-
-	AsmArea* v_table = generate_class_v_table(code_gen, identifier);
+	
+	AsmArea* v_table = generate_class_v_table(code_gen, symbol);
 
 	Node** fields = node->class_node.class_node.var_declare_list;
 	int field_count = node->class_node.class_node.var_count;

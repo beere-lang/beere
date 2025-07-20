@@ -28,6 +28,10 @@
 #include "../symbols/symbols.h"
 #include "../utils/utils.h"
 
+int prototype_flag = -1;
+
+int class_function_index = -1;
+
 Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
 static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype);
@@ -232,6 +236,17 @@ static void analyzer_setup_prototype_methods(Module* module)
 		prototype_method_size++;
 
 		analyzer_add_symbol_to_scope(module, size_method, module->global_scope, NULL, 1);
+	}
+	{
+		Node* pop_method = analyzer_create_prototype_method_node("pop", NULL, create_type(TYPE_INT, NULL));
+		
+		Type* type = create_type(TYPE_ARRAY, NULL);
+		Type* return_type = create_type(TYPE_INT, NULL);
+		
+		protype_methods[0] = analyzer_create_prototype_method("pop", type, 1, pop_method, return_type, NULL);
+		prototype_method_size++;
+
+		analyzer_add_symbol_to_scope(module, pop_method, module->global_scope, NULL, 1);
 	}
 }
 
@@ -438,16 +453,23 @@ static int analyzer_get_class_size(Type* type, SymbolTable* scope)
 
 	int total_size = 0;
 
-	for (int i = 0; i < class_symbol->symbol_class->field_count; i++)
-	{
-		Node* field = class_symbol->symbol_class->fields[i];
+	Symbol* curr = class_symbol;
 
-		if (field->declare_node.declare.is_static)
+	while (curr != NULL)
+	{
+		for (int i = 0; i < curr->symbol_class->field_count; i++)
 		{
-			continue;
+			Node* field = curr->symbol_class->fields[i];
+
+			if (field->declare_node.declare.is_static)
+			{
+				continue;
+			}
+			
+			total_size += analyzer_get_type_size(field->declare_node.declare.var_type, scope);
 		}
-		
-		total_size += analyzer_get_type_size(field->declare_node.declare.var_type, scope);
+
+		curr = curr->symbol_class->super;
 	}
 
 	return total_size;
@@ -760,8 +782,16 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 	symbol->symbol_class->func_count = node->class_node.class_node.func_count;
 	symbol->symbol_class->field_count = node->class_node.class_node.var_count;
 	
-	symbol->symbol_class->total_offset = 0;
-	symbol->symbol_class->offset = 0;
+	int init_size = 0;
+
+	if (node->class_node.class_node.super_identifer != NULL)
+	{
+		Type* type = create_type(TYPE_CLASS, node->class_node.class_node.super_identifer);
+		init_size += analyzer_get_type_size(type, scope);
+	}
+
+	symbol->symbol_class->total_offset = init_size;
+	symbol->symbol_class->offset = init_size;
 
 	symbol->symbol_class->class_id = class_count;
 
@@ -1274,7 +1304,17 @@ static Type* handle_function(Symbol* class_symbol, char* field_name, Module* mod
 	}
 }
 
-static Type* handle_prototype_method(Type* type, char* field_name, Module* module, SymbolTable* scope, NodeList* args)
+static int get_prototype_id(const char* name)
+{
+	if (strcmp(name, "pop") == 0)
+	{
+		return 0;
+	}
+
+	return -1;
+}
+
+static Type* handle_prototype_method(Node** node, Type* type, char* field_name, Module* module, SymbolTable* scope, NodeList* args)
 {
 	printf("[Analyzer] [Debug] Maybe found a prototype function call...\n");
 
@@ -1291,7 +1331,9 @@ static Type* handle_prototype_method(Type* type, char* field_name, Module* modul
 	{
 		return NULL;
 	}
-		
+
+	prototype_flag = get_prototype_id(ref->method_name);
+
 	return function_type;
 }
 
@@ -1433,7 +1475,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 
 	if (node->member_access_node.member_access.is_function && !is_class)
 	{
-		return handle_prototype_method(type, field_name, module, scope, args);
+		return handle_prototype_method(&node, type, field_name, module, scope, args);
 	}
 
 	if (!is_class)
@@ -1600,6 +1642,13 @@ static Type* analyzer_get_function_call_type(Module* module, Node* node, SymbolT
 	if (type == NULL)
 	{
 		return NULL;
+	}
+
+	if (prototype_flag != -1)
+	{
+		node->function_call_node.function_call.is_prototype = 1;
+		node->function_call_node.function_call.prototype_id = prototype_flag;
+		prototype_flag = -1;
 	}
 	
 	return type;
@@ -1961,7 +2010,7 @@ static Node* analyzer_implictly_cast_all(Module* module, Type* preffered, Node* 
 		exit(1);
 	}
 
-	if (!analyzer_is_the_same(type, preffered))
+	if (!analyzer_is_type_identic(type, preffered, scope))
 	{
 		return _analyzer_create_cast(&expression, preffered);
 	}
@@ -2083,6 +2132,8 @@ int analyzer_check_parameters(Node* params_head, Node* _params_head)
 	
 	while (i < function_size)
 	{
+		printf("I: %d\n", i);
+		
 		if (parameter == NULL || _parameter == NULL)
 		{
 			return 0;
@@ -2122,7 +2173,7 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 
 		return;
 	}
-	
+
 	Node* member = analyzer_get_function_from_class(super_class, (char*) symbol->symbol_function->identifier);
 
 	if (member == NULL)
@@ -2140,7 +2191,7 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 	}
 
 	int flag = analyzer_is_the_same(symbol->symbol_function->return_type, member->function_node.function.return_type);
-	int _flag = analyzer_check_parameters(symbol->symbol_function->params_head, member->function_node.function.params->head);
+	int _flag = analyzer_check_parameters(symbol->symbol_function->params_head, (member->function_node.function.params == NULL) ? NULL : member->function_node.function.params->head);
 	
 	if (!flag || !_flag)
 	{
@@ -2168,6 +2219,112 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 	 */
 	printf("[Analyzer] [Debug] Can't apply shadowing on functions...\n");
 	exit(1);
+}
+
+static void analyzer_add_method_to_table(MethodEntry* entry, ClassVTable* table)
+{
+	if (table->entries_capacity <= table->entries_count)
+	{
+		table->entries_capacity *= 2;
+		table->entries = realloc(table->entries, sizeof(MethodEntry*) * table->entries_capacity);
+	}
+
+	table->entries[table->entries_count] = entry;
+	table->entries_count++;
+}
+
+static void analyzer_copy_method_to_table(MethodEntry* entry, ClassVTable* table)
+{
+	if (table->entries_capacity <= table->entries_count)
+	{
+		table->entries_capacity *= 2;
+		table->entries = realloc(table->entries, sizeof(MethodEntry*) * table->entries_capacity);
+	}
+
+	MethodEntry* temp = malloc(sizeof(MethodEntry));
+	*temp = *entry;
+
+	table->entries[table->entries_count] = temp;
+	table->entries_count++;
+}
+
+static void analyzer_find_and_replace_method_to_table(MethodEntry* entry, ClassVTable* table)
+{
+	for (int i = 0; i < table->entries_count; i++)
+	{
+		MethodEntry* curr = table->entries[i];
+
+		if (strcmp(entry->method_name, curr->method_name) == 0)
+		{
+			entry->method_index = curr->method_index;
+			table->entries[i] = entry;
+		}
+	}
+}
+
+static MethodEntry* analyzer_create_method_entry(Node* method, Symbol* class, int index)
+{
+	MethodEntry* entry = malloc(sizeof(MethodEntry));
+
+	entry->method_name = strdup(method->function_node.function.identifier);
+	entry->class_name = strdup(class->symbol_class->identifier);
+
+	entry->method_index = index;
+
+	return entry;
+}
+
+static void analyzer_setup_class_vtable(Symbol* class)
+{
+	ClassVTable* class_v_table = malloc(sizeof(ClassVTable));
+	
+	class_v_table->entries = malloc(sizeof(MethodEntry*) * 4);
+	class_v_table->entries_capacity = 4;
+	class_v_table->entries_count = 0;
+
+	class->symbol_class->class_v_table = class_v_table;
+}
+
+static void analyzer_copy_class_vtable(Symbol* class, ClassVTable* super_v_table)
+{
+	ClassVTable* class_v_table = malloc(sizeof(ClassVTable));
+	class->symbol_class->class_v_table = class_v_table;
+
+	class_v_table->entries = malloc(sizeof(MethodEntry*) * super_v_table->entries_capacity);
+	class_v_table->entries_capacity = super_v_table->entries_capacity;
+	class_v_table->entries_count = 0;
+
+	for (int i = 0; i < super_v_table->entries_count; i++)
+	{
+		MethodEntry* entry = super_v_table->entries[i];
+		analyzer_copy_method_to_table(entry, class_v_table);
+	}
+}
+
+static void analyzer_handle_class_v_table(Symbol* class)
+{
+	analyzer_setup_class_vtable(class);
+}
+
+static void analyzer_handle_class_methods(Symbol* class)
+{
+	for (int i = 0; i < class->symbol_class->func_count; i++)
+	{
+		Node* curr = class->symbol_class->functions[i];
+
+		if (curr->function_node.function.is_virtual)
+		{
+			int index = class->symbol_class->class_v_table->entries_count;
+
+			MethodEntry* entry = analyzer_create_method_entry(curr, class, index);
+			analyzer_add_method_to_table(entry, class->symbol_class->class_v_table);
+		}
+		else if (curr->function_node.function.is_override)
+		{
+			MethodEntry* entry = analyzer_create_method_entry(curr, class, -1);
+			analyzer_find_and_replace_method_to_table(entry, class->symbol_class->class_v_table);
+		}
+	}
 }
 
 static void analyzer_handle_function_declaration(Module* module, Node* node, SymbolTable* scope)
@@ -2223,7 +2380,7 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 	{
 		Symbol* super = scope->owner_statement->symbol_class->super;
 
-		analyzer_check_function(func_symbol, (super == NULL) ? NULL : super);
+		analyzer_check_function(func_symbol, super);
 	}
 
 	if (function_node->params != NULL)
@@ -2650,17 +2807,22 @@ static void analyzer_handle_var_assign(Module* module, Node* node, SymbolTable* 
 
 static Node* analyzer_get_function_from_class(Symbol* class, char* func_name)
 {
+	if (class == NULL)
+	{
+		return NULL;
+	}
+	
 	for (int i = 0; i < class->symbol_class->func_count; i++)
 	{
 		Node* member = class->symbol_class->functions[i];
-
+	
 		if (strcmp(member->function_node.function.identifier, func_name) == 0)
 		{
 			return member;
 		}
 	}
 
-	return NULL;
+	return analyzer_get_function_from_class(class->symbol_class->super, func_name);
 }
 
 static int analyzer_class_extends(Symbol* class, char* super_name)
@@ -2753,12 +2915,17 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 		}
 		
 		class_symbol->symbol_class->super = super_symbol;
+
+		analyzer_copy_class_vtable(class_symbol, super_symbol->symbol_class->class_v_table);
 	}
 	else 
 	{
+		class_symbol->symbol_class->super = NULL;
+		analyzer_handle_class_v_table(class_symbol);
+		
 		printf("[Analyzer] [Debug] Class dont have a super class...\n");
 	}
-	
+
 	class_symbol->symbol_class->class_scope = class_scope;
 	class_symbol->symbol_class->constructor = NULL;
 	
@@ -2767,9 +2934,11 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 		analyzer_analyze_node(module, class_node->constructor, class_scope, NULL);
 		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function_node.function.identifier, class_scope, 0, 1, 0, 0);
 	}
-	
+
 	analyzer_handle_class_vars(module, node, class_scope);
 	analyzer_handle_class_funcs(module, node, class_scope);
+
+	analyzer_handle_class_methods(class_symbol);
 }
 
 static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTable* scope)
