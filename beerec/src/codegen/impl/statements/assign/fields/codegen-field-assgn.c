@@ -5,7 +5,9 @@ extern char* field_get_mov_op_code_access(CodeGen* codegen, Type* type);
 
 void generate_field_assign(CodeGen* codegen, Node* node, AsmArea* area)
 {
-	AsmReturn* value = generate_expression(codegen, node->variable_assign_node.variable_assign.assign_value, area, 1, 0);
+	int force_reg = (node->variable_assign_node.variable_assign.assign_value->type == NODE_LITERAL) ? 0 : 1;
+	
+	AsmReturn* value = generate_expression(codegen, node->variable_assign_node.variable_assign.assign_value, area, force_reg, 0);
 	AsmReturn* ref = generate_expression(codegen, node->variable_assign_node.variable_assign.left, area, 0, 0);
 	char buff[64];
 

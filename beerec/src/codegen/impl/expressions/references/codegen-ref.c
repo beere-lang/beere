@@ -150,6 +150,58 @@ AsmReturn* generate_local_variable_reference(CodeGen* codegen, Symbol* symbol, A
 	}
 }
 
+AsmReturn* generate_global_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)
+{
+	char buff[64];
+	Type* type = symbol->symbol_variable->type;
+	
+	if (force_reg)
+	{
+		char* reg = get_register_access(codegen, type, prefer_second);
+
+		snprintf(buff, 64, "	%s	%s, %s [rip+%s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
+		add_line_to_area(area, buff);
+
+		AsmReturn* ret = create_asm_return(reg, type);
+		ret->is_reg = 1;
+		
+		return ret;
+	}
+	else
+	{
+		snprintf(buff, 64, "%s [rip+%s]", get_reference_access_size(codegen, type),symbol->symbol_variable->identifier);
+		
+		AsmReturn* ret = create_asm_return(buff, type);
+		return ret;
+	}
+}
+
+AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)
+{
+	char buff[64];
+	Type* type = symbol->symbol_variable->type;
+	
+	if (force_reg)
+	{
+		char* reg = get_register_access(codegen, type, prefer_second);
+
+		snprintf(buff, 64, "	%s	%s, %s [rip+.static_%s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
+		add_line_to_area(area, buff);
+
+		AsmReturn* ret = create_asm_return(reg, type);
+		ret->is_reg = 1;
+		
+		return ret;
+	}
+	else
+	{
+		snprintf(buff, 64, "%s [rip+.static_%s]", get_reference_access_size(codegen, type),symbol->symbol_variable->identifier);
+		
+		AsmReturn* ret = create_asm_return(buff, type);
+		return ret;
+	}
+}
+
 AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
 {
 	VariableNode* identifier_node = &node->variable_node.variable;
@@ -158,12 +210,12 @@ AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* ar
 
 	if (symbol->symbol_variable->is_static)
 	{
-		// TODO
+		return generate_static_variable_reference(codegen, symbol, area, force_reg, prefer_second);
 	}
 	
 	if (symbol->symbol_variable->is_global)
 	{
-		// TODO:
+		return generate_global_variable_reference(codegen, symbol, area, force_reg, prefer_second);
 	}
 
 	return generate_local_variable_reference(codegen, symbol, area, force_reg, prefer_second);

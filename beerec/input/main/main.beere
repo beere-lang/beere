@@ -1,5 +1,6 @@
-fn main()
+fn teste(): int
 {
-    let p: float = 1.0F
-    p = 2.0F + 2.0F - 1F
+    let a: int = 20
+
+    return a
 }
