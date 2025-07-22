@@ -3,25 +3,19 @@
 #include "codegen-lit.h"
 #include "../../../../parser/parser.h"
 
-static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* area, Flag flag)
+static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	int value = literal->int_value;
-	int force_flag = 0;
 	
-	if (flag == FLAG_FORCE_REG)
-	{
-		force_flag = 1;
-	}
-
 	char buff[64];
 	char* result = NULL;
 	
-	if (force_flag)
+	if (force_reg)
 	{
-		char* reg = codegen->prefer_second ? "ebx" : "eax";
+		char* reg = prefer_second ? "ebx" : "eax";
 
-		snprintf(buff, 64, "mov	%s, %d", reg, value);
+		snprintf(buff, 64, "	mov	%s, %d", reg, value);
 		result = reg;
 
 		add_line_to_area(area, buff);
@@ -35,24 +29,24 @@ static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* ar
 	return create_asm_return(result, create_type(TYPE_INT, NULL));
 }
 
-static AsmReturn* generate_float_literal(CodeGen* codegen, Node* node, AsmArea* area, Flag flag)
+static AsmReturn* generate_float_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	int value = literal->int_value;
 	
 	Constant* constant = generate_constant(node);
 
-	char* reg = codegen->prefer_second ? "xmm1" : "xmm0";
+	char* reg = prefer_second ? "xmm1" : "xmm0";
 
 	char buff[64];
-	snprintf(buff, 64, "movss	%s, DWORD PTR [rip+.LC%d]", reg, constant->id);
+	snprintf(buff, 64, "	movss	%s, dword [rip+.LC%d]", reg, constant->id);
 
 	add_line_to_area(area, buff);
 
 	return create_asm_return(reg, create_type(TYPE_FLOAT, NULL));
 }
 
-static AsmReturn* generate_literal_value(CodeGen* codegen, Node* node, AsmArea* area, Flag flag)
+AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 
@@ -60,12 +54,12 @@ static AsmReturn* generate_literal_value(CodeGen* codegen, Node* node, AsmArea* 
 	{
 		case TYPE_INT:
 		{
-			return generate_int_literal(codegen, node, area, flag);
+			return generate_int_literal(codegen, node, area, force_reg, prefer_second);
 		}
 		
 		case TYPE_FLOAT:
 		{
-			return generate_float_literal(codegen, node, area, flag);
+			return generate_float_literal(codegen, node, area, force_reg, prefer_second);
 		}
 		
 		default:
@@ -74,9 +68,4 @@ static AsmReturn* generate_literal_value(CodeGen* codegen, Node* node, AsmArea* 
 			exit(1);
 		}
 	}
-}
-
-AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, Flag flag)
-{
-	return generate_literal_value(codegen, node, area, flag);
 }

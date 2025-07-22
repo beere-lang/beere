@@ -2,22 +2,38 @@
 
 #include "codegen-op.h"
 #include "../../../codegen.h"
+#include "../arithmetic/codegen-arith.h"
 #include "../codegen-expr.h"
 
-AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, Flag flag)
+AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
 {
 	OperationNode* op_node = &node->operation_node.operation;
 	
-	AsmReturn* left = generate_expr(codegen, node, area, flag);
+	AsmReturn* left = generate_expression(codegen, node->operation_node.operation.left, area, 1, 0);
+	AsmReturn* right = generate_expression(codegen, node->operation_node.operation.right, area, 0, 1);
 	
-	codegen->prefer_second = 1;
-	AsmReturn* right = generate_expr(codegen, node, area, flag);
-	codegen->prefer_second = 0;
-
 	switch (op_node->op)
 	{
+		case TOKEN_OPERATOR_PLUS:
+		{
+			return generate_plus_operation(codegen, left, right, area);
+		}
+
+		case TOKEN_OPERATOR_MINUS:
+		{
+			return generate_minus_operation(codegen, left, right, area);
+		}
+
+		case TOKEN_OPERATOR_INCREMENT:
+		{
+			return generate_increment_operation(codegen, left, right, area);
+		}
 		
-		
+		case TOKEN_OPERATOR_DECREMENT:
+		{
+			return generate_decrement_operation(codegen, left, right, area);
+		}
+
 		default:
 		{
 			exit(1);

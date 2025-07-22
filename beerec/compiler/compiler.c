@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "../src/analyzer/analyzer.h"
-#include "../src/codegen/code-gen.h"
+#include "../src/codegen/codegen.h"
 #include "../src/modules/modules.h"
 #include "../src/parser/parser.h"
 #include "../src/lexer/lexer.h"
@@ -158,8 +158,8 @@ static void free_content(char* content)
 
 static void generate_assembly(Node** nodes, Module* module)
 {
-	CodeGen* code_gen = malloc(sizeof(CodeGen));
-	setup_code_gen(code_gen, module);
+	CodeGen* codegen = malloc(sizeof(CodeGen));
+	setup_codegen(module, codegen);
 
 	Node* node = nodes[0];
 
@@ -167,14 +167,14 @@ static void generate_assembly(Node** nodes, Module* module)
 
 	while (node != NULL)
 	{
-		code_gen_global(code_gen, node);
+		generate_node(codegen, node, text_section);
 		
 		i++;
 
 		node = nodes[i];
 	}
 
-	print_code_generated();
+	print_code_generated(codegen);
 }
 
 Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)

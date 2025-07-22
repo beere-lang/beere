@@ -18,5 +18,14 @@ add_executable(beerec
         src/utils/string_builder/string_builder.c
 		src/modules/modules.c
 		src/modules/handler/module-handler.c
-	src/codegen/code-gen.c
+		src/codegen/codegen.c
+		src/codegen/impl/expressions/codegen-expr.c
+		src/codegen/impl/expressions/arithmetic/codegen-arith.c
+		src/codegen/impl/expressions/literals/codegen-lit.c
+		src/codegen/impl/expressions/operations/codegen-op.c
+		src/codegen/impl/expressions/references/codegen-ref.c
+		src/codegen/impl/expressions/cast/codegen-cast.c
+		src/codegen/impl/statements/declaration/fields/codegen-field-decl.c
+		src/codegen/impl/statements/declaration/methods/codegen-method-decl.c
+		src/codegen/impl/statements/assign/fields/codegen-field-assgn.c
 )

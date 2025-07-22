@@ -3,91 +3,18 @@
 #include <stdlib.h>
 
 #include "codegen.h"
+#include "impl/statements/assign/fields/codegen-field-assgn.h"
+#include "impl/statements/declaration/fields/codegen-field-decl.h"
+#include "impl/statements/declaration/methods/codegen-method-decl.h"
 
-static char* generate_size_type(VarType type)
-{
-	switch (type)
-	{
-		case TYPE_INT:
-		{
-			return strdup("dd");
-		}
+extern char* get_literal_value(LiteralNode* literal);
 
-		case TYPE_FLOAT:
-		{
-			return strdup("dd");
-		}
-
-		case TYPE_DOUBLE:
-		{
-			return strdup("dq");
-		}
-
-		case TYPE_STRING:
-		{
-			return strdup("db");
-		}
-		
-		default:
-		{
-			printf("[Codegen] Invalid constant value type...\n");
-			exit(1);
-		}
-	}
-}
-
-static char* get_literal_value(LiteralNode* literal)
-{
-	char buff[64];
-	
-	switch (literal->literal_type->type)
-	{
-		case TYPE_INT:
-		{
-			snprintf(buff, 64, "%d", literal->int_value);
-			return strdup(buff);
-		}
-
-		case TYPE_FLOAT:
-		{
-			union
-			{
-				float flt;
-				uint32_t hex;
-			} hex;
-
-			hex.flt = literal->float_value;
-			
-			snprintf(buff, 64, "0x%x", hex.hex);
-			return strdup(buff);
-		}
-
-		case TYPE_DOUBLE:
-		{
-			union
-			{
-				double dbl;
-				uint64_t hex;
-			} hex;
-
-			hex.dbl = literal->double_value;
-			
-			snprintf(buff, 64, "0x%x", (unsigned int) hex.hex);
-			return strdup(buff);
-		}
-
-		case TYPE_STRING:
-		{
-			return strdup(literal->string_value);
-		}
-		
-		default:
-		{
-			printf("[Codegen] Invalid constant value type...\n");
-			exit(1);
-		}
-	}
-}
+ConstantTable* constant_table = NULL;
+AsmArea* externs_section = NULL;
+AsmArea* text_section = NULL;
+AsmArea* data_section = NULL;
+AsmArea* rodata_section = NULL;
+AsmArea* bss_section = NULL;
 
 AsmReturn* create_asm_return(char* value, Type* type)
 {
@@ -95,6 +22,7 @@ AsmReturn* create_asm_return(char* value, Type* type)
 
 	asm_ret->result = strdup(value);
 	asm_ret->type = type;
+	asm_ret->is_reg = 0;
 
 	return asm_ret;
 }
@@ -151,6 +79,8 @@ static void setup_text_section()
 {
 	AsmArea* text_section_area = create_area();
 	add_line_to_area(text_section_area, "section	.text");
+	add_line_to_area(text_section_area, "");
+	add_line_to_area(text_section_area, "global	main");
 
 	text_section = text_section_area;
 }
@@ -158,7 +88,7 @@ static void setup_text_section()
 static void setup_bss_section()
 {
 	AsmArea* bss_section_area = create_area();
-	add_line_to_area(bss_section, "section	.bss");
+	add_line_to_area(bss_section_area, "section	.bss");
 
 	bss_section = bss_section_area;
 }
@@ -166,7 +96,7 @@ static void setup_bss_section()
 static void setup_data_section()
 {
 	AsmArea* data_section_area = create_area();
-	add_line_to_area(data_section, "section	.data");
+	add_line_to_area(data_section_area, "section	.data");
 
 	data_section = data_section_area;
 }
@@ -247,4 +177,84 @@ Constant* generate_constant(Node* literal)
 	}
 
 	return constant;
+}
+
+void setup_codegen(Module* module, CodeGen* codegen)
+{
+	codegen->module = module;
+	codegen->scope = module->global_scope;
+
+	setup_bss_section();
+	setup_data_section();
+	setup_rodata_section();
+	setup_constant_table();
+	setup_text_section();
+	setup_externs();
+}
+
+static void print_constants()
+{
+	for (int i = 0; i < constant_table->constant_length; i++)
+	{
+		Constant* curr = constant_table->constants[i];
+
+		char buff[64];
+		snprintf(buff, 64, ".LC%d: %s", curr->id, curr->value);
+
+		add_line_to_area(rodata_section, buff);
+	}
+}
+
+static void print_area(AsmArea* area)
+{
+	for (int i = 0; i < area->lines_length; i++)
+	{
+		char* curr = area->lines[i];
+		printf("%s\n", curr);
+	}
+
+	printf("\n");
+}
+
+void print_code_generated(CodeGen* codegen)
+{
+	print_constants();
+	print_area(externs_section);
+	print_area(bss_section);
+	print_area(data_section);
+	print_area(rodata_section);
+	print_area(text_section);
+}
+
+void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
+{
+	switch (node->type)
+	{
+		case NODE_FUNCTION:
+		{
+			generate_method_declaration(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_DECLARATION:
+		{
+			generate_field_declaration(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_VARIABLE_ASSIGN:
+		{
+			generate_field_assign(codegen, node, area);
+
+			return;
+		}
+		
+		default:
+		{
+			printf("Invalid node while generating node: %d...\n", node->type);
+			exit(1);
+		}
+	}
 }

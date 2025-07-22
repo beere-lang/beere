@@ -2,6 +2,7 @@
 #define CODEGEN_H
 
 #include "../symbols/symbols.h"
+#include "../modules/modules.h"
 
 #define asm_return_size sizeof(AsmReturn)
 #define asm_area_size sizeof(AsmArea)
@@ -13,13 +14,12 @@ typedef struct ConstantTable ConstantTable;
 typedef struct AsmReturn AsmReturn;
 typedef struct AsmArea AsmArea;
 
-AsmArea* externs_section = NULL;
-AsmArea* text_section = NULL;
-AsmArea* data_section = NULL;
-AsmArea* rodata_section = NULL;
-AsmArea* bss_section = NULL;
-
-ConstantTable* constant_table = NULL;
+extern AsmArea* externs_section;
+extern AsmArea* text_section;
+extern AsmArea* data_section;
+extern AsmArea* rodata_section;
+extern AsmArea* bss_section;
+extern ConstantTable* constant_table;
 
 typedef enum
 {
@@ -62,11 +62,16 @@ struct AsmReturn
 {
 	char* result;
 	Type* type;
+
+	int is_reg;
 };
 
+void generate_node(CodeGen* codegen, Node* node, AsmArea* area);
 AsmReturn* create_asm_return(char* value, Type* type);
+void setup_codegen(Module* module, CodeGen* codegen);
 void add_line_to_area(AsmArea* area, char* line);
 AsmArea* create_area_with_label(char* label);
+void print_code_generated(CodeGen* codegen);
 Constant* generate_constant(Node* literal);
 AsmArea* create_area();
 
