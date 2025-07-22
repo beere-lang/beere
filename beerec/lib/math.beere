@@ -1,0 +1,36 @@
+fn pow(base: double, exp: int)
+{
+	if (exp == 0)
+	{
+		return 1.0
+	}
+	if (exp == 1)
+	{
+		return base
+	}
+
+	const number: double = base
+    
+	let abs_exp: int
+
+	if (exp >= 0)
+	{
+		abs_exp = exp
+	}
+	else
+	{
+		abs_exp = -exp
+	}
+
+	for (let i = 1; i < abs_exp; i++)
+	{
+		base *= number
+	}
+
+	if (exp < 0)
+	{
+		return 1.0 / base
+	}
+
+	return base
+}

@@ -490,21 +490,45 @@ Token handle_literals(Lexer* lexer, int negative)
 			switch (esc)
 			{
 				case 'n': 
+				{
 					value = '\n'; 
+
 					break;
+				}
+
 				case 't':
+				{
 					value = '\t'; 
+
 					break;
+				}
+
 				case '\'': 
+				{
 					value = '\''; 
+
 					break;
+				}
+
 				case '\\': 
+				{
 					value = '\\'; 
+
 					break;
+				}
+
+				case '0':
+				{
+					value = '\0';
+
+					break;
+				}
+
 				default:
 					printf("[Lexer] [Error] Invalid escape sequence \\%c\n", esc);
 					exit(1);
 				}
+
 				advance(lexer);
 		} 
 		else 
@@ -524,12 +548,10 @@ Token handle_literals(Lexer* lexer, int negative)
 		Token token;
 
 		token.token_type = TOKEN_LITERAL_CHAR;
-
 		token.start = lexer->start; 
-
 		token.length = (size_t)(lexer->current - lexer->start);
-
 		token.line = lexer->line;
+		token.ch_value = value;
 		
 		return token;
 	}

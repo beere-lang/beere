@@ -238,6 +238,7 @@ static Node* parse_literal(Parser* parser)
 	Node* expr = NULL;
 
 	const TokenType tkn_type = peek_tkn(parser)->token_type;
+	const Token* tkn = peek_tkn(parser);
 	
 	if (tkn_type == TOKEN_LITERAL_INT || 
 		tkn_type == TOKEN_LITERAL_FLOAT || 
@@ -301,7 +302,7 @@ static Node* parse_literal(Parser* parser)
 				Type* type = create_type(TYPE_CHAR, NULL);
 
 				literal_node->literal_node.literal.literal_type = type;
-				literal_node->literal_node.literal.char_value = convert_char(peek_tkn(parser)->start);
+				literal_node->literal_node.literal.char_value = tkn->ch_value;
 				
 				break;
 			}

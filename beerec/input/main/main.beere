@@ -1,31 +1,4 @@
-class Base
-{
-    public i: int = 10
-    public static j: int = 1
-
-    public virtual fn speak()
-    {
-    }
-
-    public virtual fn ok()
-    {
-    }
-}
-
-class Sub extends Base
-{
-    public k: int = 0
-
-    public override fn speak()
-    {
-    }
-}
-
 fn main()
 {
-    let sub: Sub* = new Sub()
-    sub->k = 10
-
-    let base: Base* = new Base()
-    base->i = sub->k + 10
+    print("Hi")
 }

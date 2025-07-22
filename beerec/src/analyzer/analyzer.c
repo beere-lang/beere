@@ -29,6 +29,7 @@
 #include "../utils/utils.h"
 
 int prototype_flag = -1;
+char* param_registers[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 
 int class_function_index = -1;
 
@@ -629,7 +630,7 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 	symbol->symbol_variable->identifier = node->declare_node.declare.identifier;
 	symbol->symbol_variable->is_const = node->declare_node.declare.is_const;
 	symbol->symbol_variable->is_static = node->declare_node.declare.is_static;
-
+	
 	symbol->is_export = node->declare_node.declare.is_export;
 
 	if (symbol->is_export)
@@ -681,7 +682,7 @@ static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, 
 
 	symbol->symbol_variable->type = node->param_node.param.argument_type;
 	symbol->symbol_variable->identifier = node->param_node.param.identifier;
-
+	
 	symbol->symbol_variable->is_const = 0;
 
 	symbol->is_export = 0;
@@ -699,6 +700,7 @@ static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, 
 	symbol->symbol_variable->offset = *offset;
 		
 	symbol->symbol_variable->is_global = 0;
+	symbol->symbol_variable->is_static = 0;
 		
 	_analyzer_add_symbol_to_scope(symbol, scope);
 
@@ -1562,6 +1564,7 @@ static Type* analyzer_get_operation_type(Module* module, Node* node, SymbolTable
 		case TOKEN_OPERATOR_GREATER_EQUALS: // >=
 		case TOKEN_OPERATOR_GREATER: // >
 		case TOKEN_OPERATOR_EQUALS: // ==
+		case TOKEN_OPERATOR_NOT_EQUALS:
 		{
 			return create_type(TYPE_BOOL, NULL);
 		}
@@ -1604,37 +1607,94 @@ static int analyzer_is_inside_class(SymbolTable* scope)
 	return analyzer_is_inside_class(scope->parent);
 }
 
+static Type* handle_flat_method(Module* module, SymbolTable* scope, Node* callee, NodeList* args)
+{
+	Symbol* symbol = analyzer_find_symbol_from_scope(callee->variable_node.variable.identifier, scope, 0, 1, 0, 0);
+		
+	if (symbol == NULL)
+	{
+		return NULL;
+	}
+
+	Symbol* owner_function = analyzer_get_owner_function(scope);
+
+	if (analyzer_is_inside_class(scope))
+	{
+		if (owner_function->symbol_function->is_static && !symbol->symbol_function->is_static)
+		{
+			printf("[Analyzer] [Debug] Calling a function from a static scope...\n");
+			exit(1);
+		}
+	}
+
+	Node* params_head = symbol->symbol_function->params_head;
+	Node* args_head = (args == NULL) ? NULL : args->head;
+
+	analyzer_check_arguments(module, params_head, args_head, scope);
+
+	return symbol->symbol_function->return_type;
+}
+
+static void check_built_in_args(Module* module, SymbolTable* scope, int method_id, NodeList* args)
+{
+	switch (method_id)
+	{
+		case 0: // print
+		{
+			int size = analyzer_get_list_size((args == NULL) ? NULL : args->head);
+
+			if (size != 1)
+			{
+				exit(1);
+			}
+
+			Type* type = analyzer_return_type_of_expression(module, args->head, scope, NULL, 0, 0);
+
+			if (type->type != TYPE_STRING)
+			{
+				exit(1);
+			}
+
+			return;
+		}
+	}
+}
+
+static Type* handle_built_in_methods(Module* module, SymbolTable* scope, Node* node, NodeList* args)
+{
+	Node* callee = node->function_call_node.function_call.callee;
+	
+	if (strcmp(callee->variable_node.variable.identifier, "print") == 0)
+	{
+		check_built_in_args(module, scope, 0, args);
+
+		node->function_call_node.function_call.built_in_id = 0;
+		node->function_call_node.function_call.is_built_in = 1;
+
+		return create_type(TYPE_VOID, NULL);
+	}
+
+	return NULL;
+}
+
 static Type* analyzer_get_function_call_type(Module* module, Node* node, SymbolTable* scope, NodeList* args)
 {
 	args = node->function_call_node.function_call.arguments;
 	Node* callee = node->function_call_node.function_call.callee;
 
+	node->function_call_node.function_call.built_in_id = -1;
+	node->function_call_node.function_call.is_built_in = 0;
+
 	if (callee->type == NODE_IDENTIFIER)
 	{
-		Symbol* symbol = analyzer_find_symbol_from_scope(callee->variable_node.variable.identifier, scope, 0, 1, 0, 0);
+		Type* built_in = handle_built_in_methods(module, scope, node, args);
 
-		if (symbol == NULL)
+		if (built_in != NULL)
 		{
-			return NULL;
+			return built_in;
 		}
 
-		Symbol* owner_function = analyzer_get_owner_function(scope);
-
-		if (analyzer_is_inside_class(scope))
-		{
-			if (owner_function->symbol_function->is_static && !symbol->symbol_function->is_static)
-			{
-				printf("[Analyzer] [Debug] Calling a function from a static scope...\n");
-				exit(1);
-			}
-		}
-
-		Node* params_head = symbol->symbol_function->params_head;
-		Node* args_head = (args == NULL) ? NULL : args->head;
-
-		analyzer_check_arguments(module, params_head, args_head, scope);
-
-		return symbol->symbol_function->return_type;
+		return handle_flat_method(module, scope, callee, args);
 	}
 
 	Type* type = analyzer_return_type_of_expression(module, callee, scope, args, 0, NULL);
@@ -1971,6 +2031,7 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 		case TOKEN_OPERATOR_GREATER_EQUALS: // >=
 		case TOKEN_OPERATOR_GREATER: // >
 		case TOKEN_OPERATOR_EQUALS: // ==
+		case TOKEN_OPERATOR_NOT_EQUALS:
 		{
 			if (analyzer_is_compatible(left, right, scope))
 			{
@@ -2097,6 +2158,8 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 {
 	Node* next = head;
 
+	int count = 0;
+
 	while (next != NULL)
 	{
 		int size = analyzer_get_type_size(next->param_node.param.argument_type, scope);
@@ -2109,9 +2172,10 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 			exit(1);
 		}
 
-		analyzer_add_symbol_to_scope(module, next, scope, offset, 0);
+		Symbol* symbol = analyzer_add_symbol_to_scope(module, next, scope, offset, 0);
 
 		next = next->next;
+		count++;
 	}
 }
 
@@ -2735,6 +2799,10 @@ static void analyzer_handle_while_loop(Module* module, Node* node, SymbolTable* 
 	}
 
 	SymbolTable* block_scope = analyzer_create_scope(SYMBOL_WHILE, scope, NULL);
+	node->while_loop_node.while_loop.then_scope = block_scope;
+	block_scope->owner_statement = malloc(sizeof(Symbol));
+	block_scope->owner_statement->type = SYMBOL_WHILE;
+
 	analyzer_analyze_node(module, node->while_loop_node.while_loop.then_block, block_scope, offset);
 }
 

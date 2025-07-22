@@ -128,6 +128,7 @@ typedef struct
 		VarType var_type;
 		int bool_value;
 		char* str_value;
+		char ch_value;
 	};
 } 
 Token;

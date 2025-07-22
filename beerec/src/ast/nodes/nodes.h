@@ -139,6 +139,9 @@ typedef struct
 
 	int is_prototype;
 	int prototype_id;
+
+	int is_built_in;
+	int built_in_id;
 }
 FunctionCallNode;
 
@@ -160,8 +163,12 @@ ForLoopNode;
 
 typedef struct
 {
+	SymbolTable* then_scope;
+
 	Node* condition;
 	Node* then_block;
+
+	int loop_id;
 }
 WhileLoopNode;
 
