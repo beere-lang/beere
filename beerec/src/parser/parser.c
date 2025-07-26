@@ -208,7 +208,8 @@ static void handle_ptr_array(Parser* parser, Type** result_ref)
 	advance_tkn(parser);
 }
 
-static Type* handle_type_declaration(Parser* parser) {
+static Type* handle_type_declaration(Parser* parser) 
+{
 	advance_tkn(parser);
 	expect_tkn(parser, (TokenType[]) { TOKEN_KEYWORD_TYPE, TOKEN_KEYWORD_TYPE_VOID, TOKEN_IDENTIFIER }, 3);
 
@@ -1148,8 +1149,7 @@ static Node* parse_func(
 	int is_constructor
 ) {
 	parser_info("Parsing function declaration...");
-
-	advance_tkn(parser);
+	
 	skip_end_lines(parser);
 
 	FunctionNode function_node = { 0 };
@@ -1164,10 +1164,12 @@ static Node* parse_func(
 	
 	Node* statements = NULL;
 
-	if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACE) {
+	if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACE) 
+	{
 		statements = parse_block(parser);
 
-		if (statements == NULL) {
+		if (statements == NULL) 
+		{
 			return NULL;
 		}
 

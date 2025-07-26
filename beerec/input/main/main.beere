@@ -1,9 +1,7 @@
-fn mano(arg: float): int
-{
+fn mano(arg: float): int {
     return 10
 }
 
-fn main()
-{
+fn main() {
     mano(10.0F)
 }
