@@ -1,11 +1,9 @@
-fn mano(): int
+fn mano(arg: float): int
 {
     return 10
 }
 
 fn main()
 {
-    let x: int = 0
-
-    mano()
+    mano(10.0F)
 }

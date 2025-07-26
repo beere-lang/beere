@@ -3,7 +3,7 @@
 #include "codegen-lit.h"
 #include "../../../../parser/parser.h"
 
-static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
+static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	int value = literal->int_value;
@@ -24,6 +24,12 @@ static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* ar
 	{
 		snprintf(buff, 64, "%d", value);
 		result = buff;
+	}
+
+	if (argument_flag && force_reg)
+	{
+		char* regs = prefer_second ? "rbx" : "rax";
+		result = regs;
 	}
 
 	return create_asm_return(result, create_type(TYPE_INT, NULL));
@@ -54,7 +60,7 @@ AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, int for
 	{
 		case TYPE_INT:
 		{
-			return generate_int_literal(codegen, node, area, force_reg, prefer_second);
+			return generate_int_literal(codegen, node, area, force_reg, prefer_second, argument_flag);
 		}
 		
 		case TYPE_FLOAT:

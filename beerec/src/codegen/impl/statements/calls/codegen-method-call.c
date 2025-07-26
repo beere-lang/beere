@@ -44,7 +44,8 @@ static void handle_float_argument(CodeGen* codegen, AsmReturn* reg, AsmArea* are
 	char buff[64];
 	
 	add_line_to_area(area, "	sub	rsp, 8");
-	snprintf(buff, 64, "	%s	%s [rsp + 8], %s", temp, _temp, reg->result);
+	snprintf(buff, 64, "	%s	%s [rsp], %s", temp, _temp, reg->result);
+	add_line_to_area(area, buff);
 }
 
 static void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* stack_size_ref)
