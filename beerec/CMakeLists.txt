@@ -22,6 +22,7 @@ add_executable(beerec
 		src/codegen/impl/expressions/codegen-expr.c
 		src/codegen/impl/expressions/arithmetic/codegen-arith.c
 		src/codegen/impl/expressions/literals/codegen-lit.c
+		src/codegen/impl/statements/calls/codegen-method-call.c
 		src/codegen/impl/expressions/operations/codegen-op.c
 		src/codegen/impl/expressions/references/codegen-ref.c
 		src/codegen/impl/expressions/cast/codegen-cast.c

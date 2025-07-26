@@ -46,7 +46,7 @@ static AsmReturn* generate_float_literal(CodeGen* codegen, Node* node, AsmArea* 
 	return create_asm_return(reg, create_type(TYPE_FLOAT, NULL));
 }
 
-AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
+AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 

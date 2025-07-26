@@ -1,6 +1,11 @@
-fn teste(): int
+fn mano(): int
 {
-    let a: int = 20
+    return 10
+}
 
-    return a
+fn main()
+{
+    let x: int = 0
+
+    mano()
 }

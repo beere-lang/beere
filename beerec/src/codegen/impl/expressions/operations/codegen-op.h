@@ -3,6 +3,6 @@
 
 #include "../../../codegen.h"
 
-AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second);
+AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag);
 
 #endif

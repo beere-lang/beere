@@ -6,28 +6,28 @@
 #include "operations/codegen-op.h"
 #include "references/codegen-ref.h"
 
-AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
+AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
 	switch (node->type)
 	{
 		case NODE_OPERATION:
 		{
-			return generate_operation(codegen, node, area, force_reg, prefer_second);
+			return generate_operation(codegen, node, area, force_reg, prefer_second, argument_flag);
 		}
 
 		case NODE_LITERAL:
 		{
-			return generate_literal(codegen, node, area, force_reg, prefer_second);
+			return generate_literal(codegen, node, area, force_reg, prefer_second, argument_flag);
 		}
 
 		case NODE_IDENTIFIER:
 		{
-			return generate_variable_reference(codegen, node, area, force_reg, prefer_second);
+			return generate_variable_reference(codegen, node, area, force_reg, prefer_second, argument_flag);
 		}
 
 		case NODE_CAST:
 		{
-			return generate_cast(codegen, node, area, prefer_second);
+			return generate_cast(codegen, node, area, prefer_second, argument_flag);
 		}
 
 		default:

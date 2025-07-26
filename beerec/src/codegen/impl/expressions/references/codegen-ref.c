@@ -202,7 +202,7 @@ AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	}
 }
 
-AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
+AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
 	VariableNode* identifier_node = &node->variable_node.variable;
 	
