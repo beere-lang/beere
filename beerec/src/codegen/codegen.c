@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "codegen.h"
+#include "impl/oop/codegen-class.h"
 #include "impl/statements/assign/fields/codegen-field-assgn.h"
 #include "impl/statements/calls/codegen-method-call.h"
 #include "impl/statements/declaration/fields/codegen-field-decl.h"
@@ -263,6 +264,13 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 		case NODE_FUNCTION_CALL:
 		{
 			generate_method_call(codegen, node, area, 0);
+
+			return;
+		}
+
+		case NODE_CLASS:
+		{
+			generate_class(codegen, node, area);
 
 			return;
 		}

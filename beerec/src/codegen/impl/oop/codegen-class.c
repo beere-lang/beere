@@ -87,4 +87,8 @@ void generate_class(CodeGen* codegen, Node* node, AsmArea* area)
 	merge_class_vtable(table);
 
 	generate_class_fields(codegen, node->class_node.class_node.var_declare_list, node->class_node.class_node.var_count);
+
+	/**
+	 * TODO: Implementar a geração de methods de classes
+	 */
 }
