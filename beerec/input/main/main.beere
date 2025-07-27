@@ -3,7 +3,7 @@ fn main() {
     let pa: int* = &a
     let ppa: int** = &pa
 
-    let res: int = **ppa
+    let res: int = *pa + *pa
 
     **ppa = 99
 }

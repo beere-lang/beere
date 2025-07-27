@@ -47,6 +47,7 @@ char* get_return_register(Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #009...\n");
 			exit(1);
 		}
 	}

@@ -36,6 +36,7 @@ char* field_get_reference_access_size(CodeGen* codegen, Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #204...\n");
 			exit(1);
 		}
 	}
@@ -72,6 +73,7 @@ char* field_get_mov_op_code_access(CodeGen* codegen, Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #2774...\n");
 			exit(1);
 		}
 	}

@@ -24,6 +24,7 @@ static char* get_add_opcode_for_type(Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #0296...\n");
 			exit(1);
 		}
 	}
@@ -50,6 +51,7 @@ static char* get_sub_opcode_for_type(Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #384...\n");
 			exit(1);
 		}
 	}
@@ -76,6 +78,7 @@ static char* get_mov_opcode_for_type(Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #1209...\n");
 			exit(1);
 		}
 	}

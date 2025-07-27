@@ -35,6 +35,7 @@ char* get_reference_access_size(CodeGen* codegen, Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #123...\n");
 			exit(1);
 		}
 	}
@@ -71,6 +72,7 @@ char* get_mov_op_code_access(CodeGen* codegen, Type* type)
 
 		default:
 		{
+			printf("Codegen debug fail #089...\n");
 			exit(1);
 		}
 	}
@@ -119,6 +121,7 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 
 		default:
 		{
+			printf("Codegen debug fail #102...\n");
 			exit(1);
 		}
 	}

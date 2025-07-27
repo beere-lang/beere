@@ -9,8 +9,15 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 {
 	OperationNode* op_node = &node->operation_node.operation;
 	
+	int right_force_arg = 1;
+	
+	if (node->operation_node.operation.right->type == NODE_LITERAL)
+	{
+		right_force_arg = 0;
+	}
+	
 	AsmReturn* left = generate_expression(codegen, node->operation_node.operation.left, area, 1, 0, 0);
-	AsmReturn* right = generate_expression(codegen, node->operation_node.operation.right, area, 0, 1, 0);
+	AsmReturn* right = generate_expression(codegen, node->operation_node.operation.right, area, right_force_arg, 1, 0);
 	
 	switch (op_node->op)
 	{
@@ -36,6 +43,7 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 
 		default:
 		{
+			printf("Codegen debug fail #634...\n");
 			exit(1);
 		}
 	}
