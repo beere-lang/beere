@@ -28,6 +28,7 @@ add_executable(beerec
 		src/codegen/impl/statements/calls/codegen-method-call.c
 		src/codegen/impl/expressions/operations/codegen-op.c
 		src/codegen/impl/expressions/references/codegen-ref.c
+		src/codegen/impl/expressions/pointers/codegen-ptr.c
 		src/codegen/impl/expressions/cast/codegen-cast.c
 		src/codegen/impl/statements/declaration/fields/codegen-field-decl.c
 		src/codegen/impl/statements/declaration/methods/codegen-method-decl.c
