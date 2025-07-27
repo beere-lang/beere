@@ -47,6 +47,7 @@ char* mov_opcode(VarType type)
 		
 		default:
 		{
+			printf("Codegen debug fail #235...\n");
 			exit(1);
 		}
 	}
@@ -93,6 +94,7 @@ char* correct_register(VarType type, int prefer_second)
 		
 		default:
 		{
+			printf("Codegen debug fail #427...\n");
 			exit(1);
 		}
 	}
@@ -116,20 +118,27 @@ AsmReturn* generate_dereference(CodeGen* codegen, Node* node, AsmArea* area, int
 	snprintf(buff, 64, _temp, temp, expr->result);
 	add_line_to_area(area, buff);
 
+	char* res = temp;
+	
 	if (force_reg)
 	{
 		Type* type = analyzer_return_type_of_expression(NULL, node, codegen->scope, NULL, 0, NULL);
 		
 		char* opcode = mov_opcode(type->type);
 		char* access_size = field_get_reference_access_size(codegen, type);
+		char* reg = correct_register(type->type, prefer_second);
+
+		res = reg;
 		
-		snprintf(buff, 64, "	%s	%s, %s [%s]", opcode, temp, access_size, temp);
+		snprintf(buff, 64, "	%s	%s, %s [%s]", opcode, reg, access_size, temp);
 		add_line_to_area(area, buff);
 	}
 
 	/* ----------------------------------------------------------- */
 
-	AsmReturn* ret = create_asm_return(temp, type);
+	Type* res_type = analyzer_return_type_of_expression(NULL, node, codegen->scope, NULL, 0, NULL);
+
+	AsmReturn* ret = create_asm_return(res, res_type);
 	ret->is_reg = 1;
 
 	return ret;
