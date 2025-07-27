@@ -20,6 +20,9 @@ add_executable(beerec
 		src/modules/handler/module-handler.c
 		src/codegen/codegen.c
 		src/codegen/impl/expressions/codegen-expr.c
+		src/codegen/impl/oop/codegen-class.c
+		src/codegen/impl/oop/instances/codegen-create-instance.c
+		src/codegen/impl/oop/member-access/codegen-mbr-access.c
 		src/codegen/impl/expressions/arithmetic/codegen-arith.c
 		src/codegen/impl/expressions/literals/codegen-lit.c
 		src/codegen/impl/statements/calls/codegen-method-call.c
