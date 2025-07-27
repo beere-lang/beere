@@ -1,9 +1,9 @@
 fn main() {
-    let a: int = 42
-    let pa: int* = &a
-    let ppa: int** = &pa
+    let x: int = 42
+    let p: int* = &x
+    let pp: int** = &p
 
-    let res: int = *pa + *pa
+    let res: int = *p + *p
 
-    **ppa = 99
+    **pp = 99
 }
