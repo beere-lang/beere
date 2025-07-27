@@ -1,11 +1,9 @@
-class Test {
-    public virtual fn teste() {
+fn main() {
+    let a: int = 42
+    let pa: int* = &a
+    let ppa: int** = &pa
 
-    }
-}
+    let res: int = **ppa
 
-class Test0 extends Test {
-    public override fn teste() {
-
-    }
+    **ppa = 99
 }

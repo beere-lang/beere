@@ -62,5 +62,8 @@ AsmReturn* generate_return(CodeGen* codegen, Node* node, AsmArea* area)
 
 	add_line_to_area(area, buff);
 
-	return create_asm_return(reg, ret->type);
+	AsmReturn* _ret = create_asm_return(reg, ret->type);
+	_ret->is_reg = 1;
+
+	return _ret;
 }
