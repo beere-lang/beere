@@ -1,11 +1,11 @@
 #include "codegen-method-decl.h"
 #include "../../../../../analyzer/analyzer.h"
 
-void generate_method_setup(AsmArea* area, Symbol* symbol)
+void generate_method_setup(AsmArea* area, Symbol* symbol, int is_class, char* prefered_name)
 {
 	char buff[64];
 
-	snprintf(buff, 64, "%s:", symbol->symbol_function->identifier);
+	snprintf(buff, 64, "%s:", (!is_class) ? symbol->symbol_function->identifier : prefered_name);
 	add_line_to_area(area, buff);
 
 	add_line_to_area(area, "	push	rbp");
@@ -44,7 +44,7 @@ void merge_method_area(AsmArea* area)
 	}
 }
 
-void generate_method_declaration(CodeGen* codegen, Node* node, AsmArea* area)
+void generate_method_declaration(CodeGen* codegen, Node* node, AsmArea* area, int is_class, char* class_method_name)
 {
 	AsmArea* method_area = create_area();
 
@@ -53,7 +53,7 @@ void generate_method_declaration(CodeGen* codegen, Node* node, AsmArea* area)
 	
 	codegen->scope = symbol->symbol_function->scope;
 	
-	generate_method_setup(method_area, symbol);
+	generate_method_setup(method_area, symbol, is_class, class_method_name);
 
 	generate_method_statements(codegen, node->function_node.function.block_node, method_area);
 

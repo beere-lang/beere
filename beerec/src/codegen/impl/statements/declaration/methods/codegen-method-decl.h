@@ -3,6 +3,6 @@
 
 #include "../../../../codegen.h"
 
-void generate_method_declaration(CodeGen* codegen, Node* node, AsmArea* area);
+void generate_method_declaration(CodeGen* codegen, Node* node, AsmArea* area, int is_class, char* class_method_name);
 
 #endif

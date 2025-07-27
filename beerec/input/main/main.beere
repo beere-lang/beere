@@ -1,7 +1,11 @@
-fn mano(arg: float): int {
-    return 10
+class Test {
+    public virtual fn teste() {
+
+    }
 }
 
-fn main() {
-    mano(10.0F)
+class Test0 extends Test {
+    public override fn teste() {
+
+    }
 }
