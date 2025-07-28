@@ -171,7 +171,7 @@ char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 	}
 }
 
-AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int argument_flag)
+AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int argument_flag)
 {
 	char buff[64];
 
@@ -183,11 +183,6 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	if (callee->type == NODE_IDENTIFIER)
 	{
 		symbol_method = analyzer_find_symbol_from_scope(method_name, codegen->scope, 0, 1, 0, 0);
-	}
-	else
-	{
-		Symbol* object = analyzer_find_symbol_from_scope(method_name, codegen->scope, 0, 0, 1, 0);
-		symbol_method = analyzer_find_symbol_from_scope(method_name, object->symbol_class->class_scope, 0, 1, 0, 0);
 	}
 
 	Symbol* owner_method = find_method_owner(codegen->scope);
@@ -209,13 +204,23 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		generate_method_args(codegen, node->function_call_node.function_call.arguments, area, &stack_size);
 	}
 
-	if (node->function_call_node.function_call.callee->type != NODE_IDENTIFIER) // mover a instanci pra algum registrador nao utilizado pra methods de classes.
+	if (callee->type != NODE_IDENTIFIER) // mover a instance pra algum registrador nao utilizado pra methods de classes.
 	{
-		AsmReturn* ret = generate_expression(codegen, callee, area, 0, 0, 0);
-	}
+		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 0, prefer_second, 0);
+		
+		snprintf(buff, 64, "	mov	r9, %s", ret->result);
+		add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	call	%s", method_name);
-	add_line_to_area(area, buff);
+		snprintf(buff, 64, "	mov	r9, [r9+%d]", symbol_method->symbol_function->method_id * 8);
+		add_line_to_area(area, buff);
+
+		add_line_to_area(area, "	call	r9");
+	}
+	else
+	{
+		snprintf(buff, 64, "	call	%s", method_name);
+		add_line_to_area(area, buff);
+	}
 
 	if (padding)
 	{
