@@ -6,6 +6,7 @@
 #include "operations/codegen-op.h"
 #include "pointers/codegen-ptr.h"
 #include "references/codegen-ref.h"
+#include "../oop/member-access/codegen-mbr-access.h"
 
 AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
@@ -39,6 +40,11 @@ AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int 
 		case NODE_ADRESS_OF:
 		{
 			return generate_reference(codegen, node, area, force_reg, prefer_second);
+		}
+
+		case NODE_MEMBER_ACCESS:
+		{
+			return generate_member_access(codegen, node, area, force_reg, prefer_second, argument_flag);
 		}
 
 		default:
