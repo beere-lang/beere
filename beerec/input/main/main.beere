@@ -1,9 +1,3 @@
-fn main() {
-    let x: int = 42
-    let p: int* = &x
-    let pp: int** = &p
-
-    let res: int = *p + *p
-
-    **pp = 99
+class Teste {
+    public test: int = 0
 }

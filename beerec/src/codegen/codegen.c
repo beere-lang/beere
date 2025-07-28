@@ -263,7 +263,7 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 
 		case NODE_FUNCTION_CALL:
 		{
-			generate_method_call(codegen, node, area, 0);
+			generate_method_call(codegen, node, area, 0, 0);
 
 			return;
 		}

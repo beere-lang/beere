@@ -7,6 +7,7 @@
 #include "pointers/codegen-ptr.h"
 #include "references/codegen-ref.h"
 #include "../oop/member-access/codegen-mbr-access.h"
+#include "../statements/calls/codegen-method-call.h"
 
 AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
@@ -45,6 +46,11 @@ AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int 
 		case NODE_MEMBER_ACCESS:
 		{
 			return generate_member_access(codegen, node, area, force_reg, prefer_second, argument_flag);
+		}
+
+		case NODE_FUNCTION_CALL:
+		{
+			return generate_method_call(codegen, node, area, prefer_second, argument_flag);
 		}
 
 		default:
