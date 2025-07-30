@@ -1647,11 +1647,6 @@ static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* ca
 		exit(1);
 	}
 
-	if (!analyzer_is_inside_method(scope))
-	{
-		exit(1);
-	}
-
 	if (super->symbol_class->constructor == NULL)
 	{
 		exit(1);
