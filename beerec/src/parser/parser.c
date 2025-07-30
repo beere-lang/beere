@@ -2005,6 +2005,26 @@ int is_var_or_function(Parser* parser)
 	);
 }
 
+Node* parse_super_call(Parser* parser)
+{
+	advance_tkn(parser);
+
+	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
+	advance_tkn(parser);
+
+	NodeList* args = NULL;
+	
+	if (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_PAREN)
+	{
+		args = parse_args(parser);
+	}
+
+	Node* super_node = malloc(sizeof(Node));
+	super_node->super_node.super.args = args;
+
+	return super_node;
+}
+
 Node* parse_stmt(Parser* parser)
 {
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_IMPORT)
@@ -2015,6 +2035,11 @@ Node* parse_stmt(Parser* parser)
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_CLASS)
 	{
 		return parse_class(parser);
+	}
+
+	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_SUPER)
+	{
+		return parse_super_call(parser);
 	}
 
 	if (is_var_or_function(parser))
