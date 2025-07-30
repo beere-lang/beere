@@ -47,6 +47,7 @@ static int analyzer_is_class_assignable(Symbol* from, Symbol* to);
 static Node* _analyzer_create_cast(Node** node, Type* preferred);
 static void analyzer_create_cast(Node** node, Type* preferred);
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
+static int analyzer_is_inside_method(SymbolTable* scope);
 static int analyzer_get_list_size(Node* list_head);
 
 int class_count;
@@ -1642,6 +1643,16 @@ static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* ca
 	Symbol* super = class->symbol_class->super;
 
 	if (super == NULL)
+	{
+		exit(1);
+	}
+
+	if (!analyzer_is_inside_method(scope))
+	{
+		exit(1);
+	}
+
+	if (super->symbol_class->constructor == NULL)
 	{
 		exit(1);
 	}
