@@ -238,8 +238,8 @@ static Node* parse_literal(Parser* parser)
 {
 	Node* expr = NULL;
 
-	const TokenType tkn_type = peek_tkn(parser)->token_type;
 	const Token* tkn = peek_tkn(parser);
+	const TokenType tkn_type = tkn->token_type;
 	
 	if (tkn_type == TOKEN_LITERAL_INT || 
 		tkn_type == TOKEN_LITERAL_FLOAT || 
@@ -395,6 +395,22 @@ static Node* parse_literal(Parser* parser)
 			expr = var_node;
 		}
 	}
+	else if (tkn_type == TOKEN_KEYWORD_SUPER)
+	{
+		advance_tkn(parser);
+
+		Node* node = malloc(sizeof(Node));
+
+		if (node == NULL)
+		{
+			parser_error("Failed to allocate memory for super node..."); 
+			exit(1);
+		}
+
+		node->type = NODE_SUPER;
+
+		expr = node;
+	}
 	else if (tkn_type == TOKEN_KEYWORD_THIS)
 	{
 		advance_tkn(parser);
@@ -470,9 +486,6 @@ static Node* parse_primary(Parser* parser)
 
 			expr = node;
 		}
-		/**
-		 * Detecta o '(' e detecta chamada de função.
-		 */
 		else if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_PAREN)
 		{
 			printf("[Parser] [Debug] Calling a function from a object...\n");
@@ -487,9 +500,6 @@ static Node* parse_primary(Parser* parser)
 			Node* func_call = parse_func_call(parser, expr);
 			expr = func_call;
 		}
-		/**
-		 * Detecta o '[' e detecta acesso de array.
-		 */
 		else if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACKET)
 		{
 			printf("[Parser] [Debug] Accessing a array...\n");
@@ -2005,26 +2015,6 @@ int is_var_or_function(Parser* parser)
 	);
 }
 
-Node* parse_super_call(Parser* parser)
-{
-	advance_tkn(parser);
-
-	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
-	advance_tkn(parser);
-
-	NodeList* args = NULL;
-	
-	if (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_PAREN)
-	{
-		args = parse_args(parser);
-	}
-
-	Node* super_node = malloc(sizeof(Node));
-	super_node->super_node.super.args = args;
-
-	return super_node;
-}
-
 Node* parse_stmt(Parser* parser)
 {
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_IMPORT)
@@ -2035,11 +2025,6 @@ Node* parse_stmt(Parser* parser)
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_CLASS)
 	{
 		return parse_class(parser);
-	}
-
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_SUPER)
-	{
-		return parse_super_call(parser);
 	}
 
 	if (is_var_or_function(parser))

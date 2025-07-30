@@ -1403,7 +1403,7 @@ static Type* handle_module_method_access(Module* module, SymbolTable* scope, con
 	}
 	
 	/**
-	 * TODO: Check if module is exporting method.
+	 * TODO: Checar se o metodo ta sendo exportado...
 	 */
 
 	return field_symbol->symbol_function->return_type;
@@ -1424,7 +1424,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	
 	if (type->type == TYPE_PTR && !is_ptr)
 	{
-		printf("[Analyzer] [Debug] Use '->' to access pointers...\n");
+		printf("[Analyzer] [Debug] Use '->' to access pointers pointing to a class...\n");
 
 		return NULL;
 	}
@@ -1438,7 +1438,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 
 	if (type->type == TYPE_CLASS && is_ptr)
 	{
-		printf("[Analyzer] [Debug] Use '.' to access pointers...\n");
+		printf("[Analyzer] [Debug] Use '.' to access normal classes...\n");
 
 		return NULL;
 	}
@@ -1458,6 +1458,11 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	if (node->member_access_node.member_access.object->type == NODE_THIS)
 	{
 		printf("[Analyzer [Debug] Using 'this' pointer...\n");
+	}
+
+	if (node->member_access_node.member_access.object->type == NODE_SUPER)
+	{
+		printf("[Analyzer [Debug] Using 'super'...\n");
 	}
 
 	if (is_module)
@@ -1609,8 +1614,61 @@ static int analyzer_is_inside_class(SymbolTable* scope)
 	return analyzer_is_inside_class(scope->parent);
 }
 
+static Symbol* analyzer_is_inside_class_alt(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return NULL;
+	}
+
+	if (scope->scope_kind == SYMBOL_CLASS)
+	{
+		return scope->owner_statement;
+	}
+
+	return analyzer_is_inside_class_alt(scope->parent);
+}
+
+// Chamada do constructor da super class
+static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* callee, NodeList* args)
+{
+	Symbol* class = analyzer_is_inside_class_alt(scope);
+	
+	if (class == NULL)
+	{
+		exit(1);
+	}
+
+	Symbol* super = class->symbol_class->super;
+
+	if (super == NULL)
+	{
+		exit(1);
+	}
+	
+	Node* params_head = super->symbol_class->constructor->symbol_function->params_head;
+
+	if (params_head == NULL && args != NULL)
+	{
+		exit(1);
+	}
+	else if (params_head != NULL)
+	{
+		Node* args_head = args->head;
+	
+		analyzer_check_arguments(module, params_head, args_head, scope);
+	}
+	
+	return create_type(TYPE_VOID, NULL);
+}
+
 static Type* handle_flat_method(Module* module, SymbolTable* scope, Node* callee, NodeList* args)
 {
+	if (callee->type == NODE_SUPER)
+	{
+		return handle_super_flat_call(module, scope, callee, args);
+	}
+	
 	Symbol* symbol = analyzer_find_symbol_from_scope(callee->variable_node.variable.identifier, scope, 0, 1, 0, 0);
 		
 	if (symbol == NULL)
@@ -1687,13 +1745,16 @@ static Type* analyzer_get_function_call_type(Module* module, Node* node, SymbolT
 	node->function_call_node.function_call.built_in_id = -1;
 	node->function_call_node.function_call.is_built_in = 0;
 
-	if (callee->type == NODE_IDENTIFIER)
+	if (callee->type == NODE_IDENTIFIER || callee->type == NODE_SUPER)
 	{
-		Type* built_in = handle_built_in_methods(module, scope, node, args);
-
-		if (built_in != NULL)
+		if (callee->type != NODE_SUPER)
 		{
-			return built_in;
+			Type* built_in = handle_built_in_methods(module, scope, node, args);
+	
+			if (built_in != NULL)
+			{
+				return built_in;
+			}
 		}
 
 		return handle_flat_method(module, scope, callee, args);
@@ -1880,6 +1941,46 @@ static Type* analyzer_get_argument_type(Module* module, Node* node, SymbolTable*
 static Type* analyzer_get_parameter_type(Node* node, SymbolTable* scope)
 {
 	return node->param_node.param.argument_type;
+}
+
+static int analyzer_is_inside_method(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return 0;
+	}
+
+	if (scope->scope_kind == SYMBOL_FUNCTION)
+	{
+		return 1;
+	}
+
+	return analyzer_is_inside_method(scope);
+}
+
+static Type* analyzer_get_super_type(Node* node, SymbolTable* scope)
+{
+	Symbol* class = analyzer_is_inside_class_alt(scope);
+
+	if (class == NULL)
+	{
+		exit(1);
+	}
+
+	if (!analyzer_is_inside_method(scope))
+	{
+		exit(1);
+	}
+
+	Symbol* super = class->symbol_class->super;
+	
+	if (super == NULL)
+	{
+		exit(1);
+	}
+
+	// Cast podre, cuidado.
+	return create_type(TYPE_CLASS, (char*) super->symbol_class->identifier);
 }
 
 Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct)

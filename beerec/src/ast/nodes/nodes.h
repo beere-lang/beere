@@ -252,12 +252,6 @@ ArrayLiteralNode;
 
 typedef struct
 {
-	NodeList* args;
-}
-SuperNode;
-
-typedef struct
-{
 	NodeList* statements;
 }
 BlockNode;
@@ -476,12 +470,6 @@ struct Node
 			ArrayLiteralNode array_literal;
 		}
 		array_literal_node;
-
-		struct
-		{
-			SuperNode super;
-		}
-		super_node;
 
 		struct
 		{
