@@ -3066,6 +3066,100 @@ static void analyzer_handle_class_vars(Module* module, Node* node, SymbolTable* 
 	}
 }
 
+static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_implictly)
+{
+	Node* constructor = NULL;
+	
+	for (int i = 0; i < class->symbol_class->func_count; i++)
+	{
+		Node* method = class->symbol_class->functions[i];
+
+		if (method->function_node.function.is_constructor)
+		{
+			constructor = method;
+		}
+	}
+
+	if (constructor == NULL)
+	{
+		return 0;
+	}
+
+	int super_constructor_call = 0;
+	Node** head = &constructor->function_node.function.block_node->block_node.block.statements->head;
+	Node* next = *head;
+
+	while (next != NULL)
+	{
+		if (next->type != NODE_FUNCTION_CALL)
+		{
+			continue;
+		}
+
+		if (next->function_call_node.function_call.callee->type != NODE_SUPER)
+		{
+			continue;
+		}
+
+		super_constructor_call = 1;
+
+		break;
+	}
+
+	if (!super_constructor_call && add_call_implictly) // só usar caso o constructor da super não tenha parametros
+	{
+		Node* node = malloc(sizeof(Node));
+		node->type = NODE_FUNCTION_CALL;
+
+		if (node == NULL)
+		{
+			exit(1);
+		}
+		
+		Node* super_node = malloc(sizeof(Node));
+
+		if (super_node == NULL)
+		{
+			exit(1);
+		}
+
+		super_node->type = NODE_SUPER;
+
+		node->function_call_node.function_call.callee = super_node;
+		node->function_call_node.function_call.arguments = NULL;
+
+		node->next = *head;
+
+		*head = node;
+
+		printf("Added 'super' call implictly...\n");
+	}
+
+	return super_constructor_call;
+}
+
+static void analyzer_check_super_constructor(Module* module, Symbol* symbol, SymbolTable* scope)
+{
+	Symbol* super = symbol->symbol_class->super;
+	
+	if (super == NULL)
+	{
+		return;
+	}
+	
+	if (super->symbol_class->constructor != NULL && super->symbol_class->constructor->symbol_function->params_head != NULL)
+	{
+		if (symbol->symbol_class->constructor == NULL || !analyzer_check_if_call_super_constructor(symbol, 0))
+		{
+			exit(1);
+		}
+	}
+	else if (super->symbol_class->constructor != NULL)
+	{
+		analyzer_check_if_call_super_constructor(symbol, 1);
+	}
+}
+
 static void analyzer_handle_class_declaration(Module* module, Node* node, SymbolTable* scope)
 {
 	const ClassNode* class_node = &node->class_node.class_node;
