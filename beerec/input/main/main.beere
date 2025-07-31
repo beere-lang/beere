@@ -1,3 +1,11 @@
-class Teste {
-    public test: int = 0
+class Parent {
+    public Parent(a: int) {
+
+    }
+}
+
+class Child extends Parent {
+    public Child() {
+        super(10)
+    }
 }

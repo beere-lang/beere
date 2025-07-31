@@ -106,6 +106,8 @@ struct SymbolClass
 	Node** functions;
 	Node** fields;
 
+	Node* constructor_node;
+
 	int field_count;
 	int func_count;
 

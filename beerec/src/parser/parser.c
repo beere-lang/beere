@@ -1969,7 +1969,7 @@ Node* handle_function_and_variable_parse(Parser* parser)
 	{
 		return setup_parse_variable(parser, is_public, is_static, (peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST));
 	}
-	else if ((peek_tkn(parser)->token_type == TOKEN_IDENTIFIER || peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST) && parser->inside_class)
+	else if ((peek_tkn(parser)->token_type == TOKEN_IDENTIFIER || peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST) && parser->inside_class && peek_ahead(parser)->token_type != TOKEN_CHAR_OPEN_PAREN)
 	{
 		return setup_parse_variable(parser, is_public, is_static, (peek_tkn(parser)->token_type == TOKEN_KEYWORD_CONST));
 	}
@@ -1984,7 +1984,7 @@ Node* handle_function_and_variable_parse(Parser* parser)
 			printf("[Analyzer] [Debug] Override / Virtual keyword outside a class...\n");
 			exit(1);
 		}
-		
+
 		is_virtual = (peek_tkn(parser)->token_type == TOKEN_KEYWORD_VIRTUAL);
 		is_override = (peek_tkn(parser)->token_type == TOKEN_KEYWORD_OVERRIDE);
 
@@ -1994,6 +1994,11 @@ Node* handle_function_and_variable_parse(Parser* parser)
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_FUNCTION)
 	{
 		return setup_parse_function(parser, is_public, is_static, is_virtual, is_override, 0);
+	}
+
+	if (is_virtual || is_override)
+	{
+		exit(1);
 	}
 
 	return setup_parse_function(parser, is_public, is_static, is_virtual, is_override, 1);
@@ -2513,6 +2518,11 @@ void free_node(Node* node)
 		{
 			free_node(node->adress_of_node.adress_of.expression);
 			
+			break;
+		}
+
+		case NODE_SUPER:
+		{
 			break;
 		}
 

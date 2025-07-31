@@ -786,6 +786,8 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 
 	symbol->symbol_class->func_count = node->class_node.class_node.func_count;
 	symbol->symbol_class->field_count = node->class_node.class_node.var_count;
+
+	symbol->symbol_class->constructor_node = node->class_node.class_node.constructor;
 	
 	int init_size = 0;
 
@@ -1656,10 +1658,17 @@ static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* ca
 
 	if (params_head == NULL && args != NULL)
 	{
+		printf("Super constructor dont have params...\n");
 		exit(1);
 	}
 	else if (params_head != NULL)
 	{
+		if (args == NULL)
+		{
+			printf("Super needs arguments...\n");
+			exit(1);
+		}
+
 		Node* args_head = args->head;
 	
 		analyzer_check_arguments(module, params_head, args_head, scope);
@@ -3074,17 +3083,7 @@ static void analyzer_handle_class_vars(Module* module, Node* node, SymbolTable* 
 
 static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_implictly)
 {
-	Node* constructor = NULL;
-	
-	for (int i = 0; i < class->symbol_class->func_count; i++)
-	{
-		Node* method = class->symbol_class->functions[i];
-
-		if (method->function_node.function.is_constructor)
-		{
-			constructor = method;
-		}
-	}
+	Node* constructor = class->symbol_class->constructor_node;
 
 	if (constructor == NULL)
 	{
@@ -3215,6 +3214,8 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 	analyzer_handle_class_funcs(module, node, class_scope);
 
 	analyzer_handle_class_methods(class_symbol);
+
+	analyzer_check_super_constructor(module, class_symbol, scope);
 }
 
 static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTable* scope)
