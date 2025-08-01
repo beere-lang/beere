@@ -183,8 +183,28 @@ Constant* generate_constant(Node* literal)
 	return constant;
 }
 
+int check_externs_cache(ExternEntry* entry)
+{
+	for (int i = 0; i < extern_table->externs_length; i++)
+	{
+		ExternEntry* curr = extern_table->externs[i];
+		
+		if (strcmp(entry->label, curr->label) == 0) 
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 void add_extern_entry_to_table(ExternEntry* entry)
 {
+	if (check_externs_cache(entry))
+	{
+		return;
+	}
+	
 	if (extern_table->externs_length <= extern_table->externs_capacity)
 	{
 		extern_table->externs_capacity *= 2;
