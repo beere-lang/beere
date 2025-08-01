@@ -21,7 +21,7 @@ void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area
 
 	/* ------------------------------------ */
 
-	snprintf(buff, 64, "	mov	rdi, %d", get_class_total_offset(codegen, symbol));
+	snprintf(buff, 64, "	mov	rcx, %d", get_class_total_offset(codegen, symbol));
 	add_line_to_area(area, buff);
 
 	/* ------------------------------------ */
