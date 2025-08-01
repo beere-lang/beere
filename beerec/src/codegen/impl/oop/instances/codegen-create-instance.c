@@ -34,6 +34,9 @@ void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area
 	/* ------------------------------------ */
 }
 
+/**
+ * TODO: Terminar a instanciação de classes.
+ */
 AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea* area)
 {
 	
