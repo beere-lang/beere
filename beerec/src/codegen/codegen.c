@@ -183,7 +183,7 @@ Constant* generate_constant(Node* literal)
 	return constant;
 }
 
-int check_externs_cache(ExternEntry* entry)
+static int check_externs_cache(ExternEntry* entry)
 {
 	for (int i = 0; i < extern_table->externs_length; i++)
 	{
@@ -215,7 +215,21 @@ void add_extern_entry_to_table(ExternEntry* entry)
 	extern_table->externs_length++;
 }
 
-void setup_extern_table()
+ExternEntry* create_extern_entry(char* label)
+{
+	ExternEntry* entry = malloc(sizeof(ExternEntry));
+	
+	if (entry == NULL)
+	{
+		exit(1);
+	}
+	
+	entry->label = strdup(label);
+
+	return entry;
+}
+
+static void setup_extern_table()
 {
 	ExternTable* table = malloc(sizeof(ExternTable));
 	

@@ -84,7 +84,9 @@ struct ExternEntry
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area);
 AsmReturn* create_asm_return(char* value, Type* type);
 void setup_codegen(Module* module, CodeGen* codegen);
+void add_extern_entry_to_table(ExternEntry* entry);
 void add_line_to_area(AsmArea* area, char* line);
+ExternEntry* create_extern_entry(char* label);
 AsmArea* create_area_with_label(char* label);
 void print_code_generated(CodeGen* codegen);
 Constant* generate_constant(Node* literal);
