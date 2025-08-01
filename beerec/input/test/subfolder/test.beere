@@ -1,4 +1,0 @@
-fn test_func()
-{
-	let test_var: int = 0
-}

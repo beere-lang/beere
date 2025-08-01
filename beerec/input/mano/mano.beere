@@ -1,9 +1,0 @@
-class Mano
-{
-    public static let age: int = 0
-
-    public static fn oi()
-    {
-
-    }
-}

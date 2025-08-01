@@ -9,4 +9,4 @@ char* get_dot_mod_relative_path(char* mod_path, const char* relative);
 char* read_file(const char* file_name, int mod);
 char* get_directory(char* path);
 
-#endif //UTILS_H
+#endif
