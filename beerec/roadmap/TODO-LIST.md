@@ -1,5 +1,6 @@
 * Todo-List:
- - *Terminar* class instances 'new Instance()'.
+ - Refatorar o parser e analyzer
+ - Terminar class instances 'new Instance()'.
  - Adicionar suporte a referencias de instancia da class (mais em notes 0)
  - Adicionar suporte a super e constructors no codegen
  - Adicionar o sistema de IDs em classes (pra polimorfismo seguro em run-time).

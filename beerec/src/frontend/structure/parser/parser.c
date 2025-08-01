@@ -130,7 +130,7 @@ static int convert_bool(const char* str)
 
 static char convert_char(const char* str)
 {
-	return str[0]; // :skull: top 10 codes
+	return str[0];
 }
 
 static void skip_end_lines(Parser* parser) 
@@ -163,26 +163,6 @@ static Type* chain_type(Type* type, VarType type_enum, char* class_name)
 	type->base = create_type(type_enum, class_name);
 
 	return type->base->base;
-}
-
-void print_tree(Type* head)
-{
-	Type* next = head;
-	int count = 0;
-
-	while (next != NULL)
-	{
-		if (count > 0)
-		{
-			printf(" --> ");
-		}
-		printf("%d", next->type);
-
-		next = next->base;
-		count++;
-	}
-
-	printf("\n");
 }
 
 static void handle_ptr_array(Parser* parser, Type** result_ref)
@@ -234,6 +214,11 @@ static Type* handle_type_declaration(Parser* parser)
 	return result;
 }
 
+static int is_literal(TokenType tkn_type)
+{
+	return tkn_type == TOKEN_LITERAL_INT || tkn_type == TOKEN_LITERAL_FLOAT || tkn_type == TOKEN_LITERAL_BOOL || tkn_type == TOKEN_LITERAL_CHAR || tkn_type == TOKEN_LITERAL_STRING ||tkn_type == TOKEN_LITERAL_NULL || tkn_type == TOKEN_LITERAL_DOUBLE;
+}
+
 static Node* parse_literal(Parser* parser)
 {
 	Node* expr = NULL;
@@ -241,14 +226,7 @@ static Node* parse_literal(Parser* parser)
 	const Token* tkn = peek_tkn(parser);
 	const TokenType tkn_type = tkn->token_type;
 	
-	if (tkn_type == TOKEN_LITERAL_INT || 
-		tkn_type == TOKEN_LITERAL_FLOAT || 
-		tkn_type == TOKEN_LITERAL_BOOL || 
-		tkn_type == TOKEN_LITERAL_CHAR ||
-		tkn_type == TOKEN_LITERAL_STRING ||
-		tkn_type == TOKEN_LITERAL_NULL ||
-		tkn_type == TOKEN_LITERAL_DOUBLE
-	)
+	if (is_literal(tkn_type))
 	{
 		Node* literal_node = malloc(sizeof(Node));
 
@@ -264,6 +242,7 @@ static Node* parse_literal(Parser* parser)
 			case TOKEN_LITERAL_INT: 
 			{
 				Type* type = create_type(TYPE_INT, NULL);
+				
 				literal_node->literal_node.literal.literal_type = type;
 				literal_node->literal_node.literal.int_value = convert_number_int(peek_tkn(parser)->start);
 				
@@ -273,6 +252,7 @@ static Node* parse_literal(Parser* parser)
 			case TOKEN_LITERAL_STRING: 
 			{
 				Type* type = create_type(TYPE_STRING, NULL);
+				
 				literal_node->literal_node.literal.literal_type = type;
 				literal_node->literal_node.literal.string_value = strdup(peek_tkn(parser)->str_value);
 				
@@ -282,6 +262,7 @@ static Node* parse_literal(Parser* parser)
 			case TOKEN_LITERAL_FLOAT: 
 			{
 				Type* type = create_type(TYPE_FLOAT, NULL);
+				
 				literal_node->literal_node.literal.literal_type = type;
 				literal_node->literal_node.literal.float_value = convert_number_float(peek_tkn(parser)->start);
 				
@@ -321,6 +302,7 @@ static Node* parse_literal(Parser* parser)
 			case TOKEN_LITERAL_NULL: 
 			{
 				Type* type = create_type(TYPE_NULL, NULL);
+				
 				literal_node->literal_node.literal.literal_type = type;
 				
 				break;
