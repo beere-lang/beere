@@ -10,7 +10,9 @@
 
 typedef struct CodeGen CodeGen;
 typedef struct Constant Constant;
+typedef struct ExternTable ExternTable;
 typedef struct ConstantTable ConstantTable;
+typedef struct ExternEntry ExternEntry;
 typedef struct AsmReturn AsmReturn;
 typedef struct AsmArea AsmArea;
 
@@ -64,6 +66,19 @@ struct AsmReturn
 	Type* type;
 
 	int is_reg;
+};
+
+struct ExternTable
+{
+	ExternEntry** externs;
+
+	int externs_capacity;
+	int externs_length;
+};
+
+struct ExternEntry
+{
+	char* label;
 };
 
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area);

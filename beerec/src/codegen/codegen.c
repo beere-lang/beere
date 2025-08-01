@@ -18,6 +18,7 @@ AsmArea* text_section = NULL;
 AsmArea* data_section = NULL;
 AsmArea* rodata_section = NULL;
 AsmArea* bss_section = NULL;
+ExternTable* extern_table = NULL;
 
 AsmReturn* create_asm_return(char* value, Type* type)
 {
@@ -182,6 +183,29 @@ Constant* generate_constant(Node* literal)
 	return constant;
 }
 
+void add_extern_entry_to_table(ExternEntry* entry)
+{
+	if (extern_table->externs_length <= extern_table->externs_capacity)
+	{
+		extern_table->externs_capacity *= 2;
+		extern_table->externs = malloc(sizeof(ExternEntry*) * extern_table->externs_capacity);
+	}
+
+	extern_table->externs[extern_table->externs_length] = entry;
+	extern_table->externs_length++;
+}
+
+void setup_extern_table()
+{
+	ExternTable* table = malloc(sizeof(ExternTable));
+	
+	table->externs = malloc(sizeof(ExternEntry*) * 4);
+	table->externs_capacity = 4;
+	table->externs_length = 0;
+
+	extern_table = table;
+}
+
 void setup_codegen(Module* module, CodeGen* codegen)
 {
 	codegen->module = module;
@@ -191,6 +215,7 @@ void setup_codegen(Module* module, CodeGen* codegen)
 	setup_data_section();
 	setup_rodata_section();
 	setup_constant_table();
+	setup_extern_table();
 	setup_text_section();
 	setup_externs();
 }
