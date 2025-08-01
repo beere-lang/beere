@@ -379,203 +379,500 @@ static Token identifier(Lexer* lexer)
 	return token;
 }
 
+static Token handle_string_literal(Lexer* lexer)
+{
+	advance(lexer);
+
+	StringBuilder sb;
+	init(&sb);
+
+	while (peek(lexer) != '\"')
+	{
+		if (peek(lexer) == '\n') 
+		{
+			printf("[Lexer] [Error] String not finished...");
+			exit(1);
+		}
+			
+		const char c_ = peek(lexer);
+
+		const char tmp[2] = { c_, '\0' };
+
+		append(&sb, tmp);
+
+		advance(lexer);
+	}
+
+	advance(lexer);
+
+	char* str = malloc(strlen(sb.buffer) + 1);
+
+	strcpy(str, sb.buffer);
+
+	free_string_builder(&sb);
+
+	Token tkn = (Token) { TOKEN_LITERAL_STRING, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
+
+	tkn.var_type = TYPE_STRING;
+	tkn.str_value = str;
+		
+	return tkn;
+}
+
+Token handle_number_literal(Lexer* lexer, int negative)
+{
+	int decimal = 0;
+	int i = 0;
+
+	char actual = peek(lexer);
+
+	while (is_digit(actual) || actual == '.')
+	{
+		if (actual == '.') 
+		{
+			decimal++;
+		}
+
+		advance(lexer);
+		actual = peek(lexer);
+		i++;
+	}
+
+	if (decimal >= 2)
+	{
+		printf("[Lexer] [Error] Detected a malformed number: %.*s", (int)(lexer->current - lexer->start), lexer->start);
+		exit(1);
+	}
+
+	if (actual == 'F' || actual == 'f')
+	{
+		advance(lexer);
+
+		Token tkn = (Token) { TOKEN_LITERAL_FLOAT, lexer->start, (size_t)(lexer->current - lexer->start), lexer->line };
+		tkn.negative = negative;
+
+		return tkn;
+	}
+
+	if (decimal == 1)
+	{
+
+		Token tkn = (Token) { TOKEN_LITERAL_DOUBLE, lexer->start, (size_t)(lexer->current - lexer->start), lexer->line };
+		tkn.negative = negative;
+
+		return tkn;
+	}
+
+	Token tkn = (Token) { TOKEN_LITERAL_INT, lexer->start, (size_t)(lexer->current - lexer->start), lexer->line };
+	tkn.negative = negative;
+
+	return tkn;
+}
+
+Token handle_char_literal(Lexer* lexer)
+{
+	advance(lexer);
+
+	char value;
+
+	if (peek(lexer) == '\\') 
+	{
+		advance(lexer);
+
+		char esc = peek(lexer);
+
+		switch (esc)
+		{
+			case 'n': 
+			{
+				value = '\n'; 
+
+				break;
+			}
+
+			case 't':
+			{
+				value = '\t'; 
+
+				break;
+			}
+
+			case '\'': 
+			{
+				value = '\''; 
+
+				break;
+			}
+
+			case '\\': 
+			{
+				value = '\\'; 
+
+				break;
+			}
+
+			case '0':
+			{
+				value = '\0';
+
+				break;
+			}
+
+			default:
+			{
+				printf("[Lexer] [Error] Invalid escape sequence \\%c\n", esc);
+				exit(1);
+			}
+		}
+
+		advance(lexer);
+	} 
+	else 
+	{
+		value = peek(lexer);
+		advance(lexer);
+	}
+
+	if (peek(lexer) != '\'')
+	{
+		printf("[Lexer] [Error] Unterminated char literal\n");
+		exit(1);
+	}
+
+	advance(lexer);
+
+	Token token;
+
+	token.token_type = TOKEN_LITERAL_CHAR;
+
+	token.start = lexer->start; 
+	token.length = (size_t)(lexer->current - lexer->start);
+	token.line = lexer->line;
+
+	token.ch_value = value;
+		
+	return token;
+}
+
+Token handle_bool_literal(Lexer* lexer)
+{
+	if (strncmp(lexer->start, "true", 4) == 0) 
+	{
+		jmp(lexer, 4);
+			
+		Token tkn = (Token) { TOKEN_LITERAL_BOOL, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
+		tkn.bool_value = 1;
+
+		return tkn;
+	}
+
+	if (strncmp(lexer->start, "false", 5) == 0) 
+	{
+		jmp(lexer, 5);
+			
+		Token tkn = (Token) { TOKEN_LITERAL_BOOL, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
+		tkn.bool_value = 0;
+			
+		return tkn;
+	}
+
+	return (Token) { TOKEN_UNKNOWN, lexer->start, 1, lexer->line };
+}
+
 Token handle_literals(Lexer* lexer, int negative)
 {
 	const char c = peek(lexer);
 
 	if (c == '\"')
 	{
-		advance(lexer);
-
-		StringBuilder sb;
-		
-		init(&sb);
-
-		while (peek(lexer) != '\"')
-		{
-			if (peek(lexer) == '\n') 
-			{
-				printf("[Lexer] [Error] String not finished...");
-				exit(1);
-			}
-			
-			const char c_ = peek(lexer);
-
-			const char tmp[2] = { c_, '\0' };
-
-			append(&sb, tmp);
-
-			advance(lexer);
-		}
-
-		advance(lexer);
-
-		char* str = malloc(strlen(sb.buffer) + 1);
-
-		strcpy(str, sb.buffer);
-
-		free_string_builder(&sb);
-
-		Token tkn = (Token) { TOKEN_LITERAL_STRING, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
-
-		tkn.var_type = TYPE_STRING;
-		tkn.str_value = str;
-		
-		return tkn;
+		return handle_string_literal(lexer);
 	}
 
 	if (is_digit(c))
 	{
-		int decimal = 0;
-
-		int i = 0;
-
-		char actual = peek(lexer);
-
-		while (is_digit(actual) || actual == '.')
-		{
-			if (actual == '.') 
-			{
-				decimal++;
-			}
-
-			advance(lexer);
-			actual = peek(lexer);
-			i++;
-		}
-
-		if (decimal >= 2)
-		{
-			printf("[Lexer] [Error] Detected a malformed number: %.*s", (int)(lexer->current - lexer->start), lexer->start);
-			exit(1);
-		}
-
-		if (actual == 'F' || actual == 'f')
-		{
-			advance(lexer);
-
-			Token tkn = (Token) { TOKEN_LITERAL_FLOAT, lexer->start, (size_t)(lexer->current - lexer->start), lexer->line };
-			tkn.negative = negative;
-
-			return tkn;
-		}
-
-		if (decimal == 1)
-		{
-
-			Token tkn = (Token) { TOKEN_LITERAL_DOUBLE, lexer->start, (size_t)(lexer->current - lexer->start), lexer->line };
-			tkn.negative = negative;
-
-			return tkn;
-		}
-
-		Token tkn = (Token) { TOKEN_LITERAL_INT, lexer->start, (size_t)(lexer->current - lexer->start), lexer->line };
-		tkn.negative = negative;
-
-		return tkn;
+		return handle_number_literal(lexer, negative);
 	}
 
 	if (c == '\'') 
 	{
-		advance(lexer);
-
-		char value;
-
-		if (peek(lexer) == '\\') 
-		{
-			advance(lexer);
-
-			char esc = peek(lexer);
-
-			switch (esc)
-			{
-				case 'n': 
-				{
-					value = '\n'; 
-
-					break;
-				}
-
-				case 't':
-				{
-					value = '\t'; 
-
-					break;
-				}
-
-				case '\'': 
-				{
-					value = '\''; 
-
-					break;
-				}
-
-				case '\\': 
-				{
-					value = '\\'; 
-
-					break;
-				}
-
-				case '0':
-				{
-					value = '\0';
-
-					break;
-				}
-
-				default:
-					printf("[Lexer] [Error] Invalid escape sequence \\%c\n", esc);
-					exit(1);
-				}
-
-				advance(lexer);
-		} 
-		else 
-		{
-			value = peek(lexer);
-			advance(lexer);
-		}
-
-		if (peek(lexer) != '\'')
-		{
-			printf("[Lexer] [Error] Unterminated char literal\n");
-			exit(1);
-		}
-
-		advance(lexer);
-
-		Token token;
-
-		token.token_type = TOKEN_LITERAL_CHAR;
-		token.start = lexer->start; 
-		token.length = (size_t)(lexer->current - lexer->start);
-		token.line = lexer->line;
-		token.ch_value = value;
-		
-		return token;
+		return handle_char_literal(lexer);
 	}
 
 	if (peek(lexer) == 't' || peek(lexer) == 'f') 
 	{
-		if (strncmp(lexer->start, "true", 4) == 0) 
-		{
-			jmp(lexer, 4);
-			
-			Token tkn = (Token) { TOKEN_LITERAL_BOOL, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
-			tkn.bool_value = 1;
+		return handle_bool_literal(lexer);
+	}
 
-			return tkn;
+	return (Token) { TOKEN_UNKNOWN, lexer->start, 1, lexer->line };
+}
+
+static Token handle_operators(Lexer* lexer, char c, int* negative)
+{
+	switch (c) {
+		case '.':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_OPERATOR_DOT, lexer->start, 1, lexer->line };
 		}
 
-		if (strncmp(lexer->start, "false", 5) == 0) 
+		case '+':
 		{
-			jmp(lexer, 5);
+			advance(lexer);
 			
-			Token tkn = (Token) { TOKEN_LITERAL_BOOL, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
-			tkn.bool_value = 0;
+			if (peek(lexer) == '+') 
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_INCREMENT, lexer->start, 2, lexer->line };
+			} 
+			else if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_PLUS_EQUALS, lexer->start, 2, lexer->line };
+			}
+
+			return (Token){ TOKEN_OPERATOR_PLUS, lexer->start, 1, lexer->line };
+		}
+
+		case '-':
+		{
+			advance(lexer);
 			
-			return tkn;
+			if (peek(lexer) == '-') 
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_DECREMENT, lexer->start, 2, lexer->line };
+			}
+			else if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_MINUS_EQUALS, lexer->start, 2, lexer->line };
+			}
+			else if (peek(lexer) == '>') 
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_ACCESS_PTR, lexer->start, 2, lexer->line };
+			}
+			else if (is_digit(peek(lexer))) 
+			{
+				*negative = 1;
+				break;
+			}
+
+			return (Token){ TOKEN_OPERATOR_MINUS, lexer->start, 1, lexer->line };
+		}
+
+		case '=':
+		{
+			advance(lexer);
+			
+			if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_EQUALS, lexer->start, 2, lexer->line };
+			}
+
+			return (Token){ TOKEN_OPERATOR_ASSIGN, lexer->start, 1, lexer->line };
+		}
+
+		case ':':
+		{
+			advance(lexer);
+
+			return (Token){ TOKEN_CHAR_COLON, lexer->start, 1, lexer->line };
+		}
+
+		case '*':
+		{
+			advance(lexer);
+			
+			if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+					
+				return (Token){ TOKEN_OPERATOR_TIMES_EQUALS, lexer->start, 2, lexer->line };
+			}
+				
+			return (Token){ TOKEN_CHAR_STAR, lexer->start, 1, lexer->line };
+		}
+
+		case '/':
+		{
+			advance(lexer);
+
+			if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+					
+				return (Token){ TOKEN_OPERATOR_DIVIDED_EQUALS, lexer->start, 2, lexer->line };
+			}
+			else if (peek(lexer) == '/')
+			{
+				while (peek(lexer) != '\n' && !is_end(lexer))
+				{
+					advance(lexer);
+				}
+			
+				return (Token){ TOKEN_KEYWORD_ONE_LINE_COMMENT, lexer->start, (lexer->current - lexer->start), lexer->line };
+			}
+			else if (peek(lexer) == '*')
+			{
+				while (!is_end(lexer))
+				{
+					if (peek(lexer) == '*')
+					{
+						advance(lexer);
+
+						if (peek(lexer) == '/')
+						{
+							advance(lexer);
+
+							break;
+						}
+					}
+
+					advance(lexer);
+				}
+			
+				return (Token) { TOKEN_KEYWORD_MULTI_LINE_COMMENT, lexer->start, (lexer->current - lexer->start), lexer->line };
+			}
+
+			return (Token) { TOKEN_OPERATOR_DIVIDED, lexer->start, 1, lexer->line };
+		}
+
+		case '{':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_CHAR_OPEN_BRACE, lexer->start, 1, lexer->line };
+		}
+
+		case '}':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_CHAR_CLOSE_BRACE, lexer->start, 1, lexer->line };
+		}
+
+		case '[':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_CHAR_OPEN_BRACKET, lexer->start, 1, lexer->line };
+		}
+
+		case ']':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_CHAR_CLOSE_BRACKET, lexer->start, 1, lexer->line };
+		}
+
+		case '(':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_CHAR_OPEN_PAREN, lexer->start, 1, lexer->line };
+		}
+
+		case ')':
+		{
+			advance(lexer);
+			
+			return (Token) { TOKEN_CHAR_CLOSE_PAREN, lexer->start, 1, lexer->line };
+		}
+
+		case ',':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_CHAR_COMMA, lexer->start, 1, lexer->line };
+		}
+
+		case '>':
+		{
+			advance(lexer);
+
+			if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+
+				return (Token) { TOKEN_OPERATOR_GREATER_EQUALS, lexer->start, 1, lexer->line };	
+			}
+
+			return (Token) { TOKEN_OPERATOR_GREATER, lexer->start, 1, lexer->line };
+		}
+
+		case '<':
+		{
+			advance(lexer);
+
+			if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+
+				return (Token) { TOKEN_OPERATOR_LESS_EQUALS, lexer->start, 1, lexer->line };
+			}
+
+			return (Token) { TOKEN_OPERATOR_LESS, lexer->start, 1, lexer->line };
+		}
+
+		case '!':
+		{
+			advance(lexer);
+
+			if (peek(lexer) == '=') 
+			{
+				advance(lexer);
+
+				return (Token) { TOKEN_OPERATOR_NOT_EQUALS, lexer->start, 1, lexer->line };
+			}
+
+			break;
+		}
+
+		case ';':
+		{
+			advance(lexer);
+
+			return (Token) { TOKEN_CHAR_SEMI_COLON, lexer->start, 1, lexer->line };
+		}
+
+		case '&':
+		{
+			advance(lexer);
+
+			if (peek(lexer) == '&') 
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_AND, lexer->start, 2, lexer->line };
+			}
+
+			return (Token){ TOKEN_OPERATOR_ADRESS, lexer->start, 1, lexer->line };
+		}
+
+		case '|':
+		{
+			advance(lexer);
+
+			if (peek(lexer) == '|')
+			{
+				advance(lexer);
+
+				return (Token){ TOKEN_OPERATOR_OR, lexer->start, 1, lexer->line };
+			}
+		}
+
+		default:
+		{
+			break;
 		}
 	}
 
@@ -615,249 +912,11 @@ Token read_next_tkn(Lexer* lexer)
 
 		int negative = 0;
 
-		switch (c)
+		Token operator = handle_operators(lexer, c, &negative);
+
+		if (operator.token_type != TOKEN_UNKNOWN)
 		{
-			case '.':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_OPERATOR_DOT, lexer->start, 1, lexer->line };
-				break;
-			}
-
-			case '+':
-			{
-				advance(lexer);
-			
-				if (peek(lexer) == '+') 
-				{
-					advance(lexer);
-
-					return (Token){ TOKEN_OPERATOR_INCREMENT, lexer->start, 2, lexer->line };
-				} 
-				else if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-
-					return (Token){ TOKEN_OPERATOR_PLUS_EQUALS, lexer->start, 2, lexer->line };
-				}
-
-				return (Token){ TOKEN_OPERATOR_PLUS, lexer->start, 1, lexer->line };
-			}
-
-			case '-':
-			{
-				advance(lexer);
-			
-				if (peek(lexer) == '-') 
-				{
-					advance(lexer);
-
-					return (Token){ TOKEN_OPERATOR_DECREMENT, lexer->start, 2, lexer->line };
-				}
-				else if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-
-					return (Token){ TOKEN_OPERATOR_MINUS_EQUALS, lexer->start, 2, lexer->line };
-				}
-				else if (peek(lexer) == '>') 
-				{
-					advance(lexer);
-
-					return (Token){ TOKEN_OPERATOR_ACCESS_PTR, lexer->start, 2, lexer->line };
-				}
-				else if (is_digit(peek(lexer))) 
-				{
-					negative = 1;
-					break;
-				}
-
-				return (Token){ TOKEN_OPERATOR_MINUS, lexer->start, 1, lexer->line };
-			}
-
-			case '=':
-			{
-				advance(lexer);
-			
-				if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-
-					return (Token){ TOKEN_OPERATOR_EQUALS, lexer->start, 2, lexer->line };
-				}
-
-				return (Token){ TOKEN_OPERATOR_ASSIGN, lexer->start, 1, lexer->line };
-			}
-
-			case ':':
-			{
-				advance(lexer);
-
-				return (Token){ TOKEN_CHAR_COLON, lexer->start, 1, lexer->line };
-			}
-
-			case '*':
-			{
-				advance(lexer);
-			
-				if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-					
-					return (Token){ TOKEN_OPERATOR_TIMES_EQUALS, lexer->start, 2, lexer->line };
-				}
-				
-				return (Token){ TOKEN_CHAR_STAR, lexer->start, 1, lexer->line };
-			}
-
-			case '/':
-			{
-				advance(lexer);
-
-				if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-					
-					return (Token){ TOKEN_OPERATOR_DIVIDED_EQUALS, lexer->start, 2, lexer->line };
-				}
-				else if (peek(lexer) == '/')
-				{
-					while (peek(lexer) != '\n' && !is_end(lexer))
-					{
-						advance(lexer);
-					}
-			
-					return (Token){ TOKEN_KEYWORD_ONE_LINE_COMMENT, lexer->start, (lexer->current - lexer->start), lexer->line };
-				}
-				else if (peek(lexer) == '*')
-				{
-					while (!is_end(lexer))
-					{
-						if (peek(lexer) == '*')
-						{
-							advance(lexer);
-
-							if (peek(lexer) == '/')
-							{
-								advance(lexer);
-
-								break;
-							}
-						}
-
-						advance(lexer);
-					}
-			
-					return (Token) { TOKEN_KEYWORD_MULTI_LINE_COMMENT, lexer->start, (lexer->current - lexer->start), lexer->line };
-				}
-
-				return (Token) { TOKEN_OPERATOR_DIVIDED, lexer->start, 1, lexer->line };
-			}
-
-			case '{':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_CHAR_OPEN_BRACE, lexer->start, 1, lexer->line };
-			}
-
-			case '}':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_CHAR_CLOSE_BRACE, lexer->start, 1, lexer->line };
-			}
-
-			case '[':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_CHAR_OPEN_BRACKET, lexer->start, 1, lexer->line };
-			}
-
-			case ']':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_CHAR_CLOSE_BRACKET, lexer->start, 1, lexer->line };
-			}
-
-			case '(':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_CHAR_OPEN_PAREN, lexer->start, 1, lexer->line };
-			}
-
-			case ')':
-			{
-				advance(lexer);
-			
-				return (Token) { TOKEN_CHAR_CLOSE_PAREN, lexer->start, 1, lexer->line };
-			}
-
-			case ',':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_CHAR_COMMA, lexer->start, 1, lexer->line };
-			}
-
-			case '>':
-			{
-				advance(lexer);
-
-				if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-
-					return (Token) { TOKEN_OPERATOR_GREATER_EQUALS, lexer->start, 1, lexer->line };	
-				}
-
-				return (Token) { TOKEN_OPERATOR_GREATER, lexer->start, 1, lexer->line };
-			}
-
-			case '<':
-			{
-				advance(lexer);
-
-				if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-
-					return (Token) { TOKEN_OPERATOR_LESS_EQUALS, lexer->start, 1, lexer->line };
-				}
-
-				return (Token) { TOKEN_OPERATOR_LESS, lexer->start, 1, lexer->line };
-			}
-
-			case '!':
-			{
-				advance(lexer);
-
-				if (peek(lexer) == '=') 
-				{
-					advance(lexer);
-
-					return (Token) { TOKEN_OPERATOR_NOT_EQUALS, lexer->start, 1, lexer->line };
-				}
-
-				break;
-			}
-
-			case ';':
-			{
-				advance(lexer);
-
-				return (Token) { TOKEN_CHAR_SEMI_COLON, lexer->start, 1, lexer->line };
-				break;
-			}
-
-			default:
-			{
-				break;
-			}
+			return operator;
 		}
 
 		const Token literal = handle_literals(lexer, negative);
@@ -867,32 +926,6 @@ Token read_next_tkn(Lexer* lexer)
 			return literal;
 		}
 
-		if (c == '&') 
-		{
-			advance(lexer);
-
-			if (peek(lexer) == '&') 
-			{
-				advance(lexer);
-
-				return (Token){ TOKEN_OPERATOR_AND, lexer->start, 2, lexer->line };
-			}
-
-			return (Token){ TOKEN_OPERATOR_ADRESS, lexer->start, 1, lexer->line };
-		}
-
-		if (c == '|') 
-		{
-			advance(lexer);
-
-			if (peek(lexer) == '|')
-			{
-				advance(lexer);
-
-				return (Token){ TOKEN_OPERATOR_OR, lexer->start, 1, lexer->line };
-			}
-		}
-
 		if (is_alpha(c))
 		{
 			return identifier(lexer);
@@ -900,7 +933,7 @@ Token read_next_tkn(Lexer* lexer)
 
 		advance(lexer);
 
-		return (Token){ TOKEN_IDENTIFIER, lexer->start, 1, lexer->line };
+		return (Token){ TOKEN_UNKNOWN, lexer->start, 1, lexer->line };
 	}
 }
 
