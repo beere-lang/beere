@@ -1,11 +1,12 @@
 * Todo-List:
- - Refatorar o parser e analyzer
- - Terminar class instances 'new Instance()'.
+ - Fixar referencias da stack, etc.
+ - Testar totalmente classes pra checar bugs, etc.
  - Adicionar suporte a referencias de instancia da class (mais em notes 0)
+ - Adicionar suporte a statics no member access
+ - Refatorar o parser e analyzer
  - Adicionar suporte a super e constructors no codegen
  - Adicionar o sistema de IDs em classes (pra polimorfismo seguro em run-time).
  - Adicionar cast implicito em argumentos em function calls.
- - Adicionar suporte a statics no member access
 
 * Notes:
  - Note 0:
