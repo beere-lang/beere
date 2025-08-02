@@ -3,8 +3,11 @@
 
 #include "codegen-mbr-access.h"
 #include "../../expressions/codegen-expr.h"
+#include "../codegen-class.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
 #include "../../../../../frontend/structure/parser/parser.h"
+
+#include "../../../codegen.h"
 
 extern char* field_get_reference_access_size(CodeGen* codegen, Type* type);
 extern char* correct_register(VarType type, int prefer_second);
@@ -64,7 +67,11 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	Symbol* obj_symbol = analyzer_find_symbol_from_scope(class_name, codegen->scope, 0, 0, 1, 0);
 
 	Symbol* field_symbol = find_field_symbol_from_class(codegen, obj_symbol, member_name);
-	int offset = field_symbol->symbol_variable->offset;
+	
+	ClassOffsets* offsets = find_class_offsets(class_offsets_table, class_name);
+	
+	// TODO: Adicionar suporte a fields static...
+	int offset = find_field_offset(offsets, member_name);
 
 	Type* type = field_symbol->symbol_variable->type;
 	
@@ -87,7 +94,7 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 		char* mov_op = mov_opcode(type->type);
 		char* reg = correct_register(type->type, prefer_second);
 		char* access_size = field_get_reference_access_size(codegen, type);
-		
+
 		snprintf(buff, 64, "%s [%s+%d]", access_size, object_expr->result, offset);
 
 		AsmReturn* ret = create_asm_return(reg, type);

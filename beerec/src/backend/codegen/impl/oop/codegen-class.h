@@ -41,10 +41,12 @@ struct ClassOffsetsTable
 
 FieldEntry* create_field_entry(CodeGen* codegen, char* field_name, int offset, Type* field_type);
 void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area);
+ClassOffsets* find_class_offsets(ClassOffsetsTable* table, char* class_name);
 void add_offsets_to_table(ClassOffsetsTable* table, ClassOffsets* offsets);
 void add_entry_to_offsets(ClassOffsets* offsets, FieldEntry* entry);
 void generate_class(CodeGen* codegen, Node* node, AsmArea* area);
 ClassOffsets* create_class_offsets(char* class_name, int offset);
+int find_field_offset(ClassOffsets* offsets, char* field_name);
 ClassOffsetsTable* create_class_offsets_table();
 
 #endif

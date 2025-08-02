@@ -125,7 +125,6 @@ static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* are
 /**
  * TODO: 
  * - Terminar a chamada de constructors na instanciação.
- * - Implementar super no codegen.
  */
 AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea* area)
 {
