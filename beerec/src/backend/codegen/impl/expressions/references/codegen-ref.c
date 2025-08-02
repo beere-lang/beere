@@ -136,7 +136,7 @@ AsmReturn* generate_local_variable_reference(CodeGen* codegen, Symbol* symbol, A
 	{
 		char* reg = get_register_access(codegen, type, prefer_second);
 
-		snprintf(buff, 64, "	%s	%s, %s [rbp%+d]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type),symbol->symbol_variable->offset);
+		snprintf(buff, 64, "	%s	%s, %s [rbp%+d]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->offset);
 		add_line_to_area(area, buff);
 
 		AsmReturn* ret = create_asm_return(reg, type);
@@ -146,11 +146,12 @@ AsmReturn* generate_local_variable_reference(CodeGen* codegen, Symbol* symbol, A
 	}
 	else
 	{
-		snprintf(buff, 64, "%s [rbp%+d]", get_reference_access_size(codegen, type),symbol->symbol_variable->offset);
+		snprintf(buff, 64, "%s [rbp%+d]", get_reference_access_size(codegen, type), symbol->symbol_variable->offset);
 		
 		AsmReturn* ret = create_asm_return(buff, type);
+
 		return ret;
-	}
+	} 
 }
 
 AsmReturn* generate_global_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)

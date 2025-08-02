@@ -631,8 +631,6 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 		printf("[Analyzer] [Debug] Added a local variable with offset: %d...\n", *offset);
 
 		symbol->symbol_variable->offset = *offset;
-
-		printf("%s, Offset: %d\n", scope->owner_statement->symbol_class->identifier, *offset);
 	}
 	else if (offset == NULL && !symbol->symbol_variable->is_global)
 	{
@@ -2218,6 +2216,8 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 
 	Symbol* owner_function = analyzer_get_owner_function(scope);
 
+	Symbol* symbol = analyzer_add_symbol_to_scope(module, node, scope, offset, 0);
+
 	if (!node->declare_node.declare.is_static && owner_function != NULL)
 	{
 		printf("[Analyzer] [Debug] Local variable \"%s\", adding offset...\n", node->declare_node.declare.identifier);
@@ -2225,11 +2225,11 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
 		size = align_offset(size);
 
+		symbol->symbol_variable->offset = *offset;
+
 		*offset -= size;
 	}
-
-	Symbol* symbol = analyzer_add_symbol_to_scope(module, node, scope, offset, 0);
-
+	
 	if (!node->declare_node.declare.is_static && scope->scope_kind == SYMBOL_CLASS)
 	{
 		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
@@ -2526,8 +2526,8 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 	}
 
 	// offset das variaveis locais.
-	// é pra stack, começa em 0 vai diminuíndo.
-	int local_offset = 0;
+	// é pra stack, começa em -8 (rbp backup) e vai diminuíndo.
+	int local_offset = -8;
 
 	// offset dos parametros.
 	// começa com 8 e vai aumentando.

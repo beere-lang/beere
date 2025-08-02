@@ -5,11 +5,14 @@ class Parent {
 }
 
 class Child extends Parent {
-    public Child() {
-        super(10)
+    public age: int = 0
+
+    public Child(age: int) {
+        super(age)
+        this->age = age
     }
 }
 
 fn main() {
-    let clazz: Child = new Child()
+    let clazz: Child = new Child(10)
 }
