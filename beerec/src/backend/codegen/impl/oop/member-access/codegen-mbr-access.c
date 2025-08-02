@@ -13,9 +13,24 @@ extern char* field_get_reference_access_size(CodeGen* codegen, Type* type);
 extern char* correct_register(VarType type, int prefer_second);
 extern char* mov_opcode(VarType type);
 
+Symbol* get_owner_class(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return NULL;
+	}
+
+	if (scope->scope_kind == SYMBOL_CLASS)
+	{
+		return scope->owner_statement;
+	}
+
+	return get_owner_class(scope->parent);
+}
+
 AsmReturn* generate_super(CodeGen* codegen)
 {
-	Symbol* symbol = codegen->scope->owner_statement->symbol_class->super;
+	Symbol* symbol = get_owner_class(codegen->scope)->symbol_class->super;
 	Type* type = create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
 
 	return create_asm_return("r8", type);

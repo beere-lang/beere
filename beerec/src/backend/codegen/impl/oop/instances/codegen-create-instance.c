@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "codegen-create-instance.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
@@ -16,8 +17,6 @@ void generate_method_constructor_call(CodeGen* codegen, Node* node, AsmArea* are
 {
 	char buff[64];
 
-	Node* callee = node->function_call_node.function_call.callee;
-	
 	Symbol* owner_method = find_method_owner(codegen->scope);
 	Type* type = owner_method->symbol_function->return_type;
 	int stack_size = get_method_stack_size(owner_method);
@@ -150,13 +149,18 @@ static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* are
 	{
 		ClassOffsets* curr_offset = create_class_offsets((char*) symbol->symbol_class->identifier, offset);
 		
-		*parent = curr_offset;
+		if (parent != NULL)
+		{
+			*parent = curr_offset;
+		}
+
 		parent = &curr_offset->parent;
-		
 		generate_class_fields_initialization(codegen, symbol, area, curr_offset, &offset);
 
 		symbol = symbol->symbol_class->super;
 	}
+
+	*parent = NULL;
 }
 
 AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea* area)
@@ -167,10 +171,9 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'R8', movido de 'RAX' pra 'R8', ja que 'RAX' é muito usado.
 
 	generate_class_fields(codegen, symbol, area);
-
 	generate_method_constructor_call(codegen, node, area);
 
-	Type* type = create_type(TYPE_CLASS, node->class_node.class_node.identifer);
+	Type* type = create_type(TYPE_CLASS, identifier);
 	AsmReturn* ret = create_asm_return("r8", type);
 	ret->is_reg = 1;
 

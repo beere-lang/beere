@@ -6,7 +6,9 @@
 #include "../../expressions/codegen-expr.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
 
-static Symbol* find_method_owner(SymbolTable* scope)
+extern Type* create_type(VarType type, char* class_name);
+
+Symbol* find_method_owner(SymbolTable* scope)
 {
 	if (scope == NULL)
 	{
@@ -21,7 +23,7 @@ static Symbol* find_method_owner(SymbolTable* scope)
 	return find_method_owner(scope->parent);
 }
 
-static int get_method_stack_size(Symbol* method)
+int get_method_stack_size(Symbol* method)
 {
 	int stack_size = method->symbol_function->total_offset + 8; // +8 == 'push rbp' no setup da função
 	return stack_size;
@@ -48,7 +50,7 @@ static void handle_float_argument(CodeGen* codegen, AsmReturn* reg, AsmArea* are
 	add_line_to_area(area, buff);
 }
 
-static void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* stack_size_ref)
+void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* stack_size_ref)
 {
 	char buff[64];
 	Node* next = args->head;
@@ -228,7 +230,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	}
 	else if (callee->type == NODE_SUPER)
 	{
-		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0);
+		AsmReturn* ret = generate_expression(codegen, callee, area, 0, 0, 0);
 
 		// Ponteiro da instancia ja ta no 'R8'
 		// snprintf(buff, 64, "	mov	r8, %s", ret->result);
@@ -241,6 +243,11 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	if (padding)
 	{
 		add_line_to_area(area, "	add	rsp, 8");
+	}
+
+	if (callee->type == NODE_SUPER)
+	{
+		return create_asm_return("", create_type(TYPE_VOID, NULL));
 	}
 
 	char* output_reg = call_get_return_register(type, argument_flag, area);

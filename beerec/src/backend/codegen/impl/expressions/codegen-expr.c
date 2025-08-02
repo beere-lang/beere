@@ -7,6 +7,7 @@
 #include "pointers/codegen-ptr.h"
 #include "references/codegen-ref.h"
 #include "../oop/member-access/codegen-mbr-access.h"
+#include "../oop/instances/codegen-create-instance.h"
 #include "../statements/calls/codegen-method-call.h"
 
 AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
@@ -53,6 +54,11 @@ AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int 
 			return generate_method_call(codegen, node, area, prefer_second, argument_flag);
 		}
 
+		case NODE_CREATE_INSTANCE:
+		{
+			return generate_create_class_instance(codegen, node, area);
+		}
+
 		case NODE_SUPER:
 		{
 			return generate_super(codegen);
@@ -60,7 +66,7 @@ AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int 
 
 		default:
 		{
-			printf("[Codegen Literal] Invalid node while generating expression...\n");
+			printf("[Codegen Literal] Invalid node while generating expression: %d...\n", node->type);
 			exit(1);
 		}
 	}

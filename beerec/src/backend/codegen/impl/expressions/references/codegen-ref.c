@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "codegen-ref.h"
-#include "../../../../analyzer/analyzer.h"
+#include "../../../../../frontend/semantic/analyzer/analyzer.h"
 
 char* get_reference_access_size(CodeGen* codegen, Type* type)
 {

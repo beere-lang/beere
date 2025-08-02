@@ -9,3 +9,7 @@ class Child extends Parent {
         super(10)
     }
 }
+
+fn main() {
+    let clazz: Child = new Child()
+}

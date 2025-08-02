@@ -230,6 +230,11 @@ void generate_class(CodeGen* codegen, Node* node, AsmArea* area)
 	SymbolTable* temp = codegen->scope;
 	codegen->scope = class_symbol->symbol_class->class_scope;
 	
+	if (node->class_node.class_node.constructor != NULL)
+	{
+		generate_class_constructor(codegen, identifier, node->class_node.class_node.constructor);
+	}
+	
 	generate_class_fields(codegen, identifier, node->class_node.class_node.var_declare_list, node->class_node.class_node.var_count);
 	generate_class_methods(codegen, identifier, node->class_node.class_node.func_declare_list, node->class_node.class_node.func_count);
 
