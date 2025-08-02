@@ -204,21 +204,37 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		generate_method_args(codegen, node->function_call_node.function_call.arguments, area, &stack_size);
 	}
 
-	if (callee->type != NODE_IDENTIFIER) // mover a instance pra algum registrador nao utilizado pra methods de classes.
+	if (callee->type != NODE_IDENTIFIER && callee->type != NODE_SUPER) // mover a instance pra algum registrador nao utilizado pra methods de classes.
 	{
-		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 0, prefer_second, 0);
+		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0);
 		
-		snprintf(buff, 64, "	mov	r9, %s", ret->result);
+		// Move o ponteiro da class pro 'R8' (usado como referencia pra instancia)
+		snprintf(buff, 64, "	mov	r8, %s", ret->result);
+		add_line_to_area(area, buff);
+		
+		// Move o ponteiro da vtable (offset 0 da class)
+		snprintf(buff, 64, "	mov	r9, qword [%s]", ret->result); 
 		add_line_to_area(area, buff);
 
-		snprintf(buff, 64, "	mov	r9, [r9+%d]", symbol_method->symbol_function->method_id * 8);
+		snprintf(buff, 64, "	mov	r9, qword [r9+%d]", symbol_method->symbol_function->method_id * 8);
 		add_line_to_area(area, buff);
 
 		add_line_to_area(area, "	call	r9");
 	}
-	else
+	else if (callee->type == NODE_IDENTIFIER)
 	{
 		snprintf(buff, 64, "	call	%s", method_name);
+		add_line_to_area(area, buff);
+	}
+	else if (callee->type == NODE_SUPER)
+	{
+		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0);
+
+		// Ponteiro da instancia ja ta no 'R8'
+		// snprintf(buff, 64, "	mov	r8, %s", ret->result);
+		// add_line_to_area(area, buff);
+
+		snprintf(buff, 64, "	call	%s_ctr_%s", ret->type->class_name, method_name);
 		add_line_to_area(area, buff);
 	}
 

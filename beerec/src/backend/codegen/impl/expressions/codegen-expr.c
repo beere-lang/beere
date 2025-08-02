@@ -53,6 +53,11 @@ AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int 
 			return generate_method_call(codegen, node, area, prefer_second, argument_flag);
 		}
 
+		case NODE_SUPER:
+		{
+			return generate_super(codegen);
+		}
+
 		default:
 		{
 			printf("[Codegen Literal] Invalid node while generating expression...\n");

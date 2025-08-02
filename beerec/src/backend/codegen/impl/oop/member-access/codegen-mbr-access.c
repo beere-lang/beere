@@ -3,11 +3,20 @@
 
 #include "codegen-mbr-access.h"
 #include "../../expressions/codegen-expr.h"
-#include "../../../../../frontend/analyzer/analyzer.h"
+#include "../../../../../frontend/semantic/analyzer/analyzer.h"
+#include "../../../../../frontend/structure/parser/parser.h"
 
 extern char* field_get_reference_access_size(CodeGen* codegen, Type* type);
 extern char* correct_register(VarType type, int prefer_second);
 extern char* mov_opcode(VarType type);
+
+AsmReturn* generate_super(CodeGen* codegen)
+{
+	Symbol* symbol = codegen->scope->owner_statement->symbol_class->super;
+	Type* type = create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
+
+	return create_asm_return("r8", type);
+}
 
 char* get_object_class_name(CodeGen* codegen, Node* expr)
 {
@@ -78,6 +87,7 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 		char* mov_op = mov_opcode(type->type);
 		char* reg = correct_register(type->type, prefer_second);
 		char* access_size = field_get_reference_access_size(codegen, type);
+		
 		snprintf(buff, 64, "%s [%s+%d]", access_size, object_expr->result, offset);
 
 		AsmReturn* ret = create_asm_return(reg, type);

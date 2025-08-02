@@ -19,8 +19,28 @@ ClassOffsetsTable* create_class_offsets_table()
 	return table;
 }
 
+int check_offsets_table_cache(ClassOffsetsTable* table, char* owner_class_name)
+{
+	for (int i = 0; i < table->class_offsets_length; i++)
+	{
+		ClassOffsets* offsets = table->class_offsets[i];
+
+		if (strcmp(offsets->class_name, owner_class_name))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 void add_offsets_to_table(ClassOffsetsTable* table, ClassOffsets* offsets)
 {
+	if (check_offsets_table_cache(table, offsets->class_name))
+	{
+		return;
+	}
+
 	if (table->class_offsets_capacity <= table->class_offsets_length)
 	{
 		table->class_offsets_capacity *= 2;
