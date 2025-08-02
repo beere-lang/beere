@@ -36,8 +36,9 @@ void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area
 	ExternEntry* entry = create_extern_entry("malloc");
 	add_extern_entry_to_table(entry);
 
-	add_line_to_area(area, "	call	malloc");
+	/* ------------------------------------ */
 
+	add_line_to_area(area, "	call	malloc");
 	add_line_to_area(area, "	mov	r8, rax");
 
 	/* ------------------------------------ */
@@ -69,10 +70,9 @@ static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea*
 
 	/* ---------------------------------------------- */
 	
-	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, 0, 0, 0);
+	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, 1, 0, 0);
 
 	snprintf(buff, 64, "	%s	%s, %s", mov_opcode, destiny, ret->result);
-
 	add_line_to_area(area, buff);
 
 	/* ---------------------------------------------- */
@@ -84,12 +84,14 @@ static void generate_class_fields_initialization(CodeGen* codegen, Symbol* symbo
 	{
 		Node* curr = symbol->symbol_class->fields[i];
 
+		const int BYTES_ALIGNMENT_SIZE = 8;
+		
 		int size = analyzer_get_type_size(curr->declare_node.declare.var_type, codegen->scope);
-		int alligned = (size % 8 == 0) ? size : ((size / 8) + 1) * 8;
+		int aligned = (size % BYTES_ALIGNMENT_SIZE == 0) ? size : ((size / BYTES_ALIGNMENT_SIZE) + 1) * BYTES_ALIGNMENT_SIZE;
 
 		generate_field_initialization(codegen, curr, area, *offset);
 
-		*offset += alligned;
+		*offset += aligned;
 	}
 }
 
