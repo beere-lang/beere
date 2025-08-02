@@ -251,6 +251,7 @@ void setup_codegen(Module* module, CodeGen* codegen)
 	codegen->module = module;
 	codegen->scope = module->global_scope;
 
+	setup_class_offsets_table();
 	setup_bss_section();
 	setup_data_section();
 	setup_rodata_section();
@@ -258,7 +259,6 @@ void setup_codegen(Module* module, CodeGen* codegen)
 	setup_extern_table();
 	setup_text_section();
 	setup_externs();
-	setup_class_offsets_table();
 }
 
 static void print_constants()

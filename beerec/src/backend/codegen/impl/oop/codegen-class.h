@@ -39,7 +39,7 @@ struct ClassOffsetsTable
 	int class_offsets_length;
 };
 
-FieldEntry* create_field_entry(CodeGen* codegen, char* field_name, int offset, Type* field_type);
+FieldEntry* create_field_entry(CodeGen* codegen, char* field_name, int size, int offset, Type* field_type);
 void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area);
 ClassOffsets* find_class_offsets(ClassOffsetsTable* table, char* class_name);
 void add_offsets_to_table(ClassOffsetsTable* table, ClassOffsets* offsets);

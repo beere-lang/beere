@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdlib.h>
 
 #include "codegen-create-instance.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
@@ -47,13 +46,15 @@ void generate_method_constructor_call(CodeGen* codegen, Node* node, AsmArea* are
 
 int get_class_total_offset(CodeGen* codegen, Symbol* symbol)
 {
-	int total_offset = 0;
+	int total_offset = 16;
 	Symbol* symbol_class = symbol;
 
-	while (symbol_class != NULL)
+	ClassOffsets* offsets = find_class_offsets(class_offsets_table, (char*) symbol_class->symbol_class->identifier);
+	
+	while (offsets != NULL)
 	{
-		total_offset += symbol_class->symbol_class->total_offset;
-		symbol_class = symbol_class->symbol_class->super;
+		total_offset += offsets->end_offset - offsets->start_offset;
+		offsets = offsets->parent;
 	}
 
 	return total_offset;
@@ -102,7 +103,9 @@ static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea*
 
 	/* ---------------------------------------------- */
 	
-	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, 1, 0, 0);
+	int force_reg = node->declare_node.declare.default_value->type != NODE_LITERAL;
+
+	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, force_reg, 0, 0);
 
 	snprintf(buff, 64, "	%s	%s, %s", mov_opcode, destiny, ret->result);
 	add_line_to_area(area, buff);
@@ -135,6 +138,11 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
 	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'R8', movido de 'RAX' pra 'R8', ja que 'RAX' é muito usado.
 
+	char buff[64];
+	snprintf(buff, 64, "	mov	qword [r8], .%s_v-table", identifier);
+
+	add_line_to_area(area, buff);
+	
 	generate_class_fields(codegen, symbol, area);
 	generate_method_constructor_call(codegen, node, area);
 

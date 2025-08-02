@@ -1,17 +1,18 @@
 class Parent {
-    public Parent(a: int) {
+    public Parent() {
 
     }
 }
 
 class Child extends Parent {
     public age: int = 0
+    public clazz: Parent = new Parent()
 
-    public Child(age: int) {
-        super(10)
+    public Child() {
+
     }
 }
 
 fn main() {
-    let clazz: Child = new Child(10)
+    let clazz: Child = new Child()
 }

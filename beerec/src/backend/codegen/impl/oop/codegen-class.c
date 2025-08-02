@@ -46,7 +46,7 @@ ClassOffsetsTable* create_class_offsets_table()
 {
 	ClassOffsetsTable* table = malloc(sizeof(ClassOffsetsTable));
 	
-	table->class_offsets = malloc(sizeof(ClassOffsetsTable*) * 4);
+	table->class_offsets = malloc(sizeof(ClassOffsets*) * 4);
 	table->class_offsets_capacity = 4;
 
 	table->class_offsets_length = 0;
@@ -80,19 +80,19 @@ void add_offsets_to_table(ClassOffsetsTable* table, ClassOffsets* offsets)
 	{
 		table->class_offsets_capacity *= 2;
 
-		table->class_offsets = malloc(sizeof(ClassOffsets*) * table->class_offsets_capacity);
+		table->class_offsets = realloc(table->class_offsets, sizeof(ClassOffsets*) * table->class_offsets_capacity);
 	}
 
 	table->class_offsets[table->class_offsets_length] = offsets;
 	table->class_offsets_length++;
 }
 
-FieldEntry* create_field_entry(CodeGen* codegen, char* field_name, int offset, Type* field_type)
+FieldEntry* create_field_entry(CodeGen* codegen, char* field_name, int size, int offset, Type* field_type)
 {
 	FieldEntry* entry = malloc(sizeof(FieldEntry));
 	
 	entry->field_name = strdup(field_name);
-	entry->field_size = analyzer_get_type_size(field_type, codegen->scope);
+	entry->field_size = size;
 	entry->field_offset = offset;
 
 	return entry;
@@ -104,7 +104,7 @@ void add_entry_to_offsets(ClassOffsets* offsets, FieldEntry* entry)
 	{
 		offsets->fields_capacity *= 2;
 
-		offsets->fields = malloc(sizeof(FieldEntry*) * offsets->fields_capacity);
+		offsets->fields = realloc(offsets->fields, sizeof(FieldEntry*) * offsets->fields_capacity);
 	}
 
 	offsets->fields[offsets->fields_length] = entry;
@@ -115,7 +115,7 @@ void add_entry_to_offsets(ClassOffsets* offsets, FieldEntry* entry)
 
 ClassOffsets* create_class_offsets(char* class_name, int offset)
 {
-	ClassOffsets* offsets = malloc(sizeof(ClassOffsetsTable));
+	ClassOffsets* offsets = malloc(sizeof(ClassOffsets));
 	
 	offsets->class_name = strdup(class_name);
 	
@@ -243,7 +243,7 @@ static void generate_class_offsets(CodeGen* codegen, char* identifier, ClassOffs
 		int size = analyzer_get_type_size(type, codegen->scope);
 		int aligned = (size % BYTES_ALIGNMENT_SIZE == 0) ? size : ((size / BYTES_ALIGNMENT_SIZE) + 1) * BYTES_ALIGNMENT_SIZE;
 
-		FieldEntry* entry = create_field_entry(codegen, identifier, *offset, type);
+		FieldEntry* entry = create_field_entry(codegen, identifier, aligned, *offset, type);
 		add_entry_to_offsets(offsets, entry);
 		
 		*offset += aligned;
@@ -260,17 +260,22 @@ static void setup_class_offsets(CodeGen* codegen, char* identifier, Node* node)
 	
 	while (curr != NULL)
 	{
-		ClassOffsets* offsets = create_class_offsets(identifier, offset);
+		char* class_name = (char*) curr->symbol_class->identifier;
+
+		ClassOffsets* offsets = create_class_offsets(class_name, offset);
 		
 		if (curr_offsets != NULL)
 		{
 			*curr_offsets = offsets;
+		}
+		else
+		{
 			add_offsets_to_table(class_offsets_table, offsets);
 		}
 
 		curr_offsets = &offsets->parent;
 
-		generate_class_offsets(codegen, (char*) curr->symbol_class->identifier, offsets, curr->symbol_class->fields, curr->symbol_class->field_count, &offset);
+		generate_class_offsets(codegen, class_name, offsets, curr->symbol_class->fields, curr->symbol_class->field_count, &offset);
 	
 		curr = curr->symbol_class->super;
 	}

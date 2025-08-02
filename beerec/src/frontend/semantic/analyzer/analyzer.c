@@ -1855,9 +1855,9 @@ static Type* analyzer_get_this_type(Module* module, Node* node, SymbolTable* sco
 	analyzer_analyze_node(module, node, scope, NULL);
 			
 	// cast fudido (só pra não dar warning)
-	char* identifier = (char*) analyzer_get_class_scope(scope)->owner_statement->symbol_class->identifier;
+	char* identifier = (char*) (analyzer_get_class_scope(scope)->owner_statement->symbol_class->identifier);
 	Type* type = create_type(TYPE_CLASS, identifier);
-			
+
 	return type;
 }
 

@@ -97,11 +97,6 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	// TODO: Adicionar suporte a fields static...
 	int offset = find_field_offset(offsets, member_name);
 
-	if (expr->type == NODE_THIS)
-	{
-		exit(1);
-	}
-
 	Type* type = field_symbol->symbol_variable->type;
 	
 	if (force_reg)
