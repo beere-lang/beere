@@ -1868,9 +1868,8 @@ static Type* analyzer_get_this_type(Module* module, Node* node, SymbolTable* sco
 
 static Type* analyzer_get_create_instance_type(Node* node, SymbolTable* scope)
 {
-	Type* type = create_type(TYPE_PTR, NULL);
-	type->base = create_type(TYPE_CLASS, node->create_instance_node.create_instance.class_name);
-			
+	Type* type = create_type(TYPE_CLASS, node->create_instance_node.create_instance.class_name);
+
 	return type;
 }
 
