@@ -97,7 +97,7 @@ static void generate_class_fields_initialization(CodeGen* codegen, Symbol* symbo
 
 static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* area)
 {
-	int offset = 0;
+	int offset = 16; // começa com 16 pra dar espaço pro pointer pra vtable da class em run-time e pro ID em run-time
 	
 	while (symbol != NULL)
 	{
@@ -124,6 +124,7 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 
 	Type* type = create_type(TYPE_CLASS, node->class_node.class_node.identifer);
 	AsmReturn* ret = create_asm_return("r8", type);
+	ret->is_reg = 1;
 
 	return ret;
 }

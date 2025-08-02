@@ -201,12 +201,14 @@ void generate_field_declaration(CodeGen* codegen, Node* node, AsmArea* area)
 	if (node->declare_node.declare.is_static)
 	{
 		generate_static_field_declaration(codegen, node, area);
+		
 		return;
 	}
 
 	if (codegen->scope->scope_kind == GLOBAL_SCOPE)
 	{
 		generate_global_field_declaration(codegen, node, area);
+
 		return;
 	}
 
