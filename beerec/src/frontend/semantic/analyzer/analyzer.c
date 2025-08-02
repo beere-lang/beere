@@ -514,7 +514,7 @@ int analyzer_get_type_size(Type* type, SymbolTable* scope)
 
 		case TYPE_CLASS:
 		{
-			return analyzer_get_class_size(type, scope);
+			return 8; //analyzer_get_class_size(type, scope);
 		}
 
 		default:

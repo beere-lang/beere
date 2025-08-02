@@ -60,18 +60,23 @@ void generate_method_constructor_call(CodeGen* codegen, Node* node, AsmArea* are
 
 int get_class_total_offset(CodeGen* codegen, Symbol* symbol)
 {
-	int total_offset = 16;
+	int size = 16;
+	
 	Symbol* symbol_class = symbol;
-
 	ClassOffsets* offsets = find_class_offsets(class_offsets_table, (char*) symbol_class->symbol_class->identifier);
 	
 	while (offsets != NULL)
 	{
-		total_offset += offsets->end_offset - offsets->start_offset;
+		for (int i = 0; i < offsets->fields_length; i++)
+		{
+			FieldEntry* entry = offsets->fields[i];
+			size += entry->field_size;
+		}
+
 		offsets = offsets->parent;
 	}
 
-	return total_offset;
+	return size;
 }
 
 void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area)
