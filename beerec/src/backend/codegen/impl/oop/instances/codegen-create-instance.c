@@ -8,6 +8,43 @@
 
 extern char* field_get_mov_op_code_access(CodeGen* codegen, Type* type);
 extern char* field_get_reference_access_size(CodeGen* codegen, Type* type);
+extern Symbol* find_method_owner(SymbolTable* scope);
+extern int get_method_stack_size(Symbol* owner_method);
+extern void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* stack_ref);
+
+void generate_method_constructor_call(CodeGen* codegen, Node* node, AsmArea* area)
+{
+	char buff[64];
+
+	Node* callee = node->function_call_node.function_call.callee;
+	
+	Symbol* owner_method = find_method_owner(codegen->scope);
+	Type* type = owner_method->symbol_function->return_type;
+	int stack_size = get_method_stack_size(owner_method);
+
+	int padding = 0;
+
+	if ((stack_size + 8) % 16 != 0) // +8 pro return point do call
+	{
+		snprintf(buff, 64, "	sub	rsp, 8");
+		add_line_to_area(area, buff);
+
+		padding = 1;
+	}
+
+	if (node->create_instance_node.create_instance.constructor_args != NULL)
+	{
+		generate_method_args(codegen, node->create_instance_node.create_instance.constructor_args, area, &stack_size);
+	}
+
+	snprintf(buff, 64, "	call	.%s_ctr", node->create_instance_node.create_instance.class_name);
+	add_line_to_area(area, buff);
+
+	if (padding)
+	{
+		add_line_to_area(area, "	add	rsp, 8");
+	}
+}
 
 int get_class_total_offset(CodeGen* codegen, Symbol* symbol)
 {
@@ -122,10 +159,6 @@ static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* are
 	}
 }
 
-/**
- * TODO: 
- * - Terminar a chamada de constructors na instanciação.
- */
 AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea* area)
 {
 	char* identifier = node->create_instance_node.create_instance.class_name;
@@ -134,6 +167,8 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'R8', movido de 'RAX' pra 'R8', ja que 'RAX' é muito usado.
 
 	generate_class_fields(codegen, symbol, area);
+
+	generate_method_constructor_call(codegen, node, area);
 
 	Type* type = create_type(TYPE_CLASS, node->class_node.class_node.identifer);
 	AsmReturn* ret = create_asm_return("r8", type);

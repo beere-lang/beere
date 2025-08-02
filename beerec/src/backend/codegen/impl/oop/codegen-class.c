@@ -194,7 +194,7 @@ static void generate_class_method(CodeGen* codegen, char* class_name, Node* meth
 static void generate_class_constructor(CodeGen* codegen, char* class_name, Node* method)
 {
 	char buff[64];
-	snprintf(buff, 64, ".%s_ctr_%s", class_name, method->function_node.function.identifier);
+	snprintf(buff, 64, ".%s_ctr", class_name);
 
 	generate_method_declaration(codegen, method, text_section, 1, strdup(buff));
 }
