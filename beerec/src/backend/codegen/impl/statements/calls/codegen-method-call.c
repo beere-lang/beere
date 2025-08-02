@@ -192,6 +192,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	int stack_size = get_method_stack_size(owner_method);
 
 	int padding = 0;
+	int backup_size = 0;
 
 	if ((stack_size + 8) % 16 != 0) // +8 pro return point do call
 	{
@@ -201,9 +202,16 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		padding = 1;
 	}
 
-	if (node->function_call_node.function_call.arguments != NULL)
+	if (padding)
 	{
-		generate_method_args(codegen, node->function_call_node.function_call.arguments, area, &stack_size);
+		backup_size = 8;
+	}
+
+	NodeList* constructor_args = node->create_instance_node.create_instance.constructor_args;
+	
+	if (constructor_args != NULL)
+	{
+		generate_method_args(codegen, constructor_args, area, &stack_size);
 	}
 
 	if (callee->type != NODE_IDENTIFIER && callee->type != NODE_SUPER) // mover a instance pra algum registrador nao utilizado pra methods de classes.
@@ -240,10 +248,17 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		add_line_to_area(area, buff);
 	}
 
-	if (padding)
+	snprintf(buff, 64, "	call	.%s_ctr", node->create_instance_node.create_instance.class_name);
+	add_line_to_area(area, buff);
+
+	if (constructor_args != NULL)
 	{
-		add_line_to_area(area, "	add	rsp, 8");
+		int args_size = analyzer_get_list_size(node->create_instance_node.create_instance.constructor_args->head);
+		backup_size += args_size * 8;
 	}
+
+	snprintf(buff, 64, "	add	rsp, %d", backup_size);
+	add_line_to_area(area, buff);
 
 	if (callee->type == NODE_SUPER)
 	{

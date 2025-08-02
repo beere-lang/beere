@@ -11,6 +11,7 @@ extern char* field_get_reference_access_size(CodeGen* codegen, Type* type);
 extern Symbol* find_method_owner(SymbolTable* scope);
 extern int get_method_stack_size(Symbol* owner_method);
 extern void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* stack_ref);
+extern int analyzer_get_list_size(Node* list_head);
 
 void generate_method_constructor_call(CodeGen* codegen, Node* node, AsmArea* area)
 {
@@ -30,18 +31,31 @@ void generate_method_constructor_call(CodeGen* codegen, Node* node, AsmArea* are
 		padding = 1;
 	}
 
-	if (node->create_instance_node.create_instance.constructor_args != NULL)
+	NodeList* constructor_args = node->create_instance_node.create_instance.constructor_args;
+	
+	if (constructor_args != NULL)
 	{
-		generate_method_args(codegen, node->create_instance_node.create_instance.constructor_args, area, &stack_size);
+		generate_method_args(codegen, constructor_args, area, &stack_size);
 	}
 
 	snprintf(buff, 64, "	call	.%s_ctr", node->create_instance_node.create_instance.class_name);
 	add_line_to_area(area, buff);
 
+	int backup_size = 0;
+	
 	if (padding)
 	{
-		add_line_to_area(area, "	add	rsp, 8");
+		backup_size = 8;
 	}
+	
+	if (constructor_args != NULL)
+	{
+		int args_size = analyzer_get_list_size(node->create_instance_node.create_instance.constructor_args->head);
+		backup_size += args_size * 8;
+	}
+
+	snprintf(buff, 64, "	add	rsp, %d", backup_size);
+	add_line_to_area(area, buff);
 }
 
 int get_class_total_offset(CodeGen* codegen, Symbol* symbol)

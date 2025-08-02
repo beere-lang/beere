@@ -8,17 +8,11 @@ class Child extends Parent {
     public age: int = 0
     public clazz: Parent = new Parent()
 
-    public Child()
-    {
-        age = 10
-    }
-
-    private fn test() {
+    public Child(i: int, j: int) {
 
     }
 }
 
 fn main() {
-    let i: int = 0
-    i = 10
+    let test: Child = new Child(10, 20)
 }

@@ -10,5 +10,6 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
 void analyzer_global_analyze(Module* module, Node* node);
 void analyzer_init(Module* module, Node** node_list);
+int analyzer_get_list_size(Node* list_head);
 
 #endif

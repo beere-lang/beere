@@ -29,7 +29,7 @@ static Node* _analyzer_create_cast(Node** node, Type* preferred);
 static void analyzer_create_cast(Node** node, Type* preferred);
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_is_inside_method(SymbolTable* scope);
-static int analyzer_get_list_size(Node* list_head);
+int analyzer_get_list_size(Node* list_head);
 
 int class_count;
 
@@ -2738,7 +2738,7 @@ static void analyzer_handle_return(Module* module, Node* node, SymbolTable* scop
 	}
 }
 
-static int analyzer_get_list_size(Node* list_head)
+int analyzer_get_list_size(Node* list_head)
 {
 	Node* next = list_head;
 
