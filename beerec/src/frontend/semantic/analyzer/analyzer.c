@@ -862,29 +862,21 @@ static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTa
 		case NODE_DECLARATION:
 		{
 			return analyzer_create_symbol(module, SYMBOL_VARIABLE, node, scope, 0, offset, prototype);
-
-			break;
 		}
 
 		case NODE_FUNCTION:
 		{
 			return analyzer_create_symbol(module, SYMBOL_FUNCTION, node, scope, 0, offset, prototype);
-			
-			break;
 		}
 
 		case NODE_PARAMETER:
 		{
 			return analyzer_create_symbol(module, SYMBOL_VARIABLE, node, scope, 1, offset, prototype);
-			
-			break;
 		}
 
 		case NODE_IMPORT:
 		{
 			return analyzer_create_symbol(module, SYMBOL_MODULE, node, scope, 0, offset, prototype);
-			
-			break;
 		}
 
 		default:
@@ -903,9 +895,7 @@ Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* sco
 	{
 		return NULL;
 	}
-
-	int i = 0;
-
+	
 	for (int i = 0; i < scope->count; i++) 
 	{
 		Symbol* next = scope->symbols[i];
@@ -1189,7 +1179,7 @@ static SymbolTable* analyzer_get_class_scope(SymbolTable* scope)
 		return scope;
 	}
 
-	return scope->parent;
+	return analyzer_get_class_scope(scope->parent);
 }
 
 static Type* analyzer_handle_prototype(Type* object_type, char* function_name, PrototypeMethod** ref)
@@ -2961,9 +2951,8 @@ static void analyzer_handle_var_assign(Module* module, Node* node, SymbolTable* 
 		exit(1);
 	}
 
-	analyzer_analyze_node(module, expression, scope, NULL); // analyze function already checks if things exist...
 	analyzer_analyze_node(module, expression, scope, NULL);
-
+	
 	if (left->type == NODE_CAST)
 	{
 		printf("[Analyzer] [Debug] Can't assign value to a cast...\n");
@@ -3075,15 +3064,21 @@ static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_
 	{
 		if (next->type != NODE_FUNCTION_CALL)
 		{
+			next = next->next;
+
 			continue;
 		}
 
 		if (next->function_call_node.function_call.callee->type != NODE_SUPER)
 		{
+			next = next->next;
+
 			continue;
 		}
 
 		super_constructor_call = 1;
+
+		next = next->next;
 
 		break;
 	}
@@ -3181,18 +3176,19 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 	class_symbol->symbol_class->class_scope = class_scope;
 	class_symbol->symbol_class->constructor = NULL;
 	
+	analyzer_handle_class_vars(module, node, class_scope);
+	
+	analyzer_check_super_constructor(module, class_symbol, class_scope);
+	
+	analyzer_handle_class_funcs(module, node, class_scope);
+	
+	analyzer_handle_class_methods(class_symbol);
+
 	if (class_node->constructor != NULL)
 	{
 		analyzer_analyze_node(module, class_node->constructor, class_scope, NULL);
 		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function_node.function.identifier, class_scope, 0, 1, 0, 0);
 	}
-
-	analyzer_handle_class_vars(module, node, class_scope);
-	analyzer_handle_class_funcs(module, node, class_scope);
-
-	analyzer_handle_class_methods(class_symbol);
-
-	analyzer_check_super_constructor(module, class_symbol, scope);
 }
 
 static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTable* scope)
@@ -3218,35 +3214,17 @@ static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTa
 
 static int analyzer_is_able_to_this(SymbolTable* scope)
 {
-	if (scope->scope_kind != SYMBOL_FUNCTION)
+	if (scope == NULL)
 	{
-		printf("[Analyzer] [Debug] Pointer 'this' needs to be used inside a function inside a class scope...\n");
-
 		return 0;
 	}
 
-	if (scope->parent == NULL)
+	if (scope->scope_kind == SYMBOL_CLASS)
 	{
-		printf("[Analyzer] [Debug] Pointer 'this' needs to be used inside a class scope...\n");
-
-		return 0;
+		return 1;
 	}
 
-	if (scope->parent->scope_kind != SYMBOL_CLASS)
-	{
-		printf("[Analyzer] [Debug] Pointer 'this' needs to be used inside a class scope...\n");
-
-		return 0;
-	}
-
-	if (scope->owner_statement->symbol_function->is_static)
-	{
-		printf("[Analyzer] [Debug] Pointer 'this' can't be used inside a static function...\n");
-
-		return 0;
-	}
-
-	return 1;
+	return analyzer_is_able_to_this(scope->parent);
 }
 
 static void analyzer_handle_this(Node* node, SymbolTable* scope)
