@@ -7,6 +7,36 @@
 
 extern char* get_literal_value(LiteralNode* literal);
 
+ClassOffsets* find_class_offsets(ClassOffsetsTable* table, char* class_name)
+{
+	for (int i = 0; i < table->class_offsets_length; i++)
+	{
+		ClassOffsets* offsets = table->class_offsets[i];
+		
+		if (strcmp(offsets->class_name, class_name) == 0)
+		{
+			return offsets;
+		}
+	}
+
+	return NULL;
+}
+
+int find_field_offset(ClassOffsets* offsets, char* field_name)
+{
+	for (int i = 0; i < offsets->fields_length; i++)
+	{
+		FieldEntry* offset = offsets->fields[i];
+		
+		if (strcmp(offset->field_name, field_name) == 0)
+		{
+			return offset->field_offset;
+		}
+	}
+
+	return NULL;
+}
+
 ClassOffsetsTable* create_class_offsets_table()
 {
 	ClassOffsetsTable* table = malloc(sizeof(ClassOffsetsTable));
@@ -25,7 +55,7 @@ int check_offsets_table_cache(ClassOffsetsTable* table, char* owner_class_name)
 	{
 		ClassOffsets* offsets = table->class_offsets[i];
 
-		if (strcmp(offsets->class_name, owner_class_name))
+		if (strcmp(offsets->class_name, owner_class_name) == 0)
 		{
 			return 1;
 		}
