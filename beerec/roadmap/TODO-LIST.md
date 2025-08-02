@@ -1,5 +1,5 @@
 * Todo-List:
- - Fazer functions calls voltarem o tanto que foi adicionado de argumentos (push rax, push rbx --> add rsp, 16 * sobe o espaço que alocou pros argumentos)
+ - Fixar o registrador usado na instanciação de classes sendo overwrite em outras instanciações feitas nesse meio tempo.
  - Testar totalmente classes pra checar bugs, etc.
  - Adicionar suporte a statics no member access
  - Refatorar o parser e analyzer
