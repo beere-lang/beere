@@ -97,6 +97,8 @@ static void generate_class_fields_initialization(CodeGen* codegen, Symbol* symbo
 
 static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* area)
 {
+	
+
 	int offset = 16; // começa com 16 pra dar espaço pro pointer pra vtable da class em run-time e pro ID em run-time
 	
 	while (symbol != NULL)
@@ -118,7 +120,7 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 	char* identifier = node->create_instance_node.create_instance.class_name;
 	
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
-	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'R8', movido de 'RAX' pra 'R8', pra evitar override
+	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'R8', movido de 'RAX' pra 'R8', ja que 'RAX' é muito usado.
 
 	generate_class_fields(codegen, symbol, area);
 

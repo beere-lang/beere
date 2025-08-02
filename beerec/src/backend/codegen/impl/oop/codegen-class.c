@@ -7,6 +7,72 @@
 
 extern char* get_literal_value(LiteralNode* literal);
 
+ClassOffsetsTable* create_class_offsets_table()
+{
+	ClassOffsetsTable* table = malloc(sizeof(ClassOffsetsTable));
+	
+	table->class_offsets = malloc(sizeof(ClassOffsetsTable*) * 4);
+	table->class_offsets_capacity = 4;
+
+	table->class_offsets_length = 0;
+
+	return table;
+}
+
+void add_offsets_to_table(ClassOffsetsTable* table, ClassOffsets* offsets)
+{
+	if (table->class_offsets_capacity <= table->class_offsets_length)
+	{
+		table->class_offsets_capacity *= 2;
+
+		table->class_offsets = malloc(sizeof(ClassOffsets*) * table->class_offsets_capacity);
+	}
+
+	table->class_offsets[table->class_offsets_length] = offsets;
+	table->class_offsets_length++;
+}
+
+FieldEntry* create_field_entry(CodeGen* codegen, char* field_name, int offset, Type* field_type)
+{
+	FieldEntry* entry = malloc(sizeof(FieldEntry));
+	
+	entry->field_name = strdup(field_name);
+	entry->field_size = analyzer_get_type_size(field_type, codegen->scope);
+	entry->field_offset = offset;
+
+	return entry;
+}
+
+void add_entry_to_offsets(ClassOffsets* offsets, FieldEntry* entry)
+{
+	if (offsets->fields_capacity <= offsets->fields_length)
+	{
+		offsets->fields_capacity *= 2;
+
+		offsets->fields = malloc(sizeof(FieldEntry*) * offsets->fields_capacity);
+	}
+
+	offsets->fields[offsets->fields_length] = entry;
+	offsets->fields_length++;
+
+	offsets->offset += entry->field_size;
+}
+
+ClassOffsets* create_class_offsets(char* class_name)
+{
+	ClassOffsets* offsets = malloc(sizeof(ClassOffsetsTable));
+	
+	offsets->class_name = strdup(class_name);
+	
+	offsets->fields = malloc(sizeof(FieldEntry*) * 4);
+	offsets->fields_capacity = 4;
+	offsets->fields_length = 0;
+
+	offsets->offset = 0;
+
+	return offsets;
+}
+
 static void generate_class_static_field_declaration(CodeGen* codegen, char* class_name, Node* node)
 {
 	char buff[64];

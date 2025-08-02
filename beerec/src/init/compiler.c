@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../frontend/analyzer/analyzer.h"
+#include "../frontend/semantic/analyzer/analyzer.h"
 #include "../backend/codegen/codegen.h"
 #include "../frontend/modules/modules.h"
-#include "../frontend/parser/parser.h"
+#include "../frontend/structure/parser/parser.h"
 #include "../frontend/lexer/lexer.h"
 #include "../utils/utils.h"
 

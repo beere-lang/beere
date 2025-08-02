@@ -5,17 +5,23 @@
 
 typedef struct ClassOffsets ClassOffsets;
 typedef struct FieldEntry FieldEntry;
+typedef struct ClassOffsetsTable ClassOffsetsTable;
 
 struct FieldEntry
 {
 	char* field_name;
+
 	int field_size;
 	int field_offset;
 };
 
 struct ClassOffsets
 {
-	FieldEntry* entry;
+	char* class_name;
+
+	int offset;
+	
+	FieldEntry** fields;
 
 	int fields_length;
 	int fields_capacity;
@@ -23,9 +29,10 @@ struct ClassOffsets
 
 struct ClassOffsetsTable
 {
-	char* class_name;
+	ClassOffsets** class_offsets;
 	
-	ClassOffsets* offsets;
+	int class_offsets_capacity;
+	int class_offsets_length;
 };
 
 void generate_class(CodeGen* codegen, Node* node, AsmArea* area);
