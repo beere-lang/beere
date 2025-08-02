@@ -234,7 +234,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		// snprintf(buff, 64, "	mov	r8, %s", ret->result);
 		// add_line_to_area(area, buff);
 
-		snprintf(buff, 64, "	call	%s_ctr_%s", ret->type->class_name, method_name);
+		snprintf(buff, 64, "	call	.%s_ctr_%s", ret->type->class_name, method_name);
 		add_line_to_area(area, buff);
 	}
 
