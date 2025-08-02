@@ -234,7 +234,7 @@ void generate_class(CodeGen* codegen, Node* node, AsmArea* area)
 	{
 		generate_class_constructor(codegen, identifier, node->class_node.class_node.constructor);
 	}
-	
+
 	generate_class_fields(codegen, identifier, node->class_node.class_node.var_declare_list, node->class_node.class_node.var_count);
 	generate_class_methods(codegen, identifier, node->class_node.class_node.func_declare_list, node->class_node.class_node.func_count);
 

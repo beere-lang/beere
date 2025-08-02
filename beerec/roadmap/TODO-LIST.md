@@ -1,5 +1,6 @@
 * Todo-List:
  - Fixar referencias da stack, etc.
+ - Fazer functions calls voltarem o tanto que foi adicionado de argumentos (push rax, push rbx --> add rsp, 16 * sobe o espaço que alocou pros argumentos)
  - Testar totalmente classes pra checar bugs, etc.
  - Adicionar suporte a referencias de instancia da class (mais em notes 0)
  - Adicionar suporte a statics no member access
