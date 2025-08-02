@@ -24,6 +24,11 @@ ClassOffsets* find_class_offsets(ClassOffsetsTable* table, char* class_name)
 
 int find_field_offset(ClassOffsets* offsets, char* field_name)
 {
+	if (offsets == NULL)
+	{
+		return -1;
+	}
+	
 	for (int i = 0; i < offsets->fields_length; i++)
 	{
 		FieldEntry* offset = offsets->fields[i];
@@ -34,7 +39,7 @@ int find_field_offset(ClassOffsets* offsets, char* field_name)
 		}
 	}
 
-	return NULL;
+	return find_field_offset(offsets->parent, field_name);
 }
 
 ClassOffsetsTable* create_class_offsets_table()
@@ -219,6 +224,60 @@ static void merge_class_vtable(AsmArea* table_area)
 	}
 }
 
+static void generate_class_offsets(CodeGen* codegen, char* identifier, ClassOffsets* offsets, Node** fields, int fields_count, int* offset)
+{
+	for (int i = 0; i < fields_count; i++)
+	{
+		Node* curr = fields[i];
+
+		if (curr->declare_node.declare.is_static)
+		{
+			continue;
+		}
+		
+		const int BYTES_ALIGNMENT_SIZE = 8;
+
+		Type* type = curr->declare_node.declare.var_type;
+		char* identifier = curr->declare_node.declare.identifier;
+		
+		int size = analyzer_get_type_size(type, codegen->scope);
+		int aligned = (size % BYTES_ALIGNMENT_SIZE == 0) ? size : ((size / BYTES_ALIGNMENT_SIZE) + 1) * BYTES_ALIGNMENT_SIZE;
+
+		FieldEntry* entry = create_field_entry(codegen, identifier, *offset, type);
+		add_entry_to_offsets(offsets, entry);
+		
+		*offset += aligned;
+	}
+}
+
+static void setup_class_offsets(CodeGen* codegen, char* identifier, Node* node)
+{
+	const int INITIAL_CLASS_OFFSET = 16; // 8 bytes do ptr pra vtable + 8 bytes do id da class pra checks em run-time
+	int offset = INITIAL_CLASS_OFFSET;
+	
+	ClassOffsets** curr_offsets = NULL;
+	Symbol* curr = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
+	
+	while (curr != NULL)
+	{
+		ClassOffsets* offsets = create_class_offsets(identifier, offset);
+		
+		if (curr_offsets != NULL)
+		{
+			*curr_offsets = offsets;
+			add_offsets_to_table(class_offsets_table, offsets);
+		}
+
+		curr_offsets = &offsets->parent;
+
+		generate_class_offsets(codegen, (char*) curr->symbol_class->identifier, offsets, curr->symbol_class->fields, curr->symbol_class->field_count, &offset);
+	
+		curr = curr->symbol_class->super;
+	}
+
+	*curr_offsets = NULL;
+}
+
 void generate_class(CodeGen* codegen, Node* node, AsmArea* area) 
 {
 	char* identifier = node->class_node.class_node.identifer;
@@ -234,6 +293,8 @@ void generate_class(CodeGen* codegen, Node* node, AsmArea* area)
 	{
 		generate_class_constructor(codegen, identifier, node->class_node.class_node.constructor);
 	}
+
+	setup_class_offsets(codegen, identifier, node);
 
 	generate_class_fields(codegen, identifier, node->class_node.class_node.var_declare_list, node->class_node.class_node.var_count);
 	generate_class_methods(codegen, identifier, node->class_node.class_node.func_declare_list, node->class_node.class_node.func_count);

@@ -36,6 +36,14 @@ AsmReturn* generate_super(CodeGen* codegen)
 	return create_asm_return("r8", type);
 }
 
+AsmReturn* generate_this(CodeGen* codegen)
+{
+	Symbol* symbol = get_owner_class(codegen->scope);
+	Type* type = create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
+
+	return create_asm_return("r8", type);
+}
+
 char* get_object_class_name(CodeGen* codegen, Node* expr)
 {
 	Type* class_type = analyzer_return_type_of_expression(NULL, expr, codegen->scope, NULL, 0, NULL);
@@ -75,9 +83,10 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	char buff[64];
 	
 	Node* expr = node->member_access_node.member_access.object;
+
 	char* member_name = node->member_access_node.member_access.member_name;
 	AsmReturn* object_expr = generate_expression(codegen, expr, area, 1, prefer_second, 0);
-
+	
 	char* class_name = get_object_class_name(codegen, expr);
 	Symbol* obj_symbol = analyzer_find_symbol_from_scope(class_name, codegen->scope, 0, 0, 1, 0);
 
@@ -87,6 +96,11 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	
 	// TODO: Adicionar suporte a fields static...
 	int offset = find_field_offset(offsets, member_name);
+
+	if (expr->type == NODE_THIS)
+	{
+		exit(1);
+	}
 
 	Type* type = field_symbol->symbol_variable->type;
 	

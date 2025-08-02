@@ -8,8 +8,7 @@ class Child extends Parent {
     public age: int = 0
 
     public Child(age: int) {
-        super(age)
-        this->age = age
+        super(10)
     }
 }
 

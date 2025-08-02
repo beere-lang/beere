@@ -1854,12 +1854,9 @@ static Type* analyzer_get_this_type(Module* module, Node* node, SymbolTable* sco
 {
 	analyzer_analyze_node(module, node, scope, NULL);
 			
-	Type* type = create_type(TYPE_PTR, NULL);
-
-	/**
-	 * Cast unsafe, tomar cuidado. em caso de erros: mudar o tipo pra char* no class_name
-	 */
-	type->base = create_type(TYPE_CLASS, (char*) analyzer_get_class_scope(scope)->owner_statement->symbol_class->identifier);
+	// cast fudido (só pra não dar warning)
+	char* identifier = (char*) analyzer_get_class_scope(scope)->owner_statement->symbol_class->identifier;
+	Type* type = create_type(TYPE_CLASS, identifier);
 			
 	return type;
 }
