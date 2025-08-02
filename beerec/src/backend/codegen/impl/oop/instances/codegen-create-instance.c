@@ -1,5 +1,11 @@
+#include <string.h>
+
 #include "codegen-create-instance.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
+#include "../../expressions/codegen-expr.h"
+
+extern char* field_get_mov_op_code_access(CodeGen* codegen, Type* type);
+extern char* field_get_reference_access_size(CodeGen* codegen, Type* type);
 
 int get_class_total_offset(CodeGen* codegen, Symbol* symbol)
 {
@@ -31,12 +37,71 @@ void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area
 
 	add_line_to_area(area, "	call	malloc");
 
+	add_line_to_area(area, "	mov	r8, rax");
+
 	/* ------------------------------------ */
 }
 
-void generate_class_initialization(CodeGen* codegen, Node* node, AsmArea* area)
+static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea* area, int offset)
 {
+	if (node->declare_node.declare.default_value == NULL)
+	{
+		return;
+	}
+
+	Type* type = node->declare_node.declare.var_type;
+
+	char buff[64];
+
+	char* mov_opcode = field_get_mov_op_code_access(codegen, type);
+	char* destiny = NULL;
+
+	if (node->declare_node.declare.is_static)
+	{
+		return;
+	}
+
+	char* access_size = field_get_reference_access_size(codegen, type);
+
+	snprintf(buff, 64, "%s [r8+%d]", access_size, offset);
+	destiny = strdup(buff);
+
+	/* ---------------------------------------------- */
 	
+	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, 0, 0, 0);
+
+	snprintf(buff, 64, "	%s	%s, %s", mov_opcode, destiny, ret->result);
+
+	add_line_to_area(area, buff);
+
+	/* ---------------------------------------------- */
+}
+
+static void generate_class_fields_initialization(CodeGen* codegen, Symbol* symbol, AsmArea* area, int* offset)
+{
+	for (int i = 0; i < symbol->symbol_class->field_count; i++)
+	{
+		Node* curr = symbol->symbol_class->fields[i];
+
+		int size = analyzer_get_type_size(curr->declare_node.declare.var_type, codegen->scope);
+		int alligned = (size % 8 == 0) ? size : ((size / 8) + 1) * 8;
+
+		generate_field_initialization(codegen, curr, area, *offset);
+
+		*offset += alligned;
+	}
+}
+
+static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* area)
+{
+	int offset = 0;
+	
+	while (symbol != NULL)
+	{
+		generate_class_fields_initialization(codegen, symbol, area, &offset);
+
+		symbol = symbol->symbol_class->super;
+	}
 }
 
 /**
@@ -49,6 +114,8 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 	
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
 	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'RAX'
+
+	generate_class_fields(codegen, symbol, area);
 
 	return NULL;
 }
