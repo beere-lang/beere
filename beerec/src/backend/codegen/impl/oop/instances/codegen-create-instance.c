@@ -2,6 +2,7 @@
 
 #include "codegen-create-instance.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
+#include "../../../../../frontend/structure/parser/parser.h"
 #include "../../expressions/codegen-expr.h"
 
 extern char* field_get_mov_op_code_access(CodeGen* codegen, Type* type);
@@ -105,17 +106,21 @@ static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* are
 }
 
 /**
- * TODO: Terminar a instanciação de classes.
+ * TODO: 
+ * - Terminar a chamada de constructors na instanciação.
+ * - Implementar class offsets table.
  */
 AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea* area)
 {
-	
 	char* identifier = node->create_instance_node.create_instance.class_name;
 	
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
-	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'RAX'
+	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'R8', movido de 'RAX' pra 'R8', pra evitar override
 
 	generate_class_fields(codegen, symbol, area);
 
-	return NULL;
+	Type* type = create_type(TYPE_CLASS, node->class_node.class_node.identifer);
+	AsmReturn* ret = create_asm_return("r8", type);
+
+	return ret;
 }
