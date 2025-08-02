@@ -55,10 +55,10 @@ void add_entry_to_offsets(ClassOffsets* offsets, FieldEntry* entry)
 	offsets->fields[offsets->fields_length] = entry;
 	offsets->fields_length++;
 
-	offsets->offset += entry->field_size;
+	offsets->end_offset += entry->field_size;
 }
 
-ClassOffsets* create_class_offsets(char* class_name)
+ClassOffsets* create_class_offsets(char* class_name, int offset)
 {
 	ClassOffsets* offsets = malloc(sizeof(ClassOffsetsTable));
 	
@@ -68,7 +68,8 @@ ClassOffsets* create_class_offsets(char* class_name)
 	offsets->fields_capacity = 4;
 	offsets->fields_length = 0;
 
-	offsets->offset = 0;
+	offsets->start_offset = offset;
+	offsets->end_offset = offset;
 
 	return offsets;
 }
@@ -136,6 +137,14 @@ static void generate_class_method(CodeGen* codegen, char* class_name, Node* meth
 {
 	char buff[64];
 	snprintf(buff, 64, ".%s_fn_%s", class_name, method->function_node.function.identifier);
+
+	generate_method_declaration(codegen, method, text_section, 1, strdup(buff));
+}
+
+static void generate_class_constructor(CodeGen* codegen, char* class_name, Node* method)
+{
+	char buff[64];
+	snprintf(buff, 64, ".%s_ctr_%s", class_name, method->function_node.function.identifier);
 
 	generate_method_declaration(codegen, method, text_section, 1, strdup(buff));
 }

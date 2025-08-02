@@ -17,9 +17,12 @@ struct FieldEntry
 
 struct ClassOffsets
 {
+	ClassOffsets* parent;
+	
 	char* class_name;
 
-	int offset;
+	int start_offset;
+	int end_offset;
 	
 	FieldEntry** fields;
 
@@ -29,12 +32,19 @@ struct ClassOffsets
 
 struct ClassOffsetsTable
 {
-	ClassOffsets** class_offsets;
 	
+	ClassOffsets** class_offsets;
+
 	int class_offsets_capacity;
 	int class_offsets_length;
 };
 
+FieldEntry* create_field_entry(CodeGen* codegen, char* field_name, int offset, Type* field_type);
+void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area);
+void add_offsets_to_table(ClassOffsetsTable* table, ClassOffsets* offsets);
+void add_entry_to_offsets(ClassOffsets* offsets, FieldEntry* entry);
 void generate_class(CodeGen* codegen, Node* node, AsmArea* area);
+ClassOffsets* create_class_offsets(char* class_name, int offset);
+ClassOffsetsTable* create_class_offsets_table();
 
 #endif

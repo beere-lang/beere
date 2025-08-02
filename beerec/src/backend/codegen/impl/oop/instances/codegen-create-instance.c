@@ -4,6 +4,7 @@
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
 #include "../../../../../frontend/structure/parser/parser.h"
 #include "../../expressions/codegen-expr.h"
+#include "../codegen-class.h"
 
 extern char* field_get_mov_op_code_access(CodeGen* codegen, Type* type);
 extern char* field_get_reference_access_size(CodeGen* codegen, Type* type);
@@ -78,32 +79,44 @@ static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea*
 	/* ---------------------------------------------- */
 }
 
-static void generate_class_fields_initialization(CodeGen* codegen, Symbol* symbol, AsmArea* area, int* offset)
+static void generate_class_fields_initialization(CodeGen* codegen, Symbol* symbol, AsmArea* area, ClassOffsets* class_offsets, int* offset)
 {
 	for (int i = 0; i < symbol->symbol_class->field_count; i++)
 	{
 		Node* curr = symbol->symbol_class->fields[i];
 
 		const int BYTES_ALIGNMENT_SIZE = 8;
+
+		Type* type = curr->declare_node.declare.var_type;
+		char* identifier = curr->declare_node.declare.identifier;
 		
-		int size = analyzer_get_type_size(curr->declare_node.declare.var_type, codegen->scope);
+		int size = analyzer_get_type_size(type, codegen->scope);
 		int aligned = (size % BYTES_ALIGNMENT_SIZE == 0) ? size : ((size / BYTES_ALIGNMENT_SIZE) + 1) * BYTES_ALIGNMENT_SIZE;
 
 		generate_field_initialization(codegen, curr, area, *offset);
 
+		FieldEntry* entry = create_field_entry(codegen, identifier, *offset, type);
+		add_entry_to_offsets(class_offsets, entry);
+		
 		*offset += aligned;
 	}
 }
 
 static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* area)
 {
-	
+	ClassOffsets** parent = NULL;
 
 	int offset = 16; // começa com 16 pra dar espaço pro pointer pra vtable da class em run-time e pro ID em run-time
+	int i = 0;
 	
 	while (symbol != NULL)
 	{
-		generate_class_fields_initialization(codegen, symbol, area, &offset);
+		ClassOffsets* curr_offset = create_class_offsets((char*) symbol->symbol_class->identifier, offset);
+		
+		*parent = curr_offset;
+		parent = &curr_offset->parent;
+		
+		generate_class_fields_initialization(codegen, symbol, area, curr_offset, &offset);
 
 		symbol = symbol->symbol_class->super;
 	}
@@ -112,7 +125,6 @@ static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* are
 /**
  * TODO: 
  * - Terminar a chamada de constructors na instanciação.
- * - Implementar class offsets table.
  * - Implementar super no codegen.
  */
 AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea* area)
