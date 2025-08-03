@@ -4,7 +4,7 @@ Beere is a simple, fast, and low-level programming language, designed for system
 
 > ⚙️ Inspired by C, Java, Go and C++, but with better readability, more safety, easier to develop projects, and optional object-oriented programming.
 
-## Features (that beere will have in the first release and later)
+## Features (that beere will have in the **first** release)
 
 - Fast native compilation to x86_64 Assembly  
 - Manual memory management with safety checks  
