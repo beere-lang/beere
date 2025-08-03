@@ -20,7 +20,7 @@ beerec install [dependency]
 ```
 
 ```ts
-import test as dep
+import [dependency] as dep
 
 fn main() {
     dep.foo(10)
