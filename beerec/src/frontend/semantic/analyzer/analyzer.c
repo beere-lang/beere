@@ -1880,10 +1880,46 @@ static Type* analyzer_get_adress_of_type(Module* module, Node* node, SymbolTable
 	return ptr;
 }
 
+static Symbol* get_class_owner(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return NULL;
+	}
+
+	if (scope->scope_kind == SYMBOL_CLASS)
+	{
+		return scope->owner_statement;
+	}
+
+	return get_class_owner(scope->parent);
+}
+
 static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int member_access, int* direct)
 {
 	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 1, 1);
 
+	SymbolTable* curr_scope = scope;
+	
+	while (symbol == NULL)
+	{
+		if (curr_scope == NULL)
+		{
+			break;
+		}
+		
+		Symbol* class_owner = get_class_owner(curr_scope);
+		
+		symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, class_owner->symbol_class->class_scope, 1, 0, 0, 0);
+
+		if (class_owner->symbol_class->super == NULL)
+		{
+			break;
+		}
+
+		curr_scope = class_owner->symbol_class->super->symbol_class->class_scope;
+	}
+	
 	if (symbol == NULL)
 	{
 		printf("[Analyzer] [Debug] Variable not declared: %s...\n", node->variable_node.variable.identifier);
@@ -1971,7 +2007,7 @@ static Type* analyzer_get_super_type(Node* node, SymbolTable* scope)
 		exit(1);
 	}
 
-	// Cast podre, cuidado.
+	// cast podre, só pra não dar warning
 	return create_type(TYPE_CLASS, (char*) super->symbol_class->identifier);
 }
 
@@ -2089,9 +2125,6 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 
 	switch (operation->op) 
 	{
-		/**
-		 * Operadores logicos.
-		 */
 		case TOKEN_OPERATOR_OR: // ||
 		case TOKEN_OPERATOR_AND: // &&
 		{
@@ -2103,9 +2136,6 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 			break;
 		}
 		
-		/**
-		 * Operadores aritmeticos.
-		 */
 		case TOKEN_OPERATOR_DIVIDED_EQUALS: // /=
 		case TOKEN_OPERATOR_TIMES_EQUALS: // *=
 		case TOKEN_OPERATOR_MINUS_EQUALS: // -=
@@ -2123,9 +2153,6 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 			}
 		}
 		
-		/**
-		 * Operadores comparativos.
-		 */
 		case TOKEN_OPERATOR_LESS: // <
 		case TOKEN_OPERATOR_LESS_EQUALS: // <=
 		case TOKEN_OPERATOR_GREATER_EQUALS: // >=
@@ -2303,8 +2330,6 @@ int analyzer_check_parameters(Node* params_head, Node* _params_head)
 	
 	while (i < function_size)
 	{
-		printf("I: %d\n", i);
-		
 		if (parameter == NULL || _parameter == NULL)
 		{
 			return 0;
@@ -2333,9 +2358,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 {
 	if (super_class == NULL)
 	{
-		/**
-		 * Caso a classe não extenda nenhuma e de override em uma função.
-		 */
 		if (symbol->symbol_function->is_override)
 		{
 			printf("[Analyzer] [Debug] Overriding a non declared function...\n");
@@ -2349,9 +2371,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 
 	if (member == NULL)
 	{
-		/**
-		 * Quando a função não existe na super class porém você da override.
-		 */
 		if (symbol->symbol_function->is_override)
 		{
 			printf("[Analyzer] [Debug] Overriding a non declared function...\n");
@@ -2372,9 +2391,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 	
 	if (member->function_node.function.is_virtual)
 	{
-		/**
-		 * Quando a função da super class é virtual porém você não da override.
-		 */
 		if (!symbol->symbol_function->is_override)
 		{
 			printf("[Analyzer] [Debug] Function needs the 'override' modifier...\n");
@@ -2384,10 +2400,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 		return;
 	}
 	
-	/**
-	 * Quando a função da super class existe, nao é virtual e você declara outra com mesmo nome.
-	 * - shadowing não é permitido e não tem como dar override em funções não virtuais.
-	 */
 	printf("[Analyzer] [Debug] Can't apply shadowing on functions...\n");
 	exit(1);
 }
@@ -2529,12 +2541,8 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 		exit(1);
 	}
 
-	// offset das variaveis locais.
-	// é pra stack, começa em -8 (rbp backup) e vai diminuíndo.
 	int local_offset = -8;
 
-	// offset dos parametros.
-	// começa com 8 e vai aumentando.
 	int param_offset = 8;
 
 	analyzer_analyze_type(node->function_node.function.return_type, scope);
@@ -3332,7 +3340,7 @@ static void analyzer_check_array_literal_values(Module* module, Node* head, Type
 {
 	Node* current = head;
 	
-	// Pula o primeiro tipo (array), ja que a array necessita de varios daquele tipo.
+	// pula o primeiro tipo (array), ja que a array precisa de elementos daquele tipo.
 	Type* required = type->base;
 
 	int index = 0;
@@ -3438,7 +3446,7 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 
 	add_module_to_list(module, import_module);
 
-	// A variavel path é usado agora apenas, depois é copiada.
+	// a variavel path é usada só agora, depois é copiada.
 	free(path);
 }
 
@@ -3457,7 +3465,7 @@ static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scop
 	else
 	{
 		/**
-		 * TODO: Dar handle em imports de libs imbutidas.
+		 * TODO: dar handle em imports de libs imbutidas.
 		 */
 	}
 }

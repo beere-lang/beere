@@ -20,6 +20,35 @@ static Symbol* find_class_owner(SymbolTable* scope)
 	return find_class_owner(scope->parent);
 }
 
+static Symbol* find_symbol(CodeGen* codegen, Node* node)
+{
+	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, codegen->scope, 1, 0, 0, 0);
+
+	SymbolTable* curr_scope = codegen->scope;
+	
+	// procura pelo symbol nas supers caso ele não esteja em nenhum escopo anexado ao atual
+	while (symbol == NULL)
+	{
+		if (curr_scope == NULL)
+		{
+			break;
+		}
+		
+		Symbol* class_owner = find_class_owner(curr_scope);
+		
+		symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, class_owner->symbol_class->class_scope, 1, 0, 0, 0);
+
+		if (class_owner->symbol_class->super == NULL)
+		{
+			break;
+		}
+
+		curr_scope = class_owner->symbol_class->super->symbol_class->class_scope;
+	}
+
+	return symbol;
+}
+
 char* get_reference_access_size(CodeGen* codegen, Type* type)
 {
 	switch (type->type)
@@ -258,7 +287,7 @@ AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* ar
 {
 	VariableNode* identifier_node = &node->variable_node.variable;
 	
-	Symbol* symbol = analyzer_find_symbol_from_scope(identifier_node->identifier, codegen->scope, 1, 0, 0, 0);
+	Symbol* symbol = find_symbol(codegen, node);
 
 	if (symbol->symbol_variable->is_static)
 	{

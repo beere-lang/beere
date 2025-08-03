@@ -1,4 +1,5 @@
 * Todo-List:
+ - Não permitir variaveis static e globais ao mesmo tempo (não tem sentido)
  - Adicionar suporte a statics no member access e nas classes
  - Testar se o 'R8' está sendo overwrite durante a criação de instancias dentro de funções de instancias
  - Testar o funcionamento de visibilidade (private/public) em classes e supers (não testado)

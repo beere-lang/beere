@@ -12,7 +12,7 @@ class Child extends Parent {
     public Child(n1: int) {
         super(n1)
         this.n1 = n1
-        super.field_2 = 20
+        this.field_2 = 20
     }
 }
 
