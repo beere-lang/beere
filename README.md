@@ -49,3 +49,6 @@ beerec [entry-point-file] [dot-mod-file]
 
 ## Development
 > Created only by jerious1337.
+
+## License
+> BSD 3-Clause License
