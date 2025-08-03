@@ -36,7 +36,7 @@ fn main() {
 }
 ```
 
-## OOP
+## Object-Oriented
 ```ts
 class Parent {
     public field_2: int = 10
