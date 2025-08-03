@@ -1852,6 +1852,17 @@ static Type* analyzer_get_this_type(Module* module, Node* node, SymbolTable* sco
 	return type;
 }
 
+static Type* analyzer_super_type(Module* module, Node* node, SymbolTable* scope)
+{
+	analyzer_analyze_node(module, node, scope, NULL);
+			
+	// cast fudido (só pra não dar warning)
+	char* identifier = (char*) (analyzer_get_class_scope(scope)->owner_statement->symbol_class->super->symbol_class->identifier);
+	Type* type = create_type(TYPE_CLASS, identifier);
+
+	return type;
+}
+
 static Type* analyzer_get_create_instance_type(Node* node, SymbolTable* scope)
 {
 	Type* type = create_type(TYPE_CLASS, node->create_instance_node.create_instance.class_name);
@@ -2047,6 +2058,11 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 		case NODE_PARAMETER:
 		{
 			return analyzer_get_parameter_type(expression, scope);
+		}
+
+		case NODE_SUPER:
+		{
+			return analyzer_get_super_type(expression, scope);
 		}
 
 		case NODE_ARRAY_LITERAL:
@@ -3226,9 +3242,32 @@ static int analyzer_is_able_to_this(SymbolTable* scope)
 	return analyzer_is_able_to_this(scope->parent);
 }
 
+static int analyzer_is_able_to_super(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return 0;
+	}
+
+	if (scope->scope_kind == SYMBOL_CLASS)
+	{
+		return scope->owner_statement->symbol_class->super != NULL;
+	}
+
+	return analyzer_is_able_to_this(scope->parent);
+}
+
 static void analyzer_handle_this(Node* node, SymbolTable* scope)
 {
 	if (!analyzer_is_able_to_this(scope))
+	{
+		exit(1);
+	}
+}
+
+static void analyzer_handle_super(Node* node, SymbolTable* scope)
+{
+	if (!analyzer_is_able_to_super(scope))
 	{
 		exit(1);
 	}
@@ -3591,6 +3630,13 @@ static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope
 		case NODE_ARRAY_LITERAL:
 		{
 			analyzer_handle_array_literal(module, node, scope);
+
+			return;
+		}
+
+		case NODE_SUPER:
+		{
+			analyzer_handle_super(node, scope);
 
 			return;
 		}
