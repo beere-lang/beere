@@ -51,7 +51,7 @@ extern "C" fn foo(arg: string)
 fn main() {
     // Strings structures in Beere are different from C, so,
     // you need to convert to C style strings to work on C methods
-    foo("Teste".to_cstr)
+    foo("Teste".to_cstr())
 }
 ```
 
