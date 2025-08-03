@@ -4,25 +4,39 @@ Beere is a simple, fast, and low-level programming language, designed for system
 
 > ⚙️ Inspired by C, Java, Go and C++, but with better readability, more safety, easier to develop projects, and optional object-oriented programming.
 
-## Features
+## Features (that beere will have in the **first** release)
 
 - Fast native compilation to x86_64 Assembly  
 - Manual memory management with safety checks  
-- Simple and clean syntax 
-- Optional object-oriented features (classes, vtables)  
-- Easy C interoperability (`extern "C" fn`)  
-- Lightweight module system and package manager (WIP)
+- Simple and clean syntax
+- Optional object-oriented features
+- C interoperability (`extern "C" fn`)
+- Optimizations (inspired in LLVM)
+- Module system
+- Full package manager system
+
+## Downloading Dependencies
+```
+beerec install [dependency]
+```
+
+```ts
+import [dependency] as dep
+
+fn main() {
+    dep.foo(10)
+}
+```
 
 ## Hello World
 
 ```rs
 fn main() {
-    println("Hello, World!")
+    print("Hello, World!")
 }
 ```
 
-## Object-oriented
-Beere has OOP support, and will be improved with more features in other releases.
+## Object-Oriented
 ```ts
 class Parent {
     public field_2: int = 10
@@ -46,14 +60,31 @@ fn main() {
 }
 ```
 
+## C Language Interoperability
+```rs
+extern "C" fn foo(arg: string)
+
+fn main() {
+    // Strings structures in Beere are different from C, so,
+    // you need to convert to C style strings to work on C methods
+    foo("Teste".to_cstr())
+}
+```
+
 ## Building
 To compile a Beere file:
 
 ```
-beerec path/to/entry/point path/to/dotmod/file
+beerec [entry-point-file] [dot-mod-file]
 ```
-(Compiler will generate raw Assembly and link it automatically.)
+(Compiler will generate raw Assembly and link it automatically)
 
 ## Status
 
 > ⚠️ Beere is under active development.
+
+## Development
+> Created only by jerious1337.
+
+## License
+> BSD 3-Clause License. [Read more](https://github.com/beere-lang/beere?tab=BSD-3-Clause-1-ov-file)
