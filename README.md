@@ -51,4 +51,4 @@ beerec [entry-point-file] [dot-mod-file]
 > Created only by jerious1337.
 
 ## License
-> BSD 3-Clause License
+> BSD 3-Clause License. [Read more](https://github.com/beere-lang/beere?tab=BSD-3-Clause-1-ov-file)
