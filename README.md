@@ -14,7 +14,7 @@ Beere is a simple, fast, and low-level programming language, designed for system
 - Module system
 - Full package manager system
 
-## Downloading dependencies
+## Downloading Dependencies
 ```
 beerec install [dependency]
 ```
