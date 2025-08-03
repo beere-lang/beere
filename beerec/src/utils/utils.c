@@ -34,7 +34,7 @@ char* get_directory(char* path)
 
 	if (last_slash != NULL)
 	{
-        	*(last_slash + 1) = '\0';
+		*(last_slash + 1) = '\0';
 	}
 	else
 	{
@@ -52,8 +52,8 @@ char* resolve_path(char* abs_path, char* relative)
 
 	if (GetFullPathNameA(buffer, 2048, buffer, NULL) == 0) 
 	{
-        return NULL;
-    }
+		return NULL;
+	}
 
 	return buffer;
 }
@@ -87,7 +87,7 @@ char* get_dot_mod_relative_path(char* mod_path, const char* relative)
 char* get_absolute_path(const char* relative_path)
 {
 	char* abs_path = malloc(_MAX_PATH);
-    
+	
 	if (!_fullpath(abs_path, relative_path, _MAX_PATH))
 	{
 		free(abs_path);
