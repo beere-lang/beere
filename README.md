@@ -33,5 +33,5 @@ beerec path/to/entry/point path/to/dotmod/file
 
 > ⚠️ Beere is under active development.
 
-# Beere
+## Development
 > Created only by jerious1337.
