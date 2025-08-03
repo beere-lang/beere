@@ -35,6 +35,11 @@ static Symbol* find_symbol(CodeGen* codegen, Node* node)
 		}
 		
 		Symbol* class_owner = find_class_owner(curr_scope);
+
+		if (class_owner == NULL)
+		{
+			break;
+		}
 		
 		symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, class_owner->symbol_class->class_scope, 1, 0, 0, 0);
 
