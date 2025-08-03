@@ -116,12 +116,10 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	else
 	{
 		char* mov_op = mov_opcode(type->type);
-		char* reg = correct_register(type->type, prefer_second);
 		char* access_size = field_get_reference_access_size(codegen, type);
 
 		snprintf(buff, 64, "%s [%s+%d]", access_size, object_expr->result, offset);
-
-		AsmReturn* ret = create_asm_return(reg, type);
+		AsmReturn* ret = create_asm_return(buff, type);
 		
 		return ret;
 	}
