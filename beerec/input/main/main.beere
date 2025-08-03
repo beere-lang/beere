@@ -7,14 +7,14 @@ class Parent {
 }
 
 class Child extends Parent {
-    public field: int = 0
+    public n1: int = 0
 
-    public Child() {
-        super(10)
-        field = 10
+    public Child(n1: int) {
+        super(n1)
+        this.n1 = n1
     }
 }
 
 fn main() {
-    let child: Child = new Child()
+    let child: Child = new Child(10)
 }
