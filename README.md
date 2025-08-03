@@ -19,6 +19,14 @@ Beere is a simple, fast, and low-level programming language, designed for system
 beerec install [dependency]
 ```
 
+```ts
+import test as dep
+
+fn main() {
+    dep.foo(10)
+}
+```
+
 ## Hello World
 
 ```rs
