@@ -44,6 +44,16 @@ beerec [entry-point-file] [dot-mod-file]
 ```
 (Compiler will generate raw Assembly and link it automatically)
 
+## C Interoperability
+```rs
+extern "C" fn foo(arg: string)
+
+fn main() {
+    // Strings structures in Beere are different from C, so, you need to convert to C style strings to work on C methods
+    foo("Teste".to_cstr)
+}
+```
+
 ## Status
 
 > ⚠️ Beere is under active development.
