@@ -1,4 +1,4 @@
-# Beere
+# Beere Programming Language
 
 Beere is a simple, fast, and low-level programming language, designed for systems programming with modern syntax and manual memory control.
 
