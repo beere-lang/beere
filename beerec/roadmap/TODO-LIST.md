@@ -9,5 +9,6 @@
  08 - Adicionar o sistema de cast em pointers e classes
  09 - Refatorar o parser e analyzer
  10 - Melhorar o sistema de logs (trabalhoso pkrl kkkk)
+ 11 - Adicionar compiler flags de verdade
 
 * Notes:
