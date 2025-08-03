@@ -93,7 +93,7 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	Symbol* field_symbol = find_field_symbol_from_class(codegen, obj_symbol, member_name);
 	
 	ClassOffsets* offsets = find_class_offsets(class_offsets_table, class_name);
-	
+
 	// TODO: Adicionar suporte a fields static...
 	int offset = find_field_offset(offsets, member_name);
 
@@ -104,8 +104,8 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 		char* mov_op = mov_opcode(type->type);
 		char* reg = correct_register(type->type, prefer_second);
 		char* access_size = field_get_reference_access_size(codegen, type);
+		
 		snprintf(buff, 64, "	%s	%s [%s+%d], %s", mov_op, access_size, object_expr->result, offset, reg);
-
 		add_line_to_area(area, buff);
 		
 		AsmReturn* ret = create_asm_return(reg, type);

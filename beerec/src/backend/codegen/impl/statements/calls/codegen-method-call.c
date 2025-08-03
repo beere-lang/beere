@@ -248,17 +248,17 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		add_line_to_area(area, buff);
 	}
 
-	snprintf(buff, 64, "	call	.%s_ctr", node->create_instance_node.create_instance.class_name);
-	add_line_to_area(area, buff);
-
 	if (constructor_args != NULL)
 	{
 		int args_size = analyzer_get_list_size(node->create_instance_node.create_instance.constructor_args->head);
 		backup_size += args_size * 8;
 	}
 
-	snprintf(buff, 64, "	add	rsp, %d", backup_size);
-	add_line_to_area(area, buff);
+	if (backup_size != 0)
+	{
+		snprintf(buff, 64, "	add	rsp, %d", backup_size);
+		add_line_to_area(area, buff);
+	}
 
 	if (callee->type == NODE_SUPER)
 	{

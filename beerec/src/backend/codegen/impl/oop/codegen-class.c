@@ -12,7 +12,7 @@ ClassOffsets* find_class_offsets(ClassOffsetsTable* table, char* class_name)
 	for (int i = 0; i < table->class_offsets_length; i++)
 	{
 		ClassOffsets* offsets = table->class_offsets[i];
-		
+			
 		if (strcmp(offsets->class_name, class_name) == 0)
 		{
 			return offsets;
@@ -258,19 +258,22 @@ static void setup_class_offsets(CodeGen* codegen, char* identifier, Node* node)
 	ClassOffsets** curr_offsets = NULL;
 	Symbol* curr = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
 	
+	int i = 0;
+	
 	while (curr != NULL)
 	{
-		char* class_name = (char*) curr->symbol_class->identifier;
+		char* class_name = strdup(curr->symbol_class->identifier);
 
 		ClassOffsets* offsets = create_class_offsets(class_name, offset);
+		
+		if (i == 0)
+		{
+			add_offsets_to_table(class_offsets_table, offsets);
+		}
 		
 		if (curr_offsets != NULL)
 		{
 			*curr_offsets = offsets;
-		}
-		else
-		{
-			add_offsets_to_table(class_offsets_table, offsets);
 		}
 
 		curr_offsets = &offsets->parent;
@@ -278,6 +281,8 @@ static void setup_class_offsets(CodeGen* codegen, char* identifier, Node* node)
 		generate_class_offsets(codegen, class_name, offsets, curr->symbol_class->fields, curr->symbol_class->field_count, &offset);
 	
 		curr = curr->symbol_class->super;
+
+		i++;
 	}
 
 	*curr_offsets = NULL;
@@ -294,12 +299,12 @@ void generate_class(CodeGen* codegen, Node* node, AsmArea* area)
 	SymbolTable* temp = codegen->scope;
 	codegen->scope = class_symbol->symbol_class->class_scope;
 	
+	setup_class_offsets(codegen, identifier, node);
+	
 	if (node->class_node.class_node.constructor != NULL)
 	{
 		generate_class_constructor(codegen, identifier, node->class_node.class_node.constructor);
 	}
-
-	setup_class_offsets(codegen, identifier, node);
 
 	generate_class_fields(codegen, identifier, node->class_node.class_node.var_declare_list, node->class_node.class_node.var_count);
 	generate_class_methods(codegen, identifier, node->class_node.class_node.func_declare_list, node->class_node.class_node.func_count);

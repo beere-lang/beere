@@ -54,8 +54,11 @@ void generate_method_constructor_call(CodeGen* codegen, Node* node, AsmArea* are
 		backup_size += args_size * 8;
 	}
 
-	snprintf(buff, 64, "	add	rsp, %d", backup_size);
-	add_line_to_area(area, buff);
+	if (backup_size != 0)
+	{
+		snprintf(buff, 64, "	add	rsp, %d", backup_size);
+		add_line_to_area(area, buff);
+	}
 }
 
 int get_class_total_offset(CodeGen* codegen, Symbol* symbol)
