@@ -36,13 +36,29 @@ fn main() {
 }
 ```
 
-## Building
-To compile a Beere file:
+## OOP
+```ts
+class Parent {
+    public field_2: int = 10
 
+    public Parent(n1: int) {
+        this.field_2 = n1
+    }
+}
+
+class Child extends Parent {
+    public n1: int = 0
+
+    public Child(n1: int) {
+        super(n1)
+        this.n1 = n1
+    }
+}
+
+fn main() {
+    let child: Child = new Child(10)
+}
 ```
-beerec [entry-point-file] [dot-mod-file]
-```
-(Compiler will generate raw Assembly and link it automatically)
 
 ## C Language Interoperability
 ```rs
@@ -54,6 +70,14 @@ fn main() {
     foo("Teste".to_cstr())
 }
 ```
+
+## Building
+To compile a Beere file:
+
+```
+beerec [entry-point-file] [dot-mod-file]
+```
+(Compiler will generate raw Assembly and link it automatically)
 
 ## Status
 
