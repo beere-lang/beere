@@ -606,12 +606,13 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 		exit(1);
 	}
 
-	symbol->symbol_variable->is_global = (scope->scope_kind == GLOBAL_SCOPE || scope->scope_kind == SYMBOL_CLASS);
+	symbol->symbol_variable->is_global = (scope->scope_kind == GLOBAL_SCOPE);
 
 	symbol->symbol_variable->type = node->declare_node.declare.var_type;
 	symbol->symbol_variable->identifier = node->declare_node.declare.identifier;
 	symbol->symbol_variable->is_const = node->declare_node.declare.is_const;
 	symbol->symbol_variable->is_static = node->declare_node.declare.is_static;
+	symbol->symbol_variable->is_class_global = 0;
 	
 	symbol->is_export = node->declare_node.declare.is_export;
 
@@ -632,7 +633,7 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 
 		symbol->symbol_variable->offset = *offset;
 	}
-	else if (offset == NULL && !symbol->symbol_variable->is_global)
+	else if (offset == NULL && !symbol->symbol_variable->is_global && (scope->scope_kind != SYMBOL_CLASS))
 	{
 		printf("[Analyzer] [Debug] Found a local variable with a invalid offset...\n");
 		exit(1);

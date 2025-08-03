@@ -11,7 +11,7 @@ class Child extends Parent {
 
     public Child() {
         super(10)
-        this.field = 10
+        field = 10
     }
 }
 
