@@ -44,7 +44,7 @@ beerec [entry-point-file] [dot-mod-file]
 ```
 (Compiler will generate raw Assembly and link it automatically)
 
-## C Interoperability
+## C Language Interoperability
 ```rs
 extern "C" fn foo(arg: string)
 
