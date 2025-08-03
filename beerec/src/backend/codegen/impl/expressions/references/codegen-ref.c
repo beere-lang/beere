@@ -3,6 +3,22 @@
 
 #include "codegen-ref.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
+#include "../../oop/codegen-class.h"
+
+static Symbol* find_class_owner(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return NULL;
+	}
+
+	if (scope->scope_kind == SYMBOL_CLASS)
+	{
+		return scope->owner_statement;
+	}
+
+	return find_class_owner(scope->parent);
+}
 
 char* get_reference_access_size(CodeGen* codegen, Type* type)
 {
@@ -206,6 +222,38 @@ AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	}
 }
 
+AsmReturn* generate_class_global_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)
+{
+	char buff[64];
+	Type* type = symbol->symbol_variable->type;
+	
+	Symbol* class_owner = find_class_owner(codegen->scope);
+	ClassOffsets* offsets = find_class_offsets(class_offsets_table, (char*) class_owner->symbol_class->identifier);
+
+	int offset = find_field_offset(offsets, (char*) symbol->symbol_variable->identifier);
+	
+	if (force_reg)
+	{
+		char* reg = get_register_access(codegen, type, prefer_second);
+
+		snprintf(buff, 64, "	%s	%s, %s [r8%+d]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), offset);
+		add_line_to_area(area, buff);
+
+		AsmReturn* ret = create_asm_return(reg, type);
+		ret->is_reg = 1;
+		
+		return ret;
+	}
+	else
+	{
+		snprintf(buff, 64, "%s [r8%+d]", get_reference_access_size(codegen, type), offset);
+		
+		AsmReturn* ret = create_asm_return(buff, type);
+
+		return ret;
+	}
+}
+
 AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
 	VariableNode* identifier_node = &node->variable_node.variable;
@@ -220,6 +268,11 @@ AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* ar
 	if (symbol->symbol_variable->is_global)
 	{
 		return generate_global_variable_reference(codegen, symbol, area, force_reg, prefer_second);
+	}
+
+	if (symbol->symbol_variable->is_class_global)
+	{
+		return generate_class_global_variable_reference(codegen, symbol, area, force_reg, prefer_second);
 	}
 
 	return generate_local_variable_reference(codegen, symbol, area, force_reg, prefer_second);
