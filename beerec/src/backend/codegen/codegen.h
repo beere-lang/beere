@@ -35,6 +35,7 @@ Flag;
 
 struct CodeGen
 {
+	int inner_class;
 	int prefer_second;
 
 	Module* module;

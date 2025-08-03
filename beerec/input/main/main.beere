@@ -1,17 +1,20 @@
 class Parent {
-    public Parent() {
+    public field_2: int = 10
 
+    public Parent(n1: int) {
+        this.field_2 = n1
     }
 }
 
 class Child extends Parent {
-    public global_field: int = 0
+    public field: int = 0
 
     public Child() {
-        this.global_field = 10
+        super(10)
+        this.field = 10
     }
 }
 
 fn main() {
-    let test: Child = new Child()
+    let child: Child = new Child()
 }

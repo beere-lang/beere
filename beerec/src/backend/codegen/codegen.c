@@ -250,6 +250,7 @@ void setup_codegen(Module* module, CodeGen* codegen)
 {
 	codegen->module = module;
 	codegen->scope = module->global_scope;
+	codegen->inner_class = 0;
 
 	setup_class_offsets_table();
 	setup_bss_section();

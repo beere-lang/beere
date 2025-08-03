@@ -99,7 +99,11 @@ void setup_instance_memory_alloc(CodeGen* codegen, Symbol* symbol, AsmArea* area
 	/* ------------------------------------ */
 
 	add_line_to_area(area, "	call	malloc");
-	add_line_to_area(area, "	mov	r8, rax");
+
+	char* reg = (codegen->inner_class) ? "r10" : "r8";
+	snprintf(buff, 64, "	mov	%s, rax", reg);
+
+	add_line_to_area(area, buff);
 
 	/* ------------------------------------ */
 }
@@ -120,14 +124,21 @@ static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea*
 
 	char* access_size = field_get_reference_access_size(codegen, type);
 
-	snprintf(buff, 64, "%s [r8+%d]", access_size, offset);
+	char* reg = codegen->inner_class ? "r10" : "r8";
+
+	snprintf(buff, 64, "%s [%s+%d]", access_size, reg, offset);
 	destiny = strdup(buff);
 
 	/* ---------------------------------------------- */
 	
 	int force_reg = node->declare_node.declare.default_value->type != NODE_LITERAL;
 
+	int backup = codegen->inner_class;
+	codegen->inner_class = 1;
+	
 	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, force_reg, 0, 0);
+
+	codegen->inner_class = backup;
 
 	snprintf(buff, 64, "	%s	%s, %s", mov_opcode, destiny, ret->result);
 	add_line_to_area(area, buff);
@@ -137,19 +148,24 @@ static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea*
 
 static void generate_class_fields(CodeGen* codegen, Symbol* symbol, AsmArea* area)
 {
-	for (int i = 0; i < symbol->symbol_class->field_count; i++)
+	while (symbol != NULL)
 	{
-		Node* curr = symbol->symbol_class->fields[i];
-
-		if (curr->declare_node.declare.is_static)
+		for (int i = 0; i < symbol->symbol_class->field_count; i++)
 		{
-			continue;
-		}
-		
-		ClassOffsets* offsets = find_class_offsets(class_offsets_table, (char*) symbol->symbol_class->identifier);
-		int offset = find_field_offset(offsets, curr->declare_node.declare.identifier);
+			Node* curr = symbol->symbol_class->fields[i];
 
-		generate_field_initialization(codegen, curr, area, offset);
+			if (curr->declare_node.declare.is_static)
+			{
+				continue;
+			}
+			
+			ClassOffsets* offsets = find_class_offsets(class_offsets_table, (char*) symbol->symbol_class->identifier);
+			int offset = find_field_offset(offsets, curr->declare_node.declare.identifier);
+
+			generate_field_initialization(codegen, curr, area, offset);
+		}
+
+		symbol = symbol->symbol_class->super;
 	}
 }
 
@@ -160,8 +176,10 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 	Symbol* symbol = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
 	setup_instance_memory_alloc(codegen, symbol, area); // output reg é o 'R8', movido de 'RAX' pra 'R8', ja que 'RAX' é muito usado.
 
+	char* reg = codegen->inner_class ? "r10" : "r8";
+
 	char buff[64];
-	snprintf(buff, 64, "	mov	qword [r8], .%s_v-table", identifier);
+	snprintf(buff, 64, "	mov	qword [%s], .%s_v-table", reg, identifier);
 
 	add_line_to_area(area, buff);
 	
@@ -169,7 +187,7 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 	generate_method_constructor_call(codegen, node, area);
 
 	Type* type = create_type(TYPE_CLASS, identifier);
-	AsmReturn* ret = create_asm_return("r8", type);
+	AsmReturn* ret = create_asm_return(reg, type);
 	ret->is_reg = 1;
 
 	return ret;

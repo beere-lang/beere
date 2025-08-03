@@ -3078,8 +3078,6 @@ static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_
 
 		super_constructor_call = 1;
 
-		next = next->next;
-
 		break;
 	}
 
@@ -3178,8 +3176,6 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 	
 	analyzer_handle_class_vars(module, node, class_scope);
 	
-	analyzer_check_super_constructor(module, class_symbol, class_scope);
-	
 	analyzer_handle_class_funcs(module, node, class_scope);
 	
 	analyzer_handle_class_methods(class_symbol);
@@ -3189,6 +3185,8 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 		analyzer_analyze_node(module, class_node->constructor, class_scope, NULL);
 		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function_node.function.identifier, class_scope, 0, 1, 0, 0);
 	}
+
+	analyzer_check_super_constructor(module, class_symbol, class_scope);
 }
 
 static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTable* scope)

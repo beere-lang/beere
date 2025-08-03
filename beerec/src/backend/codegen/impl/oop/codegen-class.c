@@ -28,14 +28,14 @@ int find_field_offset(ClassOffsets* offsets, char* field_name)
 	{
 		return -1;
 	}
-	
+
 	for (int i = 0; i < offsets->fields_length; i++)
 	{
-		FieldEntry* offset = offsets->fields[i];
+		FieldEntry* curr = offsets->fields[i];
 		
-		if (strcmp(offset->field_name, field_name) == 0)
+		if (strcmp(curr->field_name, field_name) == 0)
 		{
-			return offset->field_offset;
+			return curr->field_offset;
 		}
 	}
 
@@ -109,8 +109,6 @@ void add_entry_to_offsets(ClassOffsets* offsets, FieldEntry* entry)
 
 	offsets->fields[offsets->fields_length] = entry;
 	offsets->fields_length++;
-
-	offsets->end_offset += entry->field_size;
 }
 
 ClassOffsets* create_class_offsets(char* class_name, int offset)
@@ -123,8 +121,10 @@ ClassOffsets* create_class_offsets(char* class_name, int offset)
 	offsets->fields_capacity = 4;
 	offsets->fields_length = 0;
 
-	offsets->start_offset = offset;
-	offsets->end_offset = offset;
+	offsets->start_offset = 0;
+	offsets->end_offset = 0;
+
+	offsets->parent = NULL;
 
 	return offsets;
 }
@@ -245,6 +245,8 @@ static void generate_class_offsets(CodeGen* codegen, char* identifier, ClassOffs
 
 		FieldEntry* entry = create_field_entry(codegen, identifier, aligned, *offset, type);
 		add_entry_to_offsets(offsets, entry);
+
+		printf("%d, %s\n", entry->field_offset, entry->field_name);
 		
 		*offset += aligned;
 	}
@@ -254,38 +256,37 @@ static void setup_class_offsets(CodeGen* codegen, char* identifier, Node* node)
 {
 	const int INITIAL_CLASS_OFFSET = 16; // 8 bytes do ptr pra vtable + 8 bytes do id da class pra checks em run-time
 	int offset = INITIAL_CLASS_OFFSET;
-	
-	ClassOffsets** curr_offsets = NULL;
+
+	ClassOffsets* curr_offsets = NULL;
 	Symbol* curr = analyzer_find_symbol_from_scope(identifier, codegen->scope, 0, 0, 1, 0);
 	
-	int i = 0;
-	
+	Symbol* arr[64];
+	int count = 0;
+
 	while (curr != NULL)
 	{
-		char* class_name = strdup(curr->symbol_class->identifier);
-
-		ClassOffsets* offsets = create_class_offsets(class_name, offset);
+		arr[count] = curr;
 		
+		curr = curr->symbol_class->super;
+		count++;
+	}
+
+	for (int i = count - 1; i >= 0; i--)
+	{
+		Symbol* curr = arr[i];
+		
+		ClassOffsets* offsets = create_class_offsets((char*) curr->symbol_class->identifier, offset);
+
+		generate_class_offsets(codegen, (char*) curr->symbol_class->identifier, offsets, curr->symbol_class->fields, curr->symbol_class->field_count, &offset);
+
+		offsets->parent = curr_offsets;
+		curr_offsets = offsets;
+
 		if (i == 0)
 		{
 			add_offsets_to_table(class_offsets_table, offsets);
 		}
-		
-		if (curr_offsets != NULL)
-		{
-			*curr_offsets = offsets;
-		}
-
-		curr_offsets = &offsets->parent;
-
-		generate_class_offsets(codegen, class_name, offsets, curr->symbol_class->fields, curr->symbol_class->field_count, &offset);
-	
-		curr = curr->symbol_class->super;
-
-		i++;
 	}
-
-	*curr_offsets = NULL;
 }
 
 void generate_class(CodeGen* codegen, Node* node, AsmArea* area) 
