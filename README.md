@@ -22,7 +22,7 @@ fn main() {
 ```
 
 ## Object-oriented
-Beere is has OOP support, and will be improved with more features in other releases.
+Beere has OOP support, and will be improved with more features in other releases.
 ```ts
 class Parent {
     public field_2: int = 10
