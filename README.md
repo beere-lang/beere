@@ -21,6 +21,31 @@ fn main() {
 }
 ```
 
+## Object-oriented
+Beere is has OOP support, and will be improved with more features in other releases.
+```ts
+class Parent {
+    public field_2: int = 10
+
+    public Parent(n1: int) {
+        this.field_2 = n1
+    }
+}
+
+class Child extends Parent {
+    public n1: int = 0
+
+    public Child(n1: int) {
+        super(n1)
+        this.n1 = n1
+    }
+}
+
+fn main() {
+    let child: Child = new Child(10)
+}
+```
+
 ## Building
 To compile a Beere file:
 
