@@ -6,7 +6,7 @@ class Parent {
 
 class Child extends Parent {
     public Child() {
-
+        let inside: int = 0
     }
 }
 
