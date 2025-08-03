@@ -4,20 +4,24 @@ Beere is a simple, fast, and low-level programming language, designed for system
 
 > ⚙️ Inspired by C, Java, Go and C++, but with better readability, more safety, easier to develop projects, and optional object-oriented programming.
 
-## Features
+## Features (that beere will have in the first release and later)
 
 - Fast native compilation to x86_64 Assembly  
 - Manual memory management with safety checks  
-- Simple and clean syntax 
+- Simple and clean syntax
 - Optional object-oriented features (classes, vtables)  
-- Easy C interoperability (`extern "C" fn`)  
+- C interoperability (`extern "C" fn`)  
 - Lightweight module system and package manager (WIP)
+- Full package manager system
+```
+beerec install [dependency]
+```
 
 ## Hello World
 
 ```rs
 fn main() {
-    println("Hello, World!")
+    print("Hello, World!")
 }
 ```
 
@@ -25,9 +29,9 @@ fn main() {
 To compile a Beere file:
 
 ```
-beerec path/to/entry/point path/to/dotmod/file
+beerec [entry-point-file] [dot-mod-file]
 ```
-(Compiler will generate raw Assembly and link it automatically.)
+(Compiler will generate raw Assembly and link it automatically)
 
 ## Status
 
