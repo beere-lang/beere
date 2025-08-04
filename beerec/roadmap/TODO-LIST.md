@@ -9,5 +9,7 @@
  08 - Dar free em tudo (atualmente ta dando memory leak tenebroso KKKKKKKKKKKK)
  09 - Melhorar o sistema de logs (trabalhoso pkrl kkkk)
  10 - Adicionar compiler flags de verdade
+ 11 - Não adicionar a v-table caso esteja vazia no assembly gerado
+ 12 - Fixar a v-table sendo movida pro 'R8' pra acessar fields de uma class
 
 * Notes:
