@@ -2509,6 +2509,11 @@ void free_node(Node* node)
 			break;
 		}
 
+		case NODE_DIRECT_CLASS:
+		{
+			break;
+		}
+
 		case NODE_SUPER:
 		{
 			break;
