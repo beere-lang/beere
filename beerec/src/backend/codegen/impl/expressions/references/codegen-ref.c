@@ -5,7 +5,7 @@
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
 #include "../../oop/codegen-class.h"
 
-static Symbol* find_class_owner(SymbolTable* scope)
+Symbol* find_class_owner(SymbolTable* scope)
 {
 	if (scope == NULL)
 	{
@@ -83,6 +83,11 @@ char* get_reference_access_size(CodeGen* codegen, Type* type)
 			return strdup("qword");
 		}
 
+		case TYPE_CLASS:
+		{
+			return strdup("qword");
+		}
+
 		default:
 		{
 			printf("Codegen debug fail #123...\n");
@@ -116,6 +121,11 @@ char* get_mov_op_code_access(CodeGen* codegen, Type* type)
 		}
 
 		case TYPE_STRING:
+		{
+			return strdup("mov");
+		}
+
+		case TYPE_CLASS:
 		{
 			return strdup("mov");
 		}
@@ -163,6 +173,13 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 		}
 
 		case TYPE_STRING:
+		{
+			temp = prefer_second ? "rbx" : "rax";
+
+			return strdup(temp);
+		}
+
+		case TYPE_CLASS:
 		{
 			temp = prefer_second ? "rbx" : "rax";
 

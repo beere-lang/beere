@@ -7,6 +7,7 @@
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
 
 extern Type* create_type(VarType type, char* class_name);
+extern Symbol* find_class_owner(SymbolTable* scope);
 
 Symbol* find_method_owner(SymbolTable* scope)
 {
@@ -173,6 +174,76 @@ char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 	}
 }
 
+static Symbol* find_class_method(SymbolTable* scope, char* method_name)
+{
+	Symbol* symbol = analyzer_find_symbol_from_scope(method_name, scope, 0, 1, 0, 0);
+
+	SymbolTable* curr_scope = scope;
+	
+	// procura pelo symbol nas supers caso ele não esteja em nenhum escopo anexado ao atual
+	while (symbol == NULL)
+	{
+		if (curr_scope == NULL)
+		{
+			break;
+		}
+		
+		Symbol* class_owner = find_class_owner(curr_scope);
+
+		if (class_owner == NULL)
+		{
+			break;
+		}
+		
+		symbol = analyzer_find_symbol_from_scope(method_name, class_owner->symbol_class->class_scope, 0, 1, 0, 0);
+
+		if (class_owner->symbol_class->super == NULL)
+		{
+			break;
+		}
+
+		curr_scope = class_owner->symbol_class->super->symbol_class->class_scope;
+	}
+
+	return symbol;
+}
+
+static void handle_class_method(CodeGen* codegen, Symbol* symbol_method, AsmReturn* ret, AsmArea* area)
+{
+	char buff[64];
+	
+	// move o ponteiro da class pro 'R8' (usado como referencia pra instancia)
+	snprintf(buff, 64, "	mov	r8, %s", ret->result);
+	add_line_to_area(area, buff);
+
+	Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
+			
+	snprintf(buff, 64, "	call	.%s_fn_%s", object_symbol->symbol_class->identifier, symbol_method->symbol_function->identifier);
+	add_line_to_area(area, buff);
+}
+
+static void handle_class_vtable_method(AsmReturn* ret, Symbol* symbol_method, AsmArea* area)
+{
+	char buff[64];
+	
+	// move o ponteiro da class pro 'R8' (usado como referencia pra instancia)
+	snprintf(buff, 64, "	mov	r8, %s", ret->result);
+	add_line_to_area(area, buff);
+			
+	// move o ponteiro da vtable (offset 0 da class)
+	snprintf(buff, 64, "	mov	r9, qword [%s]", ret->result); 
+	add_line_to_area(area, buff);
+	
+	int offset = symbol_method->symbol_function->method_id * 8;
+
+	char* str = (offset == 0) ? "	mov	r9, qword [r9]" : "	mov	r9, qword [r9+%d]";
+
+	snprintf(buff, 64, str, offset);
+	add_line_to_area(area, buff);
+	
+	add_line_to_area(area, "	call	r9");
+}
+
 AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int argument_flag)
 {
 	char buff[64];
@@ -214,22 +285,22 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		generate_method_args(codegen, constructor_args, area, &stack_size);
 	}
 
-	if (callee->type != NODE_IDENTIFIER && callee->type != NODE_SUPER) // mover a instance pra algum registrador nao utilizado pra methods de classes.
+	// mover a instance pra algum registrador nao utilizado pra methods de classes.
+	if (callee->type != NODE_IDENTIFIER && callee->type != NODE_SUPER)
 	{
 		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0);
+		Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
 		
-		// Move o ponteiro da class pro 'R8' (usado como referencia pra instancia)
-		snprintf(buff, 64, "	mov	r8, %s", ret->result);
-		add_line_to_area(area, buff);
-		
-		// Move o ponteiro da vtable (offset 0 da class)
-		snprintf(buff, 64, "	mov	r9, qword [%s]", ret->result); 
-		add_line_to_area(area, buff);
+		symbol_method = find_class_method(object_symbol->symbol_class->class_scope, method_name);
 
-		snprintf(buff, 64, "	mov	r9, qword [r9+%d]", symbol_method->symbol_function->method_id * 8);
-		add_line_to_area(area, buff);
-
-		add_line_to_area(area, "	call	r9");
+		if (symbol_method->symbol_function->is_virtual || symbol_method->symbol_function->is_override)
+		{
+			handle_class_vtable_method(ret, symbol_method, area);
+		}
+		else
+		{
+			handle_class_method(codegen, symbol_method, ret, area);
+		}
 	}
 	else if (callee->type == NODE_IDENTIFIER)
 	{
@@ -240,7 +311,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	{
 		AsmReturn* ret = generate_expression(codegen, callee, area, 0, 0, 0);
 
-		// Ponteiro da instancia ja ta no 'R8'
+		// ponteiro da instancia ja ta no 'R8'
 		// snprintf(buff, 64, "	mov	r8, %s", ret->result);
 		// add_line_to_area(area, buff);
 

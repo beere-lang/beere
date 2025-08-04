@@ -4,6 +4,10 @@ class Parent {
     public Parent(n1: int) {
         this.field_2 = n1
     }
+
+    public virtual fn test() {
+
+    }
 }
 
 class Child extends Parent {
@@ -15,9 +19,15 @@ class Child extends Parent {
         this.n1 = n1
         this.field_2 = 20
     }
+
+    public override fn test() {
+
+    }
 }
 
 fn main() {
     let test: Child = new Child(10)
     let j: int = Child.field_0
+
+    test.test()
 }
