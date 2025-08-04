@@ -6,7 +6,8 @@
  05 - Adicionar o sistema de IDs em classes (pra polimorfismo seguro em run-time).
  06 - Adicionar o sistema de cast em pointers e classes
  07 - Refatorar o parser e analyzer
- 08 - Melhorar o sistema de logs (trabalhoso pkrl kkkk)
- 09 - Adicionar compiler flags de verdade
+ 08 - Dar free em tudo (atualmente ta dando memory leak tenebroso KKKKKKKKKKKK)
+ 09 - Melhorar o sistema de logs (trabalhoso pkrl kkkk)
+ 10 - Adicionar compiler flags de verdade
 
 * Notes:
