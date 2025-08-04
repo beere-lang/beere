@@ -83,6 +83,9 @@ beerec [entry-point-file] [dot-mod-file]
 
 > ⚠️ Beere is under active development.
 
+## Progress
+> Check the `beerec/roadmap/TODO-LIST.md` file to more info.
+
 ## Development
 > Created only by jerious1337.
 
