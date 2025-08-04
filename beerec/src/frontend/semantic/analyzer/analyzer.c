@@ -1247,7 +1247,7 @@ static void analyzer_check_directly(int direct, Node* member, NodeType type)
 	}
 }
 
-static Type* handle_function(Symbol* class_symbol, char* field_name, Module* module, SymbolTable* scope, int directly, NodeList* args)
+static Type* handle_function(Symbol* class_symbol, char* field_name, Node* node, Module* module, SymbolTable* scope, int directly, NodeList* args)
 {
 	Node* member = analyzer_get_function_from_class(class_symbol, field_name);
 		
@@ -1262,6 +1262,15 @@ static Type* handle_function(Symbol* class_symbol, char* field_name, Module* mod
 		{
 			printf("[Analyzer] [Debug] Trying to access a private function: \"%s\"...\n", field_name);
 			return NULL;
+		}
+
+		if (directly)
+		{
+			Node* direct_node = malloc(sizeof(Node));
+			direct_node->type = NODE_DIRECT_CLASS;
+			direct_node->direct_class_access_node.direct_class_access.class_symbol = class_symbol;
+
+			node->member_access_node.member_access.object = direct_node;
 		}
 
 		analyzer_check_directly(directly, member, NODE_FUNCTION);
@@ -1486,7 +1495,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 
 	if (node->member_access_node.member_access.is_function)
 	{
-		return handle_function(class_symbol, field_name, module, scope, directly, args);
+		return handle_function(class_symbol, field_name, node, module, scope, directly, args);
 	}
 
 	Node* member = analyzer_get_member_from_class(class_symbol, field_name);

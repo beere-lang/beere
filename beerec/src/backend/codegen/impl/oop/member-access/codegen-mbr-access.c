@@ -65,27 +65,33 @@ char* get_object_class_name(CodeGen* codegen, Node* expr)
 	return class_name;
 }
 
-Symbol* find_field_symbol_from_class(CodeGen* codegen, Symbol* object, char* field_name)
+Symbol* find_field_symbol_from_class(CodeGen* codegen, Symbol* object, char* field_name, char** class_owner_ref)
 {
+	if (object == NULL)
+	{
+		return NULL;
+	}
+	
 	SymbolTable* scope = object->symbol_class->class_scope;
 
 	for (int i = 0; i < object->symbol_class->field_count; i++)
 	{
 		Node* field = object->symbol_class->fields[i];
-		char* field_name = field->declare_node.declare.identifier;
+		char* field_n = field->declare_node.declare.identifier;
 
-		if (strcmp(field_name, field_name) == 0)
+		if (strcmp(field_name, field_n) == 0)
 		{
 			Symbol* field_symbol = analyzer_find_symbol_from_scope(field_name, scope, 1, 0, 0, 0);
 			
+			*class_owner_ref = strdup(scope->owner_statement->symbol_class->identifier);
 			return field_symbol;
 		}
 	}
 
-	return NULL;
+	return find_field_symbol_from_class(codegen, object->symbol_class->super, field_name, class_owner_ref);
 }
 
-AsmReturn* handle_direct_class_access(CodeGen* codegen, Node* class_access, AsmArea* area, int force_reg, int prefer_second, Type* type, char* member_name)
+AsmReturn* handle_direct_class_access(CodeGen* codegen, Node* class_access, AsmArea* area, char* class_name, int force_reg, int prefer_second, Type* type, char* member_name)
 {
 	Symbol* obj_symbol = class_access->direct_class_access_node.direct_class_access.class_symbol;
 	char buff[64];
@@ -96,7 +102,7 @@ AsmReturn* handle_direct_class_access(CodeGen* codegen, Node* class_access, AsmA
 		char* reg = correct_register(type->type, prefer_second);
 		char* access_size = field_get_reference_access_size(codegen, type);
 			
-		snprintf(buff, 64, "	%s	%s [rip+%s_static_%s], %s", mov_op, access_size, obj_symbol->symbol_class->identifier, member_name, reg);
+		snprintf(buff, 64, "	%s	%s [rip+%s_static_%s], %s", mov_op, access_size, class_name, member_name, reg);
 		add_line_to_area(area, buff);
 			
 		AsmReturn* ret = create_asm_return(reg, type);
@@ -109,7 +115,7 @@ AsmReturn* handle_direct_class_access(CodeGen* codegen, Node* class_access, AsmA
 		char* mov_op = mov_opcode(type->type);
 		char* access_size = field_get_reference_access_size(codegen, type);
 
-		snprintf(buff, 64, "%s [rip+%s_static_%s]", access_size, obj_symbol->symbol_class->identifier, member_name);
+		snprintf(buff, 64, "%s [rip+%s_static_%s]", access_size, class_name, member_name);
 		AsmReturn* ret = create_asm_return(buff, type);
 			
 		return ret;
@@ -128,7 +134,9 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	char* class_name = get_object_class_name(codegen, expr);
 	Symbol* obj_symbol = analyzer_find_symbol_from_scope(class_name, codegen->scope, 0, 0, 1, 0);
 
-	Symbol* field_symbol = find_field_symbol_from_class(codegen, obj_symbol, member_name);
+	char* class_owner_ref = NULL;
+	
+	Symbol* field_symbol = find_field_symbol_from_class(codegen, obj_symbol, member_name, &class_owner_ref);
 	
 	ClassOffsets* offsets = find_class_offsets(class_offsets_table, class_name);
 
@@ -138,7 +146,7 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 
 	if (expr->type == NODE_DIRECT_CLASS)
 	{
-		return handle_direct_class_access(codegen, expr, area, force_reg, prefer_second, type, member_name);
+		return handle_direct_class_access(codegen, expr, area, class_owner_ref, force_reg, prefer_second, type, member_name);
 	}
 	
 	if (force_reg)

@@ -1,27 +1,23 @@
 class Parent {
     public field_2: int = 10
+    public static field_0: int = 1
 
     public Parent(n1: int) {
         this.field_2 = n1
     }
 
-    public virtual fn test() {
+    public static fn test() {
 
     }
 }
 
 class Child extends Parent {
     public n1: int = 0
-    public static field_0: int = 1
 
     public Child(n1: int) {
         super(n1)
         this.n1 = n1
         this.field_2 = 20
-    }
-
-    public override fn test() {
-
     }
 }
 
@@ -29,5 +25,5 @@ fn main() {
     let test: Child = new Child(10)
     let j: int = Child.field_0
 
-    test.test()
+    Child.test()
 }

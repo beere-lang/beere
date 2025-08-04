@@ -174,11 +174,17 @@ char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 	}
 }
 
-static Symbol* find_class_method(SymbolTable* scope, char* method_name)
+static Symbol* find_class_method(SymbolTable* scope, char* method_name, char** class_name_ref)
 {
 	Symbol* symbol = analyzer_find_symbol_from_scope(method_name, scope, 0, 1, 0, 0);
-
+	
+	if (scope->scope_kind == SYMBOL_CLASS && symbol != NULL)
+	{
+		*class_name_ref = strdup(scope->owner_statement->symbol_class->identifier);
+	}
+	
 	SymbolTable* curr_scope = scope;
+	Symbol* last_class = NULL;
 	
 	// procura pelo symbol nas supers caso ele não esteja em nenhum escopo anexado ao atual
 	while (symbol == NULL)
@@ -196,6 +202,7 @@ static Symbol* find_class_method(SymbolTable* scope, char* method_name)
 		}
 		
 		symbol = analyzer_find_symbol_from_scope(method_name, class_owner->symbol_class->class_scope, 0, 1, 0, 0);
+		last_class = class_owner;
 
 		if (class_owner->symbol_class->super == NULL)
 		{
@@ -205,10 +212,15 @@ static Symbol* find_class_method(SymbolTable* scope, char* method_name)
 		curr_scope = class_owner->symbol_class->super->symbol_class->class_scope;
 	}
 
+	if (curr_scope->scope_kind == SYMBOL_CLASS && *class_name_ref == NULL)
+	{
+		*class_name_ref = strdup(last_class->symbol_class->identifier);
+	}
+
 	return symbol;
 }
 
-static void handle_class_method(CodeGen* codegen, Symbol* symbol_method, AsmReturn* ret, AsmArea* area)
+static void handle_class_method(CodeGen* codegen, char* class_name, Symbol* symbol_method, AsmReturn* ret, AsmArea* area)
 {
 	char buff[64];
 	
@@ -218,7 +230,7 @@ static void handle_class_method(CodeGen* codegen, Symbol* symbol_method, AsmRetu
 
 	Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
 			
-	snprintf(buff, 64, "	call	.%s_fn_%s", object_symbol->symbol_class->identifier, symbol_method->symbol_function->identifier);
+	snprintf(buff, 64, "	call	.%s_fn_%s", class_name, symbol_method->symbol_function->identifier);
 	add_line_to_area(area, buff);
 }
 
@@ -291,7 +303,8 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0);
 		Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
 		
-		symbol_method = find_class_method(object_symbol->symbol_class->class_scope, method_name);
+		char* class_name_ref = NULL;
+		symbol_method = find_class_method(object_symbol->symbol_class->class_scope, method_name, &class_name_ref);
 
 		if (symbol_method->symbol_function->is_virtual || symbol_method->symbol_function->is_override)
 		{
@@ -299,7 +312,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		}
 		else
 		{
-			handle_class_method(codegen, symbol_method, ret, area);
+			handle_class_method(codegen, class_name_ref, symbol_method, ret, area);
 		}
 	}
 	else if (callee->type == NODE_IDENTIFIER)
