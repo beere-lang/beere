@@ -44,6 +44,13 @@ AsmReturn* generate_this(CodeGen* codegen)
 	return create_asm_return("r8", type);
 }
 
+AsmReturn* generate_class_direct_access(CodeGen* codegen, Node* node)
+{
+	Symbol* symbol = node->direct_class_access_node.direct_class_access.class_symbol;
+
+	return create_asm_return("", create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier));
+}
+
 char* get_object_class_name(CodeGen* codegen, Node* expr)
 {
 	Type* class_type = analyzer_return_type_of_expression(NULL, expr, codegen->scope, NULL, 0, NULL);
@@ -78,6 +85,37 @@ Symbol* find_field_symbol_from_class(CodeGen* codegen, Symbol* object, char* fie
 	return NULL;
 }
 
+AsmReturn* handle_direct_class_access(CodeGen* codegen, Node* class_access, AsmArea* area, int force_reg, int prefer_second, Type* type, char* member_name)
+{
+	Symbol* obj_symbol = class_access->direct_class_access_node.direct_class_access.class_symbol;
+	char buff[64];
+	
+	if (force_reg)
+	{
+		char* mov_op = mov_opcode(type->type);
+		char* reg = correct_register(type->type, prefer_second);
+		char* access_size = field_get_reference_access_size(codegen, type);
+			
+		snprintf(buff, 64, "	%s	%s [rip+%s_static_%s], %s", mov_op, access_size, obj_symbol->symbol_class->identifier, member_name, reg);
+		add_line_to_area(area, buff);
+			
+		AsmReturn* ret = create_asm_return(reg, type);
+		ret->is_reg = 1;
+
+		return ret;
+	}
+	else
+	{
+		char* mov_op = mov_opcode(type->type);
+		char* access_size = field_get_reference_access_size(codegen, type);
+
+		snprintf(buff, 64, "%s [rip+%s_static_%s]", access_size, obj_symbol->symbol_class->identifier, member_name);
+		AsmReturn* ret = create_asm_return(buff, type);
+			
+		return ret;
+	}
+}
+
 AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
 {
 	char buff[64];
@@ -94,10 +132,14 @@ AsmReturn* generate_member_access(CodeGen* codegen, Node* node, AsmArea* area, i
 	
 	ClassOffsets* offsets = find_class_offsets(class_offsets_table, class_name);
 
-	// TODO: Adicionar suporte a fields static...
 	int offset = find_field_offset(offsets, member_name);
 
 	Type* type = field_symbol->symbol_variable->type;
+
+	if (expr->type == NODE_DIRECT_CLASS)
+	{
+		return handle_direct_class_access(codegen, expr, area, force_reg, prefer_second, type, member_name);
+	}
 	
 	if (force_reg)
 	{

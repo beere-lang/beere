@@ -69,6 +69,11 @@ AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int 
 			return generate_this(codegen);
 		}
 
+		case NODE_DIRECT_CLASS:
+		{
+			return generate_class_direct_access(codegen, node);
+		}
+
 		default:
 		{
 			printf("[Codegen Literal] Invalid node while generating expression: %d...\n", node->type);

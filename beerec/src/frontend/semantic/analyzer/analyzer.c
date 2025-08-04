@@ -684,6 +684,7 @@ static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, 
 		
 	symbol->symbol_variable->is_global = 0;
 	symbol->symbol_variable->is_static = 0;
+	symbol->symbol_variable->is_class_global = 0;
 		
 	_analyzer_add_symbol_to_scope(symbol, scope);
 
@@ -1220,13 +1221,13 @@ static void analyzer_check_directly(int direct, Node* member, NodeType type)
 	{
 		if (direct && !member->declare_node.declare.is_static)
 		{
-			printf("[Analyzer] [Debug] Can't access a non static field directly...\n");
+			printf("[Analyzer] [Debug] Can't access a non static field directly: %s...\n", member->declare_node.declare.identifier);
 			exit(1);
 		}
 
 		if (!direct && member->declare_node.declare.is_static)
 		{
-			printf("[Analyzer] [Debug] Can't access a static field from a instance...\n");
+			printf("[Analyzer] [Debug] Can't access a static field from a instance: %s...\n", member->declare_node.declare.identifier);
 			exit(1);
 		}
 	}
@@ -1478,6 +1479,11 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		return NULL;
 	}
 
+	if (node->member_access_node.member_access.object->type == NODE_DIRECT_CLASS)
+	{
+		directly = 1;
+	}
+
 	if (node->member_access_node.member_access.is_function)
 	{
 		return handle_function(class_symbol, field_name, module, scope, directly, args);
@@ -1493,6 +1499,15 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	if (member->type == NODE_DECLARATION)
 	{
 		analyzer_check_directly(directly, member, NODE_DECLARATION);
+
+		if (directly)
+		{
+			Node* direct_node = malloc(sizeof(Node));
+			direct_node->type = NODE_DIRECT_CLASS;
+			direct_node->direct_class_access_node.direct_class_access.class_symbol = class_symbol;
+
+			node->member_access_node.member_access.object = direct_node;
+		}
 		
 		if (member->declare_node.declare.visibility != VISIBILITY_PUBLIC)
 		{
@@ -1934,7 +1949,7 @@ static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int me
 	if (symbol->type == SYMBOL_CLASS)
 	{	
 		printf("[Analyzer] [Debug] Accessing directly: \"%s\"...\n", node->variable_node.variable.identifier);
-			
+
 		*direct = 1;
 
 		return create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
@@ -2026,6 +2041,11 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 
 	switch (expression->type) 
 	{
+		case NODE_DIRECT_CLASS:
+		{
+			return create_type(TYPE_CLASS, (char*) expression->direct_class_access_node.direct_class_access.class_symbol->symbol_class->identifier);
+		}
+		
 		case NODE_OPERATION:
 		{
 			return analyzer_get_operation_type(module, expression, scope);
@@ -2302,9 +2322,7 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 	while (next != NULL)
 	{
 		int size = analyzer_get_type_size(next->param_node.param.argument_type, scope);
-
-		*offset += align_offset(size);
-
+		
 		if (analyzer_find_symbol_only_from_scope(next->param_node.param.identifier, scope, 0, 0, 0) != NULL)
 		{
 			printf("[Analyzer] [Debug] Parameter with name: \"%s\" already declared...\n", next->param_node.param.identifier);
@@ -2312,6 +2330,8 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 		}
 
 		Symbol* symbol = analyzer_add_symbol_to_scope(module, next, scope, offset, 0);
+
+		*offset += align_offset(size);
 
 		next = next->next;
 		count++;

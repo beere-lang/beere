@@ -8,6 +8,7 @@ class Parent {
 
 class Child extends Parent {
     public n1: int = 0
+    public static field_0: int = 1
 
     public Child(n1: int) {
         super(n1)
@@ -17,5 +18,6 @@ class Child extends Parent {
 }
 
 fn main() {
-    let child: Child = new Child(10)
+    let test: Child = new Child(10)
+    let j: int = Child.field_0
 }
