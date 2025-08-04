@@ -86,6 +86,9 @@ beerec [entry-point-file] [dot-mod-file]
 ## Progress
 > Check the `beerec/roadmap/TODO-LIST.md` file to more info.
 
+## Discord
+https://discord.gg/2HvEyHXvhb
+
 ## Development
 > Created only by jerious1337.
 
