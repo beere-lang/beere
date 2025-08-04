@@ -19,6 +19,7 @@ AsmArea* data_section = NULL;
 AsmArea* rodata_section = NULL;
 AsmArea* bss_section = NULL;
 ExternTable* extern_table = NULL;
+ClassOffsetsTable* class_offsets_table = NULL;
 
 AsmReturn* create_asm_return(char* value, Type* type)
 {
@@ -240,11 +241,18 @@ static void setup_extern_table()
 	extern_table = table;
 }
 
+static void setup_class_offsets_table()
+{
+	class_offsets_table = create_class_offsets_table();
+}
+
 void setup_codegen(Module* module, CodeGen* codegen)
 {
 	codegen->module = module;
 	codegen->scope = module->global_scope;
+	codegen->inner_class = 0;
 
+	setup_class_offsets_table();
 	setup_bss_section();
 	setup_data_section();
 	setup_rodata_section();

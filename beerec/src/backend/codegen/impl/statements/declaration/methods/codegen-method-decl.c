@@ -11,9 +11,10 @@ void generate_method_setup(AsmArea* area, Symbol* symbol, int is_class, char* pr
 	add_line_to_area(area, "	push	rbp");
 	add_line_to_area(area, "	mov	rbp, rsp");
 
-	if (symbol->symbol_function->total_offset != 0)
+	if (symbol->symbol_function->total_offset + 8 != 0)
 	{
-		snprintf(buff, 64, "	sub	rsp, %d", symbol->symbol_function->total_offset * -1);
+		// +8 por causa dos 8 bytes do backup do rbp
+		snprintf(buff, 64, "	sub	rsp, %d", (symbol->symbol_function->total_offset + 8) * -1);
 		add_line_to_area(area, buff);
 	}
 }

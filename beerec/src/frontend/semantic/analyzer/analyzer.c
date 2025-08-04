@@ -29,7 +29,7 @@ static Node* _analyzer_create_cast(Node** node, Type* preferred);
 static void analyzer_create_cast(Node** node, Type* preferred);
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_is_inside_method(SymbolTable* scope);
-static int analyzer_get_list_size(Node* list_head);
+int analyzer_get_list_size(Node* list_head);
 
 int class_count;
 
@@ -514,7 +514,7 @@ int analyzer_get_type_size(Type* type, SymbolTable* scope)
 
 		case TYPE_CLASS:
 		{
-			return analyzer_get_class_size(type, scope);
+			return 8; //analyzer_get_class_size(type, scope);
 		}
 
 		default:
@@ -606,12 +606,13 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 		exit(1);
 	}
 
-	symbol->symbol_variable->is_global = (scope->scope_kind == GLOBAL_SCOPE || scope->scope_kind == SYMBOL_CLASS);
+	symbol->symbol_variable->is_global = (scope->scope_kind == GLOBAL_SCOPE);
 
 	symbol->symbol_variable->type = node->declare_node.declare.var_type;
 	symbol->symbol_variable->identifier = node->declare_node.declare.identifier;
 	symbol->symbol_variable->is_const = node->declare_node.declare.is_const;
 	symbol->symbol_variable->is_static = node->declare_node.declare.is_static;
+	symbol->symbol_variable->is_class_global = 0;
 	
 	symbol->is_export = node->declare_node.declare.is_export;
 
@@ -631,10 +632,8 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 		printf("[Analyzer] [Debug] Added a local variable with offset: %d...\n", *offset);
 
 		symbol->symbol_variable->offset = *offset;
-
-		printf("%s, Offset: %d\n", scope->owner_statement->symbol_class->identifier, *offset);
 	}
-	else if (offset == NULL && !symbol->symbol_variable->is_global)
+	else if (offset == NULL && !symbol->symbol_variable->is_global && (scope->scope_kind != SYMBOL_CLASS))
 	{
 		printf("[Analyzer] [Debug] Found a local variable with a invalid offset...\n");
 		exit(1);
@@ -685,6 +684,7 @@ static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, 
 		
 	symbol->symbol_variable->is_global = 0;
 	symbol->symbol_variable->is_static = 0;
+	symbol->symbol_variable->is_class_global = 0;
 		
 	_analyzer_add_symbol_to_scope(symbol, scope);
 
@@ -864,29 +864,21 @@ static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTa
 		case NODE_DECLARATION:
 		{
 			return analyzer_create_symbol(module, SYMBOL_VARIABLE, node, scope, 0, offset, prototype);
-
-			break;
 		}
 
 		case NODE_FUNCTION:
 		{
 			return analyzer_create_symbol(module, SYMBOL_FUNCTION, node, scope, 0, offset, prototype);
-			
-			break;
 		}
 
 		case NODE_PARAMETER:
 		{
 			return analyzer_create_symbol(module, SYMBOL_VARIABLE, node, scope, 1, offset, prototype);
-			
-			break;
 		}
 
 		case NODE_IMPORT:
 		{
 			return analyzer_create_symbol(module, SYMBOL_MODULE, node, scope, 0, offset, prototype);
-			
-			break;
 		}
 
 		default:
@@ -905,9 +897,7 @@ Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* sco
 	{
 		return NULL;
 	}
-
-	int i = 0;
-
+	
 	for (int i = 0; i < scope->count; i++) 
 	{
 		Symbol* next = scope->symbols[i];
@@ -1191,7 +1181,7 @@ static SymbolTable* analyzer_get_class_scope(SymbolTable* scope)
 		return scope;
 	}
 
-	return scope->parent;
+	return analyzer_get_class_scope(scope->parent);
 }
 
 static Type* analyzer_handle_prototype(Type* object_type, char* function_name, PrototypeMethod** ref)
@@ -1231,13 +1221,13 @@ static void analyzer_check_directly(int direct, Node* member, NodeType type)
 	{
 		if (direct && !member->declare_node.declare.is_static)
 		{
-			printf("[Analyzer] [Debug] Can't access a non static field directly...\n");
+			printf("[Analyzer] [Debug] Can't access a non static field directly: %s...\n", member->declare_node.declare.identifier);
 			exit(1);
 		}
 
 		if (!direct && member->declare_node.declare.is_static)
 		{
-			printf("[Analyzer] [Debug] Can't access a static field from a instance...\n");
+			printf("[Analyzer] [Debug] Can't access a static field from a instance: %s...\n", member->declare_node.declare.identifier);
 			exit(1);
 		}
 	}
@@ -1257,7 +1247,7 @@ static void analyzer_check_directly(int direct, Node* member, NodeType type)
 	}
 }
 
-static Type* handle_function(Symbol* class_symbol, char* field_name, Module* module, SymbolTable* scope, int directly, NodeList* args)
+static Type* handle_function(Symbol* class_symbol, char* field_name, Node* node, Module* module, SymbolTable* scope, int directly, NodeList* args)
 {
 	Node* member = analyzer_get_function_from_class(class_symbol, field_name);
 		
@@ -1272,6 +1262,15 @@ static Type* handle_function(Symbol* class_symbol, char* field_name, Module* mod
 		{
 			printf("[Analyzer] [Debug] Trying to access a private function: \"%s\"...\n", field_name);
 			return NULL;
+		}
+
+		if (directly)
+		{
+			Node* direct_node = malloc(sizeof(Node));
+			direct_node->type = NODE_DIRECT_CLASS;
+			direct_node->direct_class_access_node.direct_class_access.class_symbol = class_symbol;
+
+			node->member_access_node.member_access.object = direct_node;
 		}
 
 		analyzer_check_directly(directly, member, NODE_FUNCTION);
@@ -1489,9 +1488,14 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		return NULL;
 	}
 
+	if (node->member_access_node.member_access.object->type == NODE_DIRECT_CLASS)
+	{
+		directly = 1;
+	}
+
 	if (node->member_access_node.member_access.is_function)
 	{
-		return handle_function(class_symbol, field_name, module, scope, directly, args);
+		return handle_function(class_symbol, field_name, node, module, scope, directly, args);
 	}
 
 	Node* member = analyzer_get_member_from_class(class_symbol, field_name);
@@ -1504,6 +1508,15 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	if (member->type == NODE_DECLARATION)
 	{
 		analyzer_check_directly(directly, member, NODE_DECLARATION);
+
+		if (directly)
+		{
+			Node* direct_node = malloc(sizeof(Node));
+			direct_node->type = NODE_DIRECT_CLASS;
+			direct_node->direct_class_access_node.direct_class_access.class_symbol = class_symbol;
+
+			node->member_access_node.member_access.object = direct_node;
+		}
 		
 		if (member->declare_node.declare.visibility != VISIBILITY_PUBLIC)
 		{
@@ -1856,21 +1869,28 @@ static Type* analyzer_get_this_type(Module* module, Node* node, SymbolTable* sco
 {
 	analyzer_analyze_node(module, node, scope, NULL);
 			
-	Type* type = create_type(TYPE_PTR, NULL);
+	// cast fudido (só pra não dar warning)
+	char* identifier = (char*) (analyzer_get_class_scope(scope)->owner_statement->symbol_class->identifier);
+	Type* type = create_type(TYPE_CLASS, identifier);
 
-	/**
-	 * Cast unsafe, tomar cuidado. em caso de erros: mudar o tipo pra char* no class_name
-	 */
-	type->base = create_type(TYPE_CLASS, (char*) analyzer_get_class_scope(scope)->owner_statement->symbol_class->identifier);
+	return type;
+}
+
+static Type* analyzer_super_type(Module* module, Node* node, SymbolTable* scope)
+{
+	analyzer_analyze_node(module, node, scope, NULL);
 			
+	// cast fudido (só pra não dar warning)
+	char* identifier = (char*) (analyzer_get_class_scope(scope)->owner_statement->symbol_class->super->symbol_class->identifier);
+	Type* type = create_type(TYPE_CLASS, identifier);
+
 	return type;
 }
 
 static Type* analyzer_get_create_instance_type(Node* node, SymbolTable* scope)
 {
-	Type* type = create_type(TYPE_PTR, NULL);
-	type->base = create_type(TYPE_CLASS, node->create_instance_node.create_instance.class_name);
-			
+	Type* type = create_type(TYPE_CLASS, node->create_instance_node.create_instance.class_name);
+
 	return type;
 }
 
@@ -1884,10 +1904,51 @@ static Type* analyzer_get_adress_of_type(Module* module, Node* node, SymbolTable
 	return ptr;
 }
 
+static Symbol* get_class_owner(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return NULL;
+	}
+
+	if (scope->scope_kind == SYMBOL_CLASS)
+	{
+		return scope->owner_statement;
+	}
+
+	return get_class_owner(scope->parent);
+}
+
 static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int member_access, int* direct)
 {
 	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 1, 1);
 
+	SymbolTable* curr_scope = scope;
+	
+	while (symbol == NULL)
+	{
+		if (curr_scope == NULL)
+		{
+			break;
+		}
+		
+		Symbol* class_owner = get_class_owner(curr_scope);
+
+		if (class_owner == NULL)
+		{
+			break;
+		}
+		
+		symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, class_owner->symbol_class->class_scope, 1, 0, 0, 0);
+
+		if (class_owner->symbol_class->super == NULL)
+		{
+			break;
+		}
+
+		curr_scope = class_owner->symbol_class->super->symbol_class->class_scope;
+	}
+	
 	if (symbol == NULL)
 	{
 		printf("[Analyzer] [Debug] Variable not declared: %s...\n", node->variable_node.variable.identifier);
@@ -1897,7 +1958,7 @@ static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int me
 	if (symbol->type == SYMBOL_CLASS)
 	{	
 		printf("[Analyzer] [Debug] Accessing directly: \"%s\"...\n", node->variable_node.variable.identifier);
-			
+
 		*direct = 1;
 
 		return create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
@@ -1975,7 +2036,7 @@ static Type* analyzer_get_super_type(Node* node, SymbolTable* scope)
 		exit(1);
 	}
 
-	// Cast podre, cuidado.
+	// cast podre, só pra não dar warning
 	return create_type(TYPE_CLASS, (char*) super->symbol_class->identifier);
 }
 
@@ -1989,6 +2050,11 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 
 	switch (expression->type) 
 	{
+		case NODE_DIRECT_CLASS:
+		{
+			return create_type(TYPE_CLASS, (char*) expression->direct_class_access_node.direct_class_access.class_symbol->symbol_class->identifier);
+		}
+		
 		case NODE_OPERATION:
 		{
 			return analyzer_get_operation_type(module, expression, scope);
@@ -2064,6 +2130,11 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 			return analyzer_get_parameter_type(expression, scope);
 		}
 
+		case NODE_SUPER:
+		{
+			return analyzer_get_super_type(expression, scope);
+		}
+
 		case NODE_ARRAY_LITERAL:
 		{
 			return expression->array_literal_node.array_literal.array_type;
@@ -2088,9 +2159,6 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 
 	switch (operation->op) 
 	{
-		/**
-		 * Operadores logicos.
-		 */
 		case TOKEN_OPERATOR_OR: // ||
 		case TOKEN_OPERATOR_AND: // &&
 		{
@@ -2102,9 +2170,6 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 			break;
 		}
 		
-		/**
-		 * Operadores aritmeticos.
-		 */
 		case TOKEN_OPERATOR_DIVIDED_EQUALS: // /=
 		case TOKEN_OPERATOR_TIMES_EQUALS: // *=
 		case TOKEN_OPERATOR_MINUS_EQUALS: // -=
@@ -2122,9 +2187,6 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 			}
 		}
 		
-		/**
-		 * Operadores comparativos.
-		 */
 		case TOKEN_OPERATOR_LESS: // <
 		case TOKEN_OPERATOR_LESS_EQUALS: // <=
 		case TOKEN_OPERATOR_GREATER_EQUALS: // >=
@@ -2219,6 +2281,8 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 
 	Symbol* owner_function = analyzer_get_owner_function(scope);
 
+	Symbol* symbol = analyzer_add_symbol_to_scope(module, node, scope, offset, 0);
+
 	if (!node->declare_node.declare.is_static && owner_function != NULL)
 	{
 		printf("[Analyzer] [Debug] Local variable \"%s\", adding offset...\n", node->declare_node.declare.identifier);
@@ -2226,11 +2290,11 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
 		size = align_offset(size);
 
+		symbol->symbol_variable->offset = *offset;
+
 		*offset -= size;
 	}
-
-	Symbol* symbol = analyzer_add_symbol_to_scope(module, node, scope, offset, 0);
-
+	
 	if (!node->declare_node.declare.is_static && scope->scope_kind == SYMBOL_CLASS)
 	{
 		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
@@ -2267,9 +2331,7 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 	while (next != NULL)
 	{
 		int size = analyzer_get_type_size(next->param_node.param.argument_type, scope);
-
-		*offset += align_offset(size);
-
+		
 		if (analyzer_find_symbol_only_from_scope(next->param_node.param.identifier, scope, 0, 0, 0) != NULL)
 		{
 			printf("[Analyzer] [Debug] Parameter with name: \"%s\" already declared...\n", next->param_node.param.identifier);
@@ -2277,6 +2339,8 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 		}
 
 		Symbol* symbol = analyzer_add_symbol_to_scope(module, next, scope, offset, 0);
+
+		*offset += align_offset(size);
 
 		next = next->next;
 		count++;
@@ -2300,8 +2364,6 @@ int analyzer_check_parameters(Node* params_head, Node* _params_head)
 	
 	while (i < function_size)
 	{
-		printf("I: %d\n", i);
-		
 		if (parameter == NULL || _parameter == NULL)
 		{
 			return 0;
@@ -2330,9 +2392,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 {
 	if (super_class == NULL)
 	{
-		/**
-		 * Caso a classe não extenda nenhuma e de override em uma função.
-		 */
 		if (symbol->symbol_function->is_override)
 		{
 			printf("[Analyzer] [Debug] Overriding a non declared function...\n");
@@ -2346,9 +2405,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 
 	if (member == NULL)
 	{
-		/**
-		 * Quando a função não existe na super class porém você da override.
-		 */
 		if (symbol->symbol_function->is_override)
 		{
 			printf("[Analyzer] [Debug] Overriding a non declared function...\n");
@@ -2369,9 +2425,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 	
 	if (member->function_node.function.is_virtual)
 	{
-		/**
-		 * Quando a função da super class é virtual porém você não da override.
-		 */
 		if (!symbol->symbol_function->is_override)
 		{
 			printf("[Analyzer] [Debug] Function needs the 'override' modifier...\n");
@@ -2381,10 +2434,6 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 		return;
 	}
 	
-	/**
-	 * Quando a função da super class existe, nao é virtual e você declara outra com mesmo nome.
-	 * - shadowing não é permitido e não tem como dar override em funções não virtuais.
-	 */
 	printf("[Analyzer] [Debug] Can't apply shadowing on functions...\n");
 	exit(1);
 }
@@ -2526,12 +2575,8 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 		exit(1);
 	}
 
-	// offset das variaveis locais.
-	// é pra stack, começa em 0 vai diminuíndo.
-	int local_offset = 0;
+	int local_offset = -8;
 
-	// offset dos parametros.
-	// começa com 8 e vai aumentando.
 	int param_offset = 8;
 
 	analyzer_analyze_type(node->function_node.function.return_type, scope);
@@ -2752,7 +2797,7 @@ static void analyzer_handle_return(Module* module, Node* node, SymbolTable* scop
 	}
 }
 
-static int analyzer_get_list_size(Node* list_head)
+int analyzer_get_list_size(Node* list_head)
 {
 	Node* next = list_head;
 
@@ -2965,9 +3010,8 @@ static void analyzer_handle_var_assign(Module* module, Node* node, SymbolTable* 
 		exit(1);
 	}
 
-	analyzer_analyze_node(module, expression, scope, NULL); // analyze function already checks if things exist...
 	analyzer_analyze_node(module, expression, scope, NULL);
-
+	
 	if (left->type == NODE_CAST)
 	{
 		printf("[Analyzer] [Debug] Can't assign value to a cast...\n");
@@ -3079,11 +3123,15 @@ static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_
 	{
 		if (next->type != NODE_FUNCTION_CALL)
 		{
+			next = next->next;
+
 			continue;
 		}
 
 		if (next->function_call_node.function_call.callee->type != NODE_SUPER)
 		{
+			next = next->next;
+
 			continue;
 		}
 
@@ -3185,18 +3233,19 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 	class_symbol->symbol_class->class_scope = class_scope;
 	class_symbol->symbol_class->constructor = NULL;
 	
+	analyzer_handle_class_vars(module, node, class_scope);
+	
+	analyzer_handle_class_funcs(module, node, class_scope);
+	
+	analyzer_handle_class_methods(class_symbol);
+
 	if (class_node->constructor != NULL)
 	{
 		analyzer_analyze_node(module, class_node->constructor, class_scope, NULL);
 		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function_node.function.identifier, class_scope, 0, 1, 0, 0);
 	}
 
-	analyzer_handle_class_vars(module, node, class_scope);
-	analyzer_handle_class_funcs(module, node, class_scope);
-
-	analyzer_handle_class_methods(class_symbol);
-
-	analyzer_check_super_constructor(module, class_symbol, scope);
+	analyzer_check_super_constructor(module, class_symbol, class_scope);
 }
 
 static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTable* scope)
@@ -3222,40 +3271,45 @@ static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTa
 
 static int analyzer_is_able_to_this(SymbolTable* scope)
 {
-	if (scope->scope_kind != SYMBOL_FUNCTION)
+	if (scope == NULL)
 	{
-		printf("[Analyzer] [Debug] Pointer 'this' needs to be used inside a function inside a class scope...\n");
-
 		return 0;
 	}
 
-	if (scope->parent == NULL)
+	if (scope->scope_kind == SYMBOL_CLASS)
 	{
-		printf("[Analyzer] [Debug] Pointer 'this' needs to be used inside a class scope...\n");
+		return 1;
+	}
 
+	return analyzer_is_able_to_this(scope->parent);
+}
+
+static int analyzer_is_able_to_super(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
 		return 0;
 	}
 
-	if (scope->parent->scope_kind != SYMBOL_CLASS)
+	if (scope->scope_kind == SYMBOL_CLASS)
 	{
-		printf("[Analyzer] [Debug] Pointer 'this' needs to be used inside a class scope...\n");
-
-		return 0;
+		return scope->owner_statement->symbol_class->super != NULL;
 	}
 
-	if (scope->owner_statement->symbol_function->is_static)
-	{
-		printf("[Analyzer] [Debug] Pointer 'this' can't be used inside a static function...\n");
-
-		return 0;
-	}
-
-	return 1;
+	return analyzer_is_able_to_this(scope->parent);
 }
 
 static void analyzer_handle_this(Node* node, SymbolTable* scope)
 {
 	if (!analyzer_is_able_to_this(scope))
+	{
+		exit(1);
+	}
+}
+
+static void analyzer_handle_super(Node* node, SymbolTable* scope)
+{
+	if (!analyzer_is_able_to_super(scope))
 	{
 		exit(1);
 	}
@@ -3320,7 +3374,7 @@ static void analyzer_check_array_literal_values(Module* module, Node* head, Type
 {
 	Node* current = head;
 	
-	// Pula o primeiro tipo (array), ja que a array necessita de varios daquele tipo.
+	// pula o primeiro tipo (array), ja que a array precisa de elementos daquele tipo.
 	Type* required = type->base;
 
 	int index = 0;
@@ -3426,7 +3480,7 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 
 	add_module_to_list(module, import_module);
 
-	// A variavel path é usado agora apenas, depois é copiada.
+	// a variavel path é usada só agora, depois é copiada.
 	free(path);
 }
 
@@ -3445,7 +3499,7 @@ static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scop
 	else
 	{
 		/**
-		 * TODO: Dar handle em imports de libs imbutidas.
+		 * TODO: dar handle em imports de libs imbutidas.
 		 */
 	}
 }
@@ -3618,6 +3672,13 @@ static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope
 		case NODE_ARRAY_LITERAL:
 		{
 			analyzer_handle_array_literal(module, node, scope);
+
+			return;
+		}
+
+		case NODE_SUPER:
+		{
+			analyzer_handle_super(node, scope);
 
 			return;
 		}

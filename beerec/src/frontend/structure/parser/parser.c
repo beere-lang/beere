@@ -1156,6 +1156,10 @@ static Node* parse_func(
 	
 	Node* statements = NULL;
 
+	// lazy fix, talvez melhor depois...
+	int backup = parser->inside_class;
+	parser->inside_class = 0;
+
 	if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACE) 
 	{
 		statements = parse_block(parser);
@@ -1169,6 +1173,8 @@ static Node* parse_func(
 		expect_tkn(parser, (TokenType[]){ TOKEN_CHAR_CLOSE_BRACE }, 1);
 		advance_tkn(parser);
 	}
+
+	parser->inside_class = backup;
 
 	skip_end_lines(parser);
 
@@ -2500,6 +2506,11 @@ void free_node(Node* node)
 		{
 			free_node(node->adress_of_node.adress_of.expression);
 			
+			break;
+		}
+
+		case NODE_DIRECT_CLASS:
+		{
 			break;
 		}
 

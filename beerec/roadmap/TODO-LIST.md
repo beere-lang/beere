@@ -1,19 +1,12 @@
 * Todo-List:
- - Refatorar o parser e analyzer
- - Terminar class instances 'new Instance()'.
- - Adicionar suporte a referencias de instancia da class (mais em notes 0)
- - Adicionar suporte a super e constructors no codegen
- - Adicionar o sistema de IDs em classes (pra polimorfismo seguro em run-time).
- - Adicionar cast implicito em argumentos em function calls.
- - Adicionar suporte a statics no member access
+ 01 - Não permitir variaveis static e globais ao mesmo tempo (não tem sentido)
+ 02 - Testar se o 'R8' está sendo overwrite durante a criação de instancias dentro de funções de instancias
+ 03 - Testar totalmente classes pra checar bugs, etc.
+ 04 - Adicionar cast implicito em argumentos em function calls.
+ 05 - Adicionar o sistema de IDs em classes (pra polimorfismo seguro em run-time).
+ 06 - Adicionar o sistema de cast em pointers e classes
+ 07 - Refatorar o parser e analyzer
+ 08 - Melhorar o sistema de logs (trabalhoso pkrl kkkk)
+ 09 - Adicionar compiler flags de verdade
 
 * Notes:
- - Note 0:
-   * Exemplo:
-	class Test {
-		private var: int = 0
-
-		public fn get_var(): int {
-			return var // usar a referencia da instancia + offset ([instance+offset])
-		}
-	}

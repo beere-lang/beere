@@ -34,6 +34,11 @@ char* field_get_reference_access_size(CodeGen* codegen, Type* type)
 			return strdup("qword");
 		}
 
+		case TYPE_CLASS:
+		{
+			return strdup("qword");
+		}
+
 		default:
 		{
 			printf("Codegen debug fail #204...\n");
@@ -67,6 +72,11 @@ char* field_get_mov_op_code_access(CodeGen* codegen, Type* type)
 		}
 
 		case TYPE_STRING:
+		{
+			return strdup("mov");
+		}
+
+		case TYPE_CLASS:
 		{
 			return strdup("mov");
 		}
@@ -201,12 +211,14 @@ void generate_field_declaration(CodeGen* codegen, Node* node, AsmArea* area)
 	if (node->declare_node.declare.is_static)
 	{
 		generate_static_field_declaration(codegen, node, area);
+		
 		return;
 	}
 
 	if (codegen->scope->scope_kind == GLOBAL_SCOPE)
 	{
 		generate_global_field_declaration(codegen, node, area);
+
 		return;
 	}
 

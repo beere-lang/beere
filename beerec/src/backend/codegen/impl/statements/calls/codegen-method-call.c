@@ -6,7 +6,10 @@
 #include "../../expressions/codegen-expr.h"
 #include "../../../../../frontend/semantic/analyzer/analyzer.h"
 
-static Symbol* find_method_owner(SymbolTable* scope)
+extern Type* create_type(VarType type, char* class_name);
+extern Symbol* find_class_owner(SymbolTable* scope);
+
+Symbol* find_method_owner(SymbolTable* scope)
 {
 	if (scope == NULL)
 	{
@@ -21,7 +24,7 @@ static Symbol* find_method_owner(SymbolTable* scope)
 	return find_method_owner(scope->parent);
 }
 
-static int get_method_stack_size(Symbol* method)
+int get_method_stack_size(Symbol* method)
 {
 	int stack_size = method->symbol_function->total_offset + 8; // +8 == 'push rbp' no setup da função
 	return stack_size;
@@ -48,7 +51,7 @@ static void handle_float_argument(CodeGen* codegen, AsmReturn* reg, AsmArea* are
 	add_line_to_area(area, buff);
 }
 
-static void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* stack_size_ref)
+void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* stack_size_ref)
 {
 	char buff[64];
 	Node* next = args->head;
@@ -171,6 +174,88 @@ char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 	}
 }
 
+static Symbol* find_class_method(SymbolTable* scope, char* method_name, char** class_name_ref)
+{
+	Symbol* symbol = analyzer_find_symbol_from_scope(method_name, scope, 0, 1, 0, 0);
+	
+	if (scope->scope_kind == SYMBOL_CLASS && symbol != NULL)
+	{
+		*class_name_ref = strdup(scope->owner_statement->symbol_class->identifier);
+	}
+	
+	SymbolTable* curr_scope = scope;
+	Symbol* last_class = NULL;
+	
+	// procura pelo symbol nas supers caso ele não esteja em nenhum escopo anexado ao atual
+	while (symbol == NULL)
+	{
+		if (curr_scope == NULL)
+		{
+			break;
+		}
+		
+		Symbol* class_owner = find_class_owner(curr_scope);
+
+		if (class_owner == NULL)
+		{
+			break;
+		}
+		
+		symbol = analyzer_find_symbol_from_scope(method_name, class_owner->symbol_class->class_scope, 0, 1, 0, 0);
+		last_class = class_owner;
+
+		if (class_owner->symbol_class->super == NULL)
+		{
+			break;
+		}
+
+		curr_scope = class_owner->symbol_class->super->symbol_class->class_scope;
+	}
+
+	if (curr_scope->scope_kind == SYMBOL_CLASS && *class_name_ref == NULL)
+	{
+		*class_name_ref = strdup(last_class->symbol_class->identifier);
+	}
+
+	return symbol;
+}
+
+static void handle_class_method(CodeGen* codegen, char* class_name, Symbol* symbol_method, AsmReturn* ret, AsmArea* area)
+{
+	char buff[64];
+	
+	// move o ponteiro da class pro 'R8' (usado como referencia pra instancia)
+	snprintf(buff, 64, "	mov	r8, %s", ret->result);
+	add_line_to_area(area, buff);
+
+	Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
+			
+	snprintf(buff, 64, "	call	.%s_fn_%s", class_name, symbol_method->symbol_function->identifier);
+	add_line_to_area(area, buff);
+}
+
+static void handle_class_vtable_method(AsmReturn* ret, Symbol* symbol_method, AsmArea* area)
+{
+	char buff[64];
+	
+	// move o ponteiro da class pro 'R8' (usado como referencia pra instancia)
+	snprintf(buff, 64, "	mov	r8, %s", ret->result);
+	add_line_to_area(area, buff);
+			
+	// move o ponteiro da vtable (offset 0 da class)
+	snprintf(buff, 64, "	mov	r9, qword [%s]", ret->result); 
+	add_line_to_area(area, buff);
+	
+	int offset = symbol_method->symbol_function->method_id * 8;
+
+	char* str = (offset == 0) ? "	mov	r9, qword [r9]" : "	mov	r9, qword [r9+%d]";
+
+	snprintf(buff, 64, str, offset);
+	add_line_to_area(area, buff);
+	
+	add_line_to_area(area, "	call	r9");
+}
+
 AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int argument_flag)
 {
 	char buff[64];
@@ -190,6 +275,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	int stack_size = get_method_stack_size(owner_method);
 
 	int padding = 0;
+	int backup_size = 0;
 
 	if ((stack_size + 8) % 16 != 0) // +8 pro return point do call
 	{
@@ -199,32 +285,68 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 		padding = 1;
 	}
 
-	if (node->function_call_node.function_call.arguments != NULL)
+	if (padding)
 	{
-		generate_method_args(codegen, node->function_call_node.function_call.arguments, area, &stack_size);
+		backup_size = 8;
 	}
 
-	if (callee->type != NODE_IDENTIFIER) // mover a instance pra algum registrador nao utilizado pra methods de classes.
+	NodeList* constructor_args = node->create_instance_node.create_instance.constructor_args;
+	
+	if (constructor_args != NULL)
 	{
-		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 0, prefer_second, 0);
+		generate_method_args(codegen, constructor_args, area, &stack_size);
+	}
+
+	// mover a instance pra algum registrador nao utilizado pra methods de classes.
+	if (callee->type != NODE_IDENTIFIER && callee->type != NODE_SUPER)
+	{
+		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0);
+		Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
 		
-		snprintf(buff, 64, "	mov	r9, %s", ret->result);
-		add_line_to_area(area, buff);
+		char* class_name_ref = NULL;
+		symbol_method = find_class_method(object_symbol->symbol_class->class_scope, method_name, &class_name_ref);
 
-		snprintf(buff, 64, "	mov	r9, [r9+%d]", symbol_method->symbol_function->method_id * 8);
-		add_line_to_area(area, buff);
-
-		add_line_to_area(area, "	call	r9");
+		if (symbol_method->symbol_function->is_virtual || symbol_method->symbol_function->is_override)
+		{
+			handle_class_vtable_method(ret, symbol_method, area);
+		}
+		else
+		{
+			handle_class_method(codegen, class_name_ref, symbol_method, ret, area);
+		}
 	}
-	else
+	else if (callee->type == NODE_IDENTIFIER)
 	{
 		snprintf(buff, 64, "	call	%s", method_name);
 		add_line_to_area(area, buff);
 	}
-
-	if (padding)
+	else if (callee->type == NODE_SUPER)
 	{
-		add_line_to_area(area, "	add	rsp, 8");
+		AsmReturn* ret = generate_expression(codegen, callee, area, 0, 0, 0);
+
+		// ponteiro da instancia ja ta no 'R8'
+		// snprintf(buff, 64, "	mov	r8, %s", ret->result);
+		// add_line_to_area(area, buff);
+
+		snprintf(buff, 64, "	call	.%s_ctr", ret->type->class_name);
+		add_line_to_area(area, buff);
+	}
+
+	if (constructor_args != NULL)
+	{
+		int args_size = analyzer_get_list_size(node->create_instance_node.create_instance.constructor_args->head);
+		backup_size += args_size * 8;
+	}
+
+	if (backup_size != 0)
+	{
+		snprintf(buff, 64, "	add	rsp, %d", backup_size);
+		add_line_to_area(area, buff);
+	}
+
+	if (callee->type == NODE_SUPER)
+	{
+		return create_asm_return("", create_type(TYPE_VOID, NULL));
 	}
 
 	char* output_reg = call_get_return_register(type, argument_flag, area);

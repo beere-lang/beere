@@ -310,9 +310,16 @@ typedef enum
 	NODE_ARRAY_PUSH, // 29
 	NODE_ARRAY_POP, // 30
 	NODE_ARRAY_LENGTH, // 31
-	NODE_SUPER // 32
+	NODE_SUPER, // 32
+	NODE_DIRECT_CLASS // 33
 }
 NodeType;
+
+typedef struct
+{
+	Symbol* class_symbol;
+}
+DirectClassAccessNode;
 
 struct Node 
 {
@@ -321,67 +328,67 @@ struct Node
 
 	union
 	{
-		struct // operation node
+		struct
 		{
 			OperationNode operation;
 		} 
 		operation_node;
 
-		struct // if statement
+		struct
 		{
 			IfNode if_statement;
 		} 
 		if_statement_node;
 
-		struct // literal values, e.g: "Hello, World!", 'a', 1
+		struct
 		{
 			LiteralNode literal;
 		} 
 		literal_node;
 
-		struct // declare variable node, e.g: int x = 0, int x
+		struct
 		{
 			DeclareNode declare;
 		}
 		declare_node;
 
-		struct // declare function node, e.g: void main() {}, void main()
+		struct
 		{
 			FunctionNode function;
 		}
 		function_node;
 
-		struct // arguments, e.g: type func(int x, int y, int z)
+		struct
 		{
 			ArgumentNode argument;
 		}
 		argument_node;
 
-		struct // variable uses, e.g: int y = x, print('${y}')
+		struct
 		{
 			VariableNode variable;
 		} 
 		variable_node;
 
-		struct // return statements, e.g: return, return 0, return true, return 1 + 1, return 1 >= 10
+		struct
 		{
 			ReturnNode return_statement;
 		}
 		return_statement_node;
 
-		struct // blocks, e.g: { print("Hello, World!") }
+		struct
 		{
 			BlockNode block;
 		}
 		block_node;
 
-		struct // function calls, e.g: a_function(), a_function_with_params(param1, param2)
+		struct
 		{
 			FunctionCallNode function_call;
 		}
 		function_call_node;
 
-		struct // assign value in variables, e.g: x = 10, y = 40.2, z = 9.0F, str = "Hello, World!"
+		struct
 		{
 			VariableAssignNode variable_assign;
 		}
@@ -393,31 +400,31 @@ struct Node
 		}
 		param_node;
 
-		struct // while loops, e.g: while(x == 0) {  }
+		struct
 		{
 			WhileLoopNode while_loop;
 		}
 		while_loop_node;
 
-		struct // for loops, e.g: for(int i = 0; i < 255; i++) {  }
+		struct
 		{
 			ForLoopNode for_loop;
 		}
 		for_loop_node;
 
-		struct // switch statements, e.g: switch(x) { case 0: printf("Hello, World!"); break; }
+		struct
 		{
 			SwitchCaseStatement switch_statement;
 		}
 		switch_statement_node;
 
-		struct // switch case statements, e.g: case 0: printf("Hello, World!"); break;
+		struct
 		{
 			SwitchCaseBlock switch_case_block;
 		}
 		switch_case_block_node;
 
-		struct // import statements, e.g: import "std_lurje"
+		struct
 		{
 			ImportStatement import_node;
 		}
@@ -488,6 +495,12 @@ struct Node
 			ArrayLengthNode array_length;
 		}
 		array_length_node;
+
+		struct
+		{
+			DirectClassAccessNode direct_class_access;
+		}
+		direct_class_access_node;
 	};
 };
 

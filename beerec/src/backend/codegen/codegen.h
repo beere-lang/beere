@@ -4,6 +4,7 @@
 #include "../../frontend/semantic/symbols/symbols.h"
 #include "../../frontend/modules/modules.h"
 
+
 #define asm_return_size sizeof(AsmReturn)
 #define asm_area_size sizeof(AsmArea)
 #define lines_default_size sizeof(char*) * 10
@@ -11,6 +12,7 @@
 typedef struct CodeGen CodeGen;
 typedef struct Constant Constant;
 typedef struct ExternTable ExternTable;
+typedef struct ClassOffsetsTable ClassOffsetsTable;
 typedef struct ConstantTable ConstantTable;
 typedef struct ExternEntry ExternEntry;
 typedef struct AsmReturn AsmReturn;
@@ -22,6 +24,7 @@ extern AsmArea* data_section;
 extern AsmArea* rodata_section;
 extern AsmArea* bss_section;
 extern ConstantTable* constant_table;
+extern ClassOffsetsTable* class_offsets_table;
 
 typedef enum
 {
@@ -32,6 +35,7 @@ Flag;
 
 struct CodeGen
 {
+	int inner_class;
 	int prefer_second;
 
 	Module* module;
