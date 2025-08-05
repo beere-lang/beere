@@ -1,3 +1,5 @@
 fn main() {
     let test: bool = 10 > 9 && 10 < 11
+    let var: bool = test
+    var = 10 == 10
 }

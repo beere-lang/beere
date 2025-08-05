@@ -88,6 +88,11 @@ char* get_reference_access_size(CodeGen* codegen, Type* type)
 			return strdup("qword");
 		}
 
+		case TYPE_BOOL:
+		{
+			return strdup("byte");
+		}
+
 		default:
 		{
 			printf("Codegen debug fail #123...\n");
@@ -126,6 +131,11 @@ char* get_mov_op_code_access(CodeGen* codegen, Type* type)
 		}
 
 		case TYPE_CLASS:
+		{
+			return strdup("mov");
+		}
+
+		case TYPE_BOOL:
 		{
 			return strdup("mov");
 		}
@@ -182,6 +192,13 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 		case TYPE_CLASS:
 		{
 			temp = prefer_second ? "rbx" : "rax";
+
+			return strdup(temp);
+		}
+
+		case TYPE_BOOL:
+		{
+			temp = prefer_second ? "bl" : "al";
 
 			return strdup(temp);
 		}
