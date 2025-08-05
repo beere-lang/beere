@@ -30,6 +30,7 @@ add_executable(beerec
 		src/backend/codegen/impl/expressions/references/codegen-ref.c
 		src/backend/codegen/impl/expressions/pointers/codegen-ptr.c
 		src/backend/codegen/impl/expressions/cast/codegen-cast.c
+		src/backend/codegen/impl/expressions/comparative/codegen-comparative.c
 		src/backend/codegen/impl/statements/declaration/fields/codegen-field-decl.c
 		src/backend/codegen/impl/statements/declaration/methods/codegen-method-decl.c
 		src/backend/codegen/impl/statements/assign/fields/codegen-field-assgn.c

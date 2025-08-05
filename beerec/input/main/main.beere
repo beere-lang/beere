@@ -1,3 +1,3 @@
 fn main() {
-
+    let test: bool = 10 > 9 && 10 < 11
 }
