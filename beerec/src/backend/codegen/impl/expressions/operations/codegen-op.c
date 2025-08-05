@@ -3,6 +3,7 @@
 #include "codegen-op.h"
 #include "../../../codegen.h"
 #include "../arithmetic/codegen-arith.h"
+#include "../comparative/codegen-comparative.h"
 #include "../codegen-expr.h"
 
 AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
@@ -29,6 +30,46 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 		case TOKEN_OPERATOR_MINUS:
 		{
 			return generate_minus_operation(codegen, left, right, area, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_EQUALS:
+		{
+			return generate_is_equals_operation(codegen, left, right, area, prefer_second, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_NOT_EQUALS:
+		{
+			return generate_is_not_equals_operation(codegen, left, right, area, prefer_second, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_GREATER:
+		{
+			return generate_is_greater_operation(codegen, left, right, area, prefer_second, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_LESS:
+		{
+			return generate_is_less_operation(codegen, left, right, area, prefer_second, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_GREATER_EQUALS:
+		{
+			return generate_is_greater_equals_operation(codegen, left, right, area, prefer_second, argument_flag);
+		}
+		
+		case TOKEN_OPERATOR_LESS_EQUALS:
+		{
+			return generate_is_less_equals_operation(codegen, left, right, area, prefer_second, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_OR:
+		{
+			return generate_or_operation(codegen, left, right, area, prefer_second, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_AND:
+		{
+			return generate_and_operation(codegen, left, right, area, prefer_second, argument_flag);
 		}
 
 		case TOKEN_OPERATOR_INCREMENT:
