@@ -1,7 +1,7 @@
 #include "compiler.h"
 
 /**
- * Compila o entry point e interpreta o dotmod (passados no )
+ * Compila o entry point e interpreta o dotmod (passados nas args)
  */
 int main(int _, char* argv[])
 {
