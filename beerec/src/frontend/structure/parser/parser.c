@@ -2381,6 +2381,14 @@ void free_node(Node* node)
 			break;
 		}
 
+		case NODE_WHILE_LOOP:
+		{
+			free_node(node->while_loop_node.while_loop.then_block);
+			free_node(node->while_loop_node.while_loop.condition);
+
+			break;
+		}
+
 		case NODE_FOR_LOOP:
 		{
 			free_node(node->for_loop_node.for_loop.init);
