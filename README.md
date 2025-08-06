@@ -62,7 +62,7 @@ fn main() {
 
 ## C Language Interoperability
 ```rs
-extern "C" fn foo(arg: string)
+extern "C" fn foo(arg: char*)
 
 fn main() {
     // Strings structures in Beere are different from C, so,
