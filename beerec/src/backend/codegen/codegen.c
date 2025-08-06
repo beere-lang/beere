@@ -8,6 +8,7 @@
 #include "impl/statements/calls/codegen-method-call.h"
 #include "impl/statements/declaration/fields/codegen-field-decl.h"
 #include "impl/statements/declaration/methods/codegen-method-decl.h"
+#include "impl/statements/if/codegen-if.h"
 #include "impl/statements/return/codegen-return.h"
 
 extern char* get_literal_value(LiteralNode* literal);
@@ -324,6 +325,13 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 		case NODE_RETURN:
 		{
 			generate_return(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_IF:
+		{
+			generate_if(codegen, node, area);
 
 			return;
 		}

@@ -3,10 +3,10 @@
 
 #include "../../../codegen.h"
 
-int if_counts;
-int if_thens_count;
-int if_elses_count;
+extern int if_thens_count;
+extern int if_elses_count;
+extern int if_posts_count;
 
-void generate_if_statement(CodeGen* codegen, Node* node, AsmArea* area);
+void generate_if(CodeGen* codegen, Node* node, AsmArea* area);
 
 #endif

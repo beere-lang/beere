@@ -247,7 +247,7 @@ AsmReturn* generate_global_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	{
 		char* reg = get_register_access(codegen, type, prefer_second);
 
-		snprintf(buff, 64, "	%s	%s, %s [rip+%s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
+		snprintf(buff, 64, "	%s	%s, %s [rel %s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
 		add_line_to_area(area, buff);
 
 		AsmReturn* ret = create_asm_return(reg, type);
@@ -257,7 +257,7 @@ AsmReturn* generate_global_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	}
 	else
 	{
-		snprintf(buff, 64, "%s [rip+%s]", get_reference_access_size(codegen, type),symbol->symbol_variable->identifier);
+		snprintf(buff, 64, "%s [rel %s]", get_reference_access_size(codegen, type),symbol->symbol_variable->identifier);
 		
 		AsmReturn* ret = create_asm_return(buff, type);
 		return ret;
@@ -273,7 +273,7 @@ AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	{
 		char* reg = get_register_access(codegen, type, prefer_second);
 
-		snprintf(buff, 64, "	%s	%s, %s [rip+.static_%s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
+		snprintf(buff, 64, "	%s	%s, %s [rel .static_%s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
 		add_line_to_area(area, buff);
 
 		AsmReturn* ret = create_asm_return(reg, type);
@@ -283,7 +283,7 @@ AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	}
 	else
 	{
-		snprintf(buff, 64, "%s [rip+.static_%s]", get_reference_access_size(codegen, type),symbol->symbol_variable->identifier);
+		snprintf(buff, 64, "%s [rel .static_%s]", get_reference_access_size(codegen, type),symbol->symbol_variable->identifier);
 		
 		AsmReturn* ret = create_asm_return(buff, type);
 		return ret;

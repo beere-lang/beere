@@ -35,4 +35,5 @@ add_executable(beerec
 	src/backend/codegen/impl/statements/declaration/methods/codegen-method-decl.c
 	src/backend/codegen/impl/statements/assign/fields/codegen-field-assgn.c
 	src/backend/codegen/impl/statements/return/codegen-return.c
+	src/backend/codegen/impl/statements/if/codegen-if.c
 )
