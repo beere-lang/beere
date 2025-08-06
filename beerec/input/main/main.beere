@@ -1,11 +1,7 @@
 fn main() {
-    let test: bool = 10 > 9 && 10 < 11
+    let i: int = 0
 
-    if (test == true) {
-        let i: int = 0
-    } else if (test == false) {
-        test = false
-    } else {
-        let j: float = 0.0F
+    while (i < 100) {
+        i = i + 1
     }
 }

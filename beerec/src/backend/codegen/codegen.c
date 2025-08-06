@@ -10,6 +10,7 @@
 #include "impl/statements/declaration/methods/codegen-method-decl.h"
 #include "impl/statements/if/codegen-if.h"
 #include "impl/statements/return/codegen-return.h"
+#include "impl/statements/while-loop/codegen-while.h"
 
 extern char* get_literal_value(LiteralNode* literal);
 
@@ -346,6 +347,13 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 		case NODE_CLASS:
 		{
 			generate_class(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_WHILE_LOOP:
+		{
+			generate_while(codegen, node, area);
 
 			return;
 		}
