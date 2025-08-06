@@ -3,12 +3,12 @@
 
 static char* generate_else(CodeGen* codegen, Node* node, AsmArea* area)
 {
-
+	return NULL;
 }
 
 static char* generate_if_then(CodeGen* codegen, Node* node, AsmArea* area)
 {
-
+	return NULL;
 }
 
 static AsmReturn* generate_if_condition(CodeGen* codegen, Node* expr, AsmArea* area)
@@ -26,6 +26,7 @@ static void generate_if_statement(CodeGen* codegen, Node* node, AsmArea* area)
 
 	char buff[64];
 
+	// da jump se não for zero (1 --> true)
 	snprintf(buff, 64, "	jnz	.if_then_%d", then_id);
 	add_line_to_area(area, buff);
 }
