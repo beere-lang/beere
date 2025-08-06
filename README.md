@@ -10,7 +10,7 @@ Beere is a simple, fast, and low-level programming language, designed for system
 - Manual memory management (Optional GC soon)
 - Simple and clean syntax
 - Optional object-oriented features
-- C interoperability (`extern "C" fn`)
+- C interoperability
 - Optimizations (inspired in LLVM)
 - Module system
 - Full package manager system
