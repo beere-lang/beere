@@ -5,6 +5,7 @@ fn main() {
         case 0:
         {
             let j: int = 10
+            break
         }
     }
 }

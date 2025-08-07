@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdlib.h>
 
 #include "codegen-switch.h"
 #include "../../expressions/codegen-expr.h"

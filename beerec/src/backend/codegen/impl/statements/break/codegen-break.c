@@ -2,6 +2,7 @@
 
 extern int fors_count;
 extern int whiles_count;
+extern int switches_case_count;
 
 SymbolTable* found_loop_scope(SymbolTable* scope)
 {
@@ -10,7 +11,7 @@ SymbolTable* found_loop_scope(SymbolTable* scope)
 		return NULL;
 	}
 
-	if (scope->scope_kind == SYMBOL_FOR || scope->scope_kind == SYMBOL_WHILE)
+	if (scope->scope_kind == SYMBOL_FOR || scope->scope_kind == SYMBOL_WHILE || scope->scope_kind == SYMBOL_SWITCH_CASE)
 	{
 		return scope;
 	}
@@ -31,6 +32,11 @@ void generate_break(CodeGen* codegen, Node* node, AsmArea* area)
 	else if(scope->scope_kind == SYMBOL_FOR)
 	{
 		snprintf(buff, 64, "	jmp	.for_post_%d", fors_count - 1);
+		add_line_to_area(area, buff);
+	}
+	else if(scope->scope_kind == SYMBOL_SWITCH_CASE)
+	{
+		snprintf(buff, 64, "	jmp	.switch_post_%d", switches_case_count - 1);
 		add_line_to_area(area, buff);
 	}
 }
