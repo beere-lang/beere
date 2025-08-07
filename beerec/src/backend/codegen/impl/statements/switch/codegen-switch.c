@@ -68,7 +68,7 @@ void generate_switch_jmp(CodeGen* codegen, Node* node, AsmArea* area, char* expr
 
 	while (next != NULL)
 	{
-		AsmReturn* ret = generate_expression(codegen, node->switch_case_block_node.switch_case_block.condition, area, 1, 0, 0);
+		AsmReturn* ret = generate_expression(codegen, next->switch_case_block_node.switch_case_block.condition, area, 1, 0, 0);
 
 		char* op = get_opcode_for_cmp(ret->type);
 		
@@ -79,6 +79,7 @@ void generate_switch_jmp(CodeGen* codegen, Node* node, AsmArea* area, char* expr
 		add_line_to_area(area, buff);
 
 		next = next->next;
+		id++;
 	}
 }
 
