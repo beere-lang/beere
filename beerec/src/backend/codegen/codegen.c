@@ -5,6 +5,7 @@
 #include "codegen.h"
 #include "impl/oop/codegen-class.h"
 #include "impl/statements/assign/fields/codegen-field-assgn.h"
+#include "impl/statements/break/codegen-break.h"
 #include "impl/statements/calls/codegen-method-call.h"
 #include "impl/statements/continue/codegen-continue.h"
 #include "impl/statements/declaration/fields/codegen-field-decl.h"
