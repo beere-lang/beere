@@ -104,18 +104,11 @@ void generate_switch(CodeGen* codegen, Node* node, AsmArea* area)
 		handle_float_argument(codegen, ret, area, expr->type->type != TYPE_DOUBLE);
 	}
 
-	Node* next = node->switch_statement_node.switch_statement.case_list->head;
-
 	int case_id = switches_case_count;
 
 	snprintf(buff, 64, "%s [rsp]", field_get_reference_access_size(codegen, expr->type));
 	
-	while (next != NULL)
-	{
-		generate_switch_jmp(codegen, node, area, strdup(buff), case_id++);
-
-		next = next->next;
-	}
+	generate_switch_jmp(codegen, node, area, strdup(buff), case_id++);
 
 	generate_switch_cases(codegen, node, area, expr);
 

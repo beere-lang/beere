@@ -7,5 +7,10 @@ fn main() {
             let j: int = 10
             break
         }
+
+        case 1:
+        {
+            let g: bool = i > 0
+        }
     }
 }
