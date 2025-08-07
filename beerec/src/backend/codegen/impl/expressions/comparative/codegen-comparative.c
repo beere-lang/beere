@@ -4,7 +4,7 @@
 #include "codegen-comparative.h"
 #include "../../../../../frontend/structure/parser/parser.h"
 
-static char* get_opcode_for_cmp(Type* type)
+char* get_opcode_for_cmp(Type* type)
 {
 	switch (type->type)
 	{

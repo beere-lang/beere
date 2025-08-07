@@ -3446,6 +3446,11 @@ static void analyzer_handle_switch_statement(Module* module, Node* node, SymbolT
 		if (next->switch_case_block_node.switch_case_block.new_scope)
 		{
 			case_scope = analyzer_create_scope(SYMBOL_SWITCH_CASE, switch_scope, NULL);
+			next->switch_case_block_node.switch_case_block.scope = case_scope;
+		}
+		else
+		{
+			next->switch_case_block_node.switch_case_block.scope = NULL;
 		}
 
 		analyzer_handle_switch_case(module, next, case_scope != NULL ? case_scope : switch_scope, required_type, offset);

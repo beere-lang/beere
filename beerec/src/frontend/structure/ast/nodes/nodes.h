@@ -187,6 +187,7 @@ typedef struct
 	Node* block;
 
 	int new_scope;
+	SymbolTable* scope;
 }
 SwitchCaseBlock;
 
