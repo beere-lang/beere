@@ -61,12 +61,12 @@ AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int 
 
 		case NODE_SUPER:
 		{
-			return generate_super(codegen);
+			return generate_super(codegen, area, force_reg);
 		}
 
 		case NODE_THIS:
 		{
-			return generate_this(codegen);
+			return generate_this(codegen, area, force_reg);
 		}
 
 		case NODE_DIRECT_CLASS:
