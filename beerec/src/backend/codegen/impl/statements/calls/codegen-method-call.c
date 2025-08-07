@@ -40,7 +40,7 @@ static int align_to_eight(int value)
 	return ((value / 8) + 1) * 8;
 }
 
-static void handle_float_argument(CodeGen* codegen, AsmReturn* reg, AsmArea* area, int is_double)
+void handle_float_argument(CodeGen* codegen, AsmReturn* reg, AsmArea* area, int is_double)
 {
 	char* temp = is_double ? "movsd" : "movss";
 	char* _temp = is_double ? "qword" : "dword";

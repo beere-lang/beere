@@ -45,11 +45,38 @@ static AsmReturn* generate_float_literal(CodeGen* codegen, Node* node, AsmArea* 
 	char* reg = prefer_second ? "xmm1" : "xmm0";
 
 	char buff[64];
-	snprintf(buff, 64, "	movss	%s, dword [rip+.LC%d]", reg, constant->id);
+	snprintf(buff, 64, "	movss	%s, dword [rel .LC%d]", reg, constant->id);
 
 	add_line_to_area(area, buff);
 
 	return create_asm_return(reg, create_type(TYPE_FLOAT, NULL));
+}
+
+static AsmReturn* generate_bool_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second)
+{
+	LiteralNode* literal = &node->literal_node.literal;
+	int value = literal->bool_value;
+	
+	char* reg = prefer_second ? "bl" : "al";
+
+	char buff[64];
+	
+	if (force_reg)
+	{
+		snprintf(buff, 64, "	mov	%s, %d", reg, value);
+		add_line_to_area(area, buff);
+	
+		AsmReturn* ret = create_asm_return(reg, create_type(TYPE_BOOL, NULL));
+		ret->is_reg = 1;
+
+		return ret;
+	}
+	else
+	{
+		snprintf(buff, 64, "%d", value);
+		
+		return create_asm_return(buff, create_type(TYPE_BOOL, NULL));
+	}
 }
 
 AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
@@ -66,6 +93,11 @@ AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, int for
 		case TYPE_FLOAT:
 		{
 			return generate_float_literal(codegen, node, area, force_reg, prefer_second);
+		}
+
+		case TYPE_BOOL:
+		{
+			return generate_bool_literal(codegen, node, area, force_reg, prefer_second);
 		}
 		
 		default:

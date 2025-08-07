@@ -5,10 +5,16 @@
 #include "codegen.h"
 #include "impl/oop/codegen-class.h"
 #include "impl/statements/assign/fields/codegen-field-assgn.h"
+#include "impl/statements/break/codegen-break.h"
 #include "impl/statements/calls/codegen-method-call.h"
+#include "impl/statements/continue/codegen-continue.h"
 #include "impl/statements/declaration/fields/codegen-field-decl.h"
 #include "impl/statements/declaration/methods/codegen-method-decl.h"
+#include "impl/statements/for-loop/codegen-for.h"
+#include "impl/statements/if/codegen-if.h"
 #include "impl/statements/return/codegen-return.h"
+#include "impl/statements/switch/codegen-switch.h"
+#include "impl/statements/while-loop/codegen-while.h"
 
 extern char* get_literal_value(LiteralNode* literal);
 
@@ -328,6 +334,13 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 			return;
 		}
 
+		case NODE_IF:
+		{
+			generate_if(codegen, node, area);
+
+			return;
+		}
+
 		case NODE_FUNCTION_CALL:
 		{
 			generate_method_call(codegen, node, area, 0, 0);
@@ -338,6 +351,41 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 		case NODE_CLASS:
 		{
 			generate_class(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_SWITCH_STATEMENT:
+		{
+			generate_switch(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_WHILE_LOOP:
+		{
+			generate_while(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_FOR_LOOP:
+		{
+			generate_for(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_CONTINUE:
+		{
+			generate_continue(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_BREAK:
+		{
+			generate_break(codegen, node, area);
 
 			return;
 		}

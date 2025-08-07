@@ -9,7 +9,8 @@ void init(StringBuilder* string_builder)
 	
 	string_builder->buffer = malloc(string_builder->memory_size);
 
-	if (string_builder->buffer) {
+	if (string_builder->buffer) 
+	{
 		string_builder->buffer[0] = '\0';
 	}
 }

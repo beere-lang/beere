@@ -158,6 +158,8 @@ typedef struct
 	Node* condition;
 	Node* then_statement;
 	Node* then_block;
+
+	SymbolTable* then_scope;
 }
 ForLoopNode;
 
@@ -185,6 +187,7 @@ typedef struct
 	Node* block;
 
 	int new_scope;
+	SymbolTable* scope;
 }
 SwitchCaseBlock;
 

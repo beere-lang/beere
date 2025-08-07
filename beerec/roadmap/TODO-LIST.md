@@ -1,5 +1,4 @@
 * Todo-List:
- 00 - **iMPORTANTE** Adicionar os outros statements, e.g: while loop, for loop, ifs, etc.
  01 - Não permitir variaveis static e globais ao mesmo tempo (não tem sentido)
  02 - Testar se o 'R8' está sendo overwrite durante a criação de instancias dentro de funções de instancias
  03 - Testar totalmente classes pra checar bugs, etc.

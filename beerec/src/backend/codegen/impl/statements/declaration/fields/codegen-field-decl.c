@@ -39,6 +39,11 @@ char* field_get_reference_access_size(CodeGen* codegen, Type* type)
 			return strdup("qword");
 		}
 
+		case TYPE_BOOL:
+		{
+			return strdup("byte");
+		}
+
 		default:
 		{
 			printf("Codegen debug fail #204...\n");
@@ -77,6 +82,11 @@ char* field_get_mov_op_code_access(CodeGen* codegen, Type* type)
 		}
 
 		case TYPE_CLASS:
+		{
+			return strdup("mov");
+		}
+
+		case TYPE_BOOL:
 		{
 			return strdup("mov");
 		}
