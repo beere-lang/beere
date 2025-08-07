@@ -38,4 +38,6 @@ add_executable(beerec
 	src/backend/codegen/impl/statements/if/codegen-if.c
 	src/backend/codegen/impl/statements/while-loop/codegen-while.c
 	src/backend/codegen/impl/statements/for-loop/codegen-for.c
+	src/backend/codegen/impl/statements/continue/codegen-continue.c
+	src/backend/codegen/impl/statements/break/codegen-break.c
 )

@@ -1,5 +1,11 @@
 fn main() {
-    for (let i: int = 0; i < 100; i = i + 1) {
-        let j: int = 0
+    let i: int = 0
+
+    while (i < 100) {
+        if (i == 10) {
+            break
+        }
+
+        i = i + 1
     }
 }

@@ -9,7 +9,7 @@ static void generate_else_block(CodeGen* codegen, Node* node, AsmArea* area, int
 {
 	char buff[64];
 	
-	snprintf(buff, 64, ".if_else_%d", id);
+	snprintf(buff, 64, ".if_else_%d:", id);
 	add_line_to_area(area, buff);
 	
 	Node* next = node->block_node.block.statements->head;
@@ -34,7 +34,7 @@ static void generate_then_block(CodeGen* codegen, Node* node, AsmArea* area, int
 	char buff[64];
 	Node* next = node->block_node.block.statements->head;
 
-	snprintf(buff, 64, ".if_then_%d", id);
+	snprintf(buff, 64, ".if_then_%d:", id);
 	add_line_to_area(text_section, buff);
 
 	while (next != NULL)
@@ -44,7 +44,7 @@ static void generate_then_block(CodeGen* codegen, Node* node, AsmArea* area, int
 		next = next->next;
 	}
 
-	snprintf(buff, 64, "	jmp	.if_post_%d", if_posts_count);
+	snprintf(buff, 64, "	jmp	.if_post_%d:", if_posts_count);
 	add_line_to_area(text_section, buff);
 }
 
@@ -54,7 +54,7 @@ static void generate_post(CodeGen* codegen, Node* node, AsmArea* area)
 	
 	char buff[64];
 	
-	snprintf(buff, 64, ".if_post_%d", id);
+	snprintf(buff, 64, ".if_post_%d:", id);
 	add_line_to_area(area, buff);
 }
 

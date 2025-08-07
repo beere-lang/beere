@@ -3,6 +3,8 @@
 
 #include "../../../codegen.h"
 
+extern int fors_count;
+
 void generate_for(CodeGen* codegen, Node* node, AsmArea* area);
 
 #endif
