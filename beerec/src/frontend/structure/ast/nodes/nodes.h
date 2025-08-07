@@ -158,6 +158,8 @@ typedef struct
 	Node* condition;
 	Node* then_statement;
 	Node* then_block;
+
+	SymbolTable* then_scope;
 }
 ForLoopNode;
 

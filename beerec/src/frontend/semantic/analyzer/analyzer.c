@@ -2958,13 +2958,14 @@ static void analyzer_handle_while_loop(Module* module, Node* node, SymbolTable* 
 static void analyzer_handle_for_loop(Module* module, Node* node, SymbolTable* scope, int* offset)
 {
 	SymbolTable* block_scope = analyzer_create_scope(SYMBOL_FOR, scope, NULL);
+	node->for_loop_node.for_loop.then_scope = block_scope;
 	
-	analyzer_analyze_node(module, node->for_loop_node.for_loop.init, block_scope, offset);
+	analyzer_analyze_node(module, node->for_loop_node.for_loop.init, scope, offset);
 
-	analyzer_analyze_node(module, node->for_loop_node.for_loop.condition, block_scope, offset);
-	analyzer_analyze_node(module, node->for_loop_node.for_loop.then_statement, block_scope, offset);
+	analyzer_analyze_node(module, node->for_loop_node.for_loop.condition, scope, offset);
+	analyzer_analyze_node(module, node->for_loop_node.for_loop.then_statement, scope, offset);
 
-	if (analyzer_return_type_of_expression(module, node->for_loop_node.for_loop.condition, block_scope, NULL, 0, NULL)->type != TYPE_BOOL)
+	if (analyzer_return_type_of_expression(module, node->for_loop_node.for_loop.condition, scope, NULL, 0, NULL)->type != TYPE_BOOL)
 	{
 		printf("[Analyzer] [Debug] Invalid for condition, expression return type needs to be 'boolean'...\n");
 		exit(1);

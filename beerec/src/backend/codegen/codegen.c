@@ -8,6 +8,7 @@
 #include "impl/statements/calls/codegen-method-call.h"
 #include "impl/statements/declaration/fields/codegen-field-decl.h"
 #include "impl/statements/declaration/methods/codegen-method-decl.h"
+#include "impl/statements/for-loop/codegen-for.h"
 #include "impl/statements/if/codegen-if.h"
 #include "impl/statements/return/codegen-return.h"
 #include "impl/statements/while-loop/codegen-while.h"
@@ -354,6 +355,13 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 		case NODE_WHILE_LOOP:
 		{
 			generate_while(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_FOR_LOOP:
+		{
+			generate_for(codegen, node, area);
 
 			return;
 		}
