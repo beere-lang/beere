@@ -28,18 +28,22 @@ Symbol* get_owner_class(SymbolTable* scope)
 	return get_owner_class(scope->parent);
 }
 
-AsmReturn* generate_super(CodeGen* codegen)
+AsmReturn* generate_super(CodeGen* codegen, AsmArea* area, int force_reg)
 {
 	Symbol* symbol = get_owner_class(codegen->scope)->symbol_class->super;
 	Type* type = create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
 
+	add_line_to_area(area, "	mov	r8, dword [rsp]");
+	
 	return create_asm_return("r8", type);
 }
 
-AsmReturn* generate_this(CodeGen* codegen)
+AsmReturn* generate_this(CodeGen* codegen, AsmArea* area, int force_reg)
 {
 	Symbol* symbol = get_owner_class(codegen->scope);
 	Type* type = create_type(TYPE_CLASS, (char*) symbol->symbol_class->identifier);
+
+	add_line_to_area(area, "	mov	r8, dword [rsp]");
 
 	return create_asm_return("r8", type);
 }

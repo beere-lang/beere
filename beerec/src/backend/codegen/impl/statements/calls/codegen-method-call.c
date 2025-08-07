@@ -97,8 +97,6 @@ static char* get_method_name_by_callee(Node* callee)
  */
 char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 {
-	printf("Type: %d\n", type->type);
-	
 	switch (type->type)
 	{
 		case TYPE_BOOL:
@@ -228,6 +226,8 @@ static void handle_class_method(CodeGen* codegen, char* class_name, Symbol* symb
 	snprintf(buff, 64, "	mov	r8, %s", ret->result);
 	add_line_to_area(area, buff);
 
+	add_line_to_area(area, "	push	r8"); // previnir de overwrites.
+
 	Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
 			
 	snprintf(buff, 64, "	call	.%s_fn_%s", class_name, symbol_method->symbol_function->identifier);
@@ -242,6 +242,8 @@ static void handle_class_vtable_method(AsmReturn* ret, Symbol* symbol_method, As
 	snprintf(buff, 64, "	mov	r8, %s", ret->result);
 	add_line_to_area(area, buff);
 			
+	add_line_to_area(area, "	push	r8"); // previnir de overwrites.
+
 	// move o ponteiro da vtable (offset 0 da class)
 	snprintf(buff, 64, "	mov	r9, qword [%s]", ret->result); 
 	add_line_to_area(area, buff);
