@@ -1,7 +1,3 @@
 fn main() {
-    let i: float = 0
-
-    while (i < 100) {
-        i++
-    }
+    let i: float = 1 * 2
 }

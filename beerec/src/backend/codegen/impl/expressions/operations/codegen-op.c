@@ -93,6 +93,16 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 			return generate_decrement_operation(codegen, left, area);
 		}
 
+		case TOKEN_OPERATOR_DIVIDED:
+		{
+			return generate_div_operation(codegen, left, right, area);
+		}
+
+		case TOKEN_CHAR_STAR:
+		{
+			return generate_multiply_operation(codegen, left, right, area);
+		}
+
 		default:
 		{
 			printf("Codegen debug fail #634...\n");
