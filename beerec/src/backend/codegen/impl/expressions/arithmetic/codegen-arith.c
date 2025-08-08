@@ -120,12 +120,82 @@ AsmReturn* generate_minus_operation(CodeGen* codegen, AsmReturn* left_value, Asm
 	return create_asm_return(left_value->result, left_value->type);
 }
 
-AsmReturn* generate_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area)
+AsmReturn* generate_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
 {
-	return NULL;
+	if (left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE)
+	{
+		return generate_floating_increment_operation(codegen, left_value, area);
+	}
+	
+	char buff[64];
+
+	snprintf(buff, 64, "	mov	eax, %s", left_value->result);
+	add_line_to_area(area, buff);
+	
+	snprintf(buff, 64, "	inc	%s", left_value->result);
+	add_line_to_area(area, buff);
+	
+	return create_asm_return("eax", left_value->type);
 }
 
-AsmReturn* generate_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area)
+AsmReturn* generate_floating_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
 {
-	return NULL;
+	char buff[64];
+
+	int is_double = (left_value->type->type == TYPE_DOUBLE);
+	char* opcode = (is_double) ? "movsd" : "movss";
+	char* _opcode = (is_double) ? "addsd" : "addss";
+
+	snprintf(buff, 64, "	%s	xmm0, %s", opcode, left_value->result);
+	add_line_to_area(area, buff);
+
+	Constant* constant = generate_directly_constant(1, is_double);
+	
+	snprintf(buff, 64, "	%s	xmm0, .LC%d", _opcode, constant->id);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, xmm0", opcode, left_value->result);
+	add_line_to_area(area, buff);
+	
+	return create_asm_return("xmm0", left_value->type);
+}
+
+AsmReturn* generate_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
+{
+	if (left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE)
+	{
+		return generate_floating_decrement_operation(codegen, left_value, area);
+	}
+
+	char buff[64];
+
+	snprintf(buff, 64, "	mov	eax, %s", left_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	dec	%s", left_value->result);
+	add_line_to_area(area, buff);
+
+	return create_asm_return("eax", left_value->type);
+}
+
+AsmReturn* generate_floating_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
+{
+	char buff[64];
+
+	int is_double = (left_value->type->type == TYPE_DOUBLE);
+	char* opcode = (is_double) ? "movsd" : "movss";
+	char* _opcode = (is_double) ? "subsd" : "subss";
+
+	snprintf(buff, 64, "	%s	xmm0, %s", opcode, left_value->result);
+	add_line_to_area(area, buff);
+
+	Constant* constant = generate_directly_constant(1, is_double);
+	
+	snprintf(buff, 64, "	%s	xmm0, .LC%d", _opcode, constant->id);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, xmm0", opcode, left_value->result);
+	add_line_to_area(area, buff);
+	
+	return create_asm_return("xmm0", left_value->type);
 }
