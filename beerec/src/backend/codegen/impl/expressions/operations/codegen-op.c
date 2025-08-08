@@ -24,8 +24,13 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 	}
 	
 	AsmReturn* left = generate_expression(codegen, node->operation_node.operation.left, area, left_force_reg, 0, 0);
-	AsmReturn* right = generate_expression(codegen, node->operation_node.operation.right, area, right_force_reg, 1, 0);
+	AsmReturn* right = NULL;
 	
+	if (op_node->op != TOKEN_OPERATOR_INCREMENT && op_node->op != TOKEN_OPERATOR_DECREMENT)
+	{
+		right = generate_expression(codegen, node->operation_node.operation.right, area, right_force_reg, 1, 0);
+	}
+
 	switch (op_node->op)
 	{
 		case TOKEN_OPERATOR_PLUS:

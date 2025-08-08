@@ -1,5 +1,5 @@
 fn main() {
-    let i: int = 0
+    let i: float = 0
 
     while (i < 100) {
         i++

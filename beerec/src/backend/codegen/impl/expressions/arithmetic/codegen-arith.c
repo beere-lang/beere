@@ -150,11 +150,11 @@ AsmReturn* generate_floating_increment_operation(CodeGen* codegen, AsmReturn* le
 	add_line_to_area(area, buff);
 
 	Constant* constant = generate_directly_constant(1, is_double);
-	
-	snprintf(buff, 64, "	%s	xmm0, .LC%d", _opcode, constant->id);
-	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, xmm0", opcode, left_value->result);
+	snprintf(buff, 64, "	%s	xmm1, [rel .LC%d]", opcode, constant->id);
+	add_line_to_area(area, buff);
+	
+	snprintf(buff, 64, "	%s	%s, xmm1", _opcode, left_value->result);
 	add_line_to_area(area, buff);
 	
 	return create_asm_return("xmm0", left_value->type);
@@ -190,11 +190,11 @@ AsmReturn* generate_floating_decrement_operation(CodeGen* codegen, AsmReturn* le
 	add_line_to_area(area, buff);
 
 	Constant* constant = generate_directly_constant(1, is_double);
-	
-	snprintf(buff, 64, "	%s	xmm0, .LC%d", _opcode, constant->id);
-	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, xmm0", opcode, left_value->result);
+	snprintf(buff, 64, "	%s	xmm1, [rel .LC%d]", opcode, constant->id);
+	add_line_to_area(area, buff);
+	
+	snprintf(buff, 64, "	%s	%s, xmm1", _opcode, left_value->result);
 	add_line_to_area(area, buff);
 	
 	return create_asm_return("xmm0", left_value->type);
