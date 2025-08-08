@@ -1,3 +1,6 @@
 fn main() {
-    let i: float = 1 * 2
+    let a: int = 0
+    let ap: int* = &a
+
+    let b: int = *ap / 2
 }
