@@ -1,6 +1,4 @@
-fn main() {
+fn main(): void {
     let a: int = 0
-    let ap: int* = &a
-
-    let b: int = *ap / 2
+    a += 10
 }

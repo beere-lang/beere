@@ -257,3 +257,39 @@ AsmReturn* generate_div_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* 
 	
 	return create_asm_return("eax", lreg->type);
 }
+
+AsmReturn* generate_plus_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
+{
+	char buff[64];
+	int is_floating = left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE;
+	char* reg = (is_floating) ? "xmm0" : "eax";
+	
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), "eax", left_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", get_add_opcode_for_type(left_value->type), "eax", right_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, "eax");
+	add_line_to_area(area, buff);
+
+	return create_asm_return((argument_flag && !is_floating) ? "rax" : reg, left_value->type);
+}
+
+AsmReturn* generate_minus_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
+{
+	char buff[64];
+	int is_floating = left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE;
+	char* reg = (is_floating) ? "xmm0" : "eax";
+	
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), "eax", left_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", get_sub_opcode_for_type(left_value->type), "eax", right_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, "eax");
+	add_line_to_area(area, buff);
+
+	return create_asm_return((argument_flag && !is_floating) ? "rax" : reg, left_value->type);
+}

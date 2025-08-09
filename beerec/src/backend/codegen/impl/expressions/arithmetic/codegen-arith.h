@@ -3,6 +3,8 @@
 
 #include "../../../codegen.h"
 
+AsmReturn* generate_minus_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag);
+AsmReturn* generate_plus_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag);
 AsmReturn* generate_minus_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag);
 AsmReturn* generate_plus_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag);
 AsmReturn* generate_multiply_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area);

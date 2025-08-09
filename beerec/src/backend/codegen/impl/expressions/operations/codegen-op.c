@@ -18,7 +18,7 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 		right_force_reg = 0;
 	}
 
-	if (op_node->op == TOKEN_OPERATOR_INCREMENT || op_node->op == TOKEN_OPERATOR_DECREMENT)
+	if (op_node->op == TOKEN_OPERATOR_INCREMENT || op_node->op == TOKEN_OPERATOR_DECREMENT || op_node->op == TOKEN_OPERATOR_PLUS_EQUALS || op_node->op == TOKEN_OPERATOR_MINUS_EQUALS)
 	{
 		left_force_reg = 0;
 	}
@@ -101,6 +101,16 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 		case TOKEN_CHAR_STAR:
 		{
 			return generate_multiply_operation(codegen, left, right, area);
+		}
+
+		case TOKEN_OPERATOR_PLUS_EQUALS:
+		{
+			return generate_plus_equals_operation(codegen, left, right, area, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_MINUS_EQUALS:
+		{
+			return generate_minus_equals_operation(codegen, left, right, area, argument_flag);
 		}
 
 		default:
