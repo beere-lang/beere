@@ -1,4 +1,4 @@
 fn main(): void {
-    let a: int = 0
-    a += 10
+    let a: float = 0.0F
+    a /= 10.0F
 }

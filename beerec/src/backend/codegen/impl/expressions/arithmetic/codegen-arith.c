@@ -293,3 +293,70 @@ AsmReturn* generate_minus_equals_operation(CodeGen* codegen, AsmReturn* left_val
 
 	return create_asm_return((argument_flag && !is_floating) ? "rax" : reg, left_value->type);
 }
+
+AsmReturn* generate_times_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
+{
+	char buff[64];
+	int is_floating = left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE;
+	char* reg = (is_floating) ? "xmm0" : "eax";
+	char* opcode = "imul";
+
+	if (is_floating)
+	{
+		opcode = (left_value->type->type == TYPE_DOUBLE) ? "mulsd" : "mulss";
+	}
+	
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), "eax", left_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", opcode, "eax", right_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, "eax");
+	add_line_to_area(area, buff);
+
+	return create_asm_return((argument_flag && !is_floating) ? "rax" : reg, left_value->type);
+}
+
+static AsmReturn* generate_floating_div_equals(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
+{
+	char buff[64];
+	char* reg = "xmm0";
+	char* opcode = (left_value->type->type == TYPE_DOUBLE) ? "divsd" : "divss";
+	
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg, left_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", opcode, reg, right_value->result);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, reg);
+	add_line_to_area(area, buff);
+
+	return create_asm_return(reg, left_value->type);
+}
+
+AsmReturn* generate_div_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int argument_flag)
+{
+	if (lreg->type->type == TYPE_FLOAT || lreg->type->type == TYPE_DOUBLE)
+	{
+		return generate_floating_div_equals(codegen, lreg, rreg, area, (lreg->type->type == TYPE_DOUBLE));
+	}
+
+	char buff[64];
+
+	snprintf(buff, 64, "	mov	eax, %s", lreg->result);
+	add_line_to_area(area, buff);
+
+	add_line_to_area(area, "	cdq");
+
+	snprintf(buff, 64, "	mov	ebx, %s", rreg->result);
+	add_line_to_area(area, buff);
+	
+	add_line_to_area(area, "	idiv	ebx");
+
+	snprintf(buff, 64, "	mov	%s, eax", lreg->result);
+	add_line_to_area(area, buff);
+	
+	return create_asm_return("eax", lreg->type);
+}
