@@ -142,7 +142,7 @@ static AsmReturn* generate_floating_increment_operation(CodeGen* codegen, AsmRet
 	return create_asm_return("xmm0", left_value->type);
 }
 
-AsmReturn* generate_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
+AsmReturn* generate_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area, int argument_flag)
 {
 	if (left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE)
 	{
@@ -157,7 +157,7 @@ AsmReturn* generate_increment_operation(CodeGen* codegen, AsmReturn* left_value,
 	snprintf(buff, 64, "	inc	%s", left_value->result);
 	add_line_to_area(area, buff);
 	
-	return create_asm_return("eax", left_value->type);
+	return create_asm_return(argument_flag ? "rax" : "eax", left_value->type);
 }
 
 static AsmReturn* generate_floating_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
@@ -182,7 +182,7 @@ static AsmReturn* generate_floating_decrement_operation(CodeGen* codegen, AsmRet
 	return create_asm_return("xmm0", left_value->type);
 }
 
-AsmReturn* generate_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
+AsmReturn* generate_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area, int argument_flag)
 {
 	if (left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE)
 	{
@@ -197,7 +197,7 @@ AsmReturn* generate_decrement_operation(CodeGen* codegen, AsmReturn* left_value,
 	snprintf(buff, 64, "	dec	%s", left_value->result);
 	add_line_to_area(area, buff);
 
-	return create_asm_return("eax", left_value->type);
+	return create_asm_return(argument_flag ? "rax" : "eax", left_value->type);
 }
 
 static AsmReturn* generate_floating_multiply(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int is_double)
@@ -212,7 +212,7 @@ static AsmReturn* generate_floating_multiply(CodeGen* codegen, AsmReturn* lreg, 
 	return create_asm_return(lreg->result, lreg->type);
 }
 
-AsmReturn* generate_multiply_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area)
+AsmReturn* generate_multiply_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int argument_flag)
 {
 	if (lreg->type->type == TYPE_FLOAT || lreg->type->type == TYPE_DOUBLE)
 	{
@@ -223,8 +223,14 @@ AsmReturn* generate_multiply_operation(CodeGen* codegen, AsmReturn* lreg, AsmRet
 
 	snprintf(buff, 64, "	imul	%s, %s", lreg->result, rreg->result);
 	add_line_to_area(area, buff);
+
+	if (argument_flag)
+	{
+		snprintf(buff, 64, "	mov	eax, %s", lreg->result);
+		add_line_to_area(area, buff);
+	}
 	
-	return create_asm_return(lreg->result, lreg->type);
+	return create_asm_return(argument_flag ? "rax" : lreg->result, lreg->type);
 }
 
 static AsmReturn* generate_floating_div(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int is_double)
@@ -239,7 +245,7 @@ static AsmReturn* generate_floating_div(CodeGen* codegen, AsmReturn* lreg, AsmRe
 	return create_asm_return(lreg->result, lreg->type);
 }
 
-AsmReturn* generate_div_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area)
+AsmReturn* generate_div_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int argument_flag)
 {
 	if (lreg->type->type == TYPE_FLOAT || lreg->type->type == TYPE_DOUBLE)
 	{
@@ -255,7 +261,7 @@ AsmReturn* generate_div_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* 
 	
 	add_line_to_area(area, "	idiv	ebx");
 	
-	return create_asm_return("eax", lreg->type);
+	return create_asm_return(argument_flag ? "rax" : "eax", lreg->type);
 }
 
 AsmReturn* generate_plus_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)

@@ -85,22 +85,22 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 
 		case TOKEN_OPERATOR_INCREMENT:
 		{
-			return generate_increment_operation(codegen, left, area);
+			return generate_increment_operation(codegen, left, area, argument_flag);
 		}
 		
 		case TOKEN_OPERATOR_DECREMENT:
 		{
-			return generate_decrement_operation(codegen, left, area);
+			return generate_decrement_operation(codegen, left, area, argument_flag);
 		}
 
 		case TOKEN_OPERATOR_DIVIDED:
 		{
-			return generate_div_operation(codegen, left, right, area);
+			return generate_div_operation(codegen, left, right, area, argument_flag);
 		}
 
 		case TOKEN_CHAR_STAR:
 		{
-			return generate_multiply_operation(codegen, left, right, area);
+			return generate_multiply_operation(codegen, left, right, area, argument_flag);
 		}
 
 		case TOKEN_OPERATOR_PLUS_EQUALS:

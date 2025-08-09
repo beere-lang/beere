@@ -1,5 +1,4 @@
 * Todo-List:
- 00 - Adicionar suporte a 'argument-flag' nas novas operações
  01 - Não permitir variaveis static e globais ao mesmo tempo (não tem sentido)
  02 - Testar totalmente classes pra checar bugs, etc.
  03 - Adicionar cast implicito em argumentos em function calls.
