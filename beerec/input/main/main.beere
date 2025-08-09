@@ -1,16 +1,4 @@
-fn main() {
-    let i: int = 0
-
-    switch (i) {
-        case 0:
-        {
-            let j: int = 10
-            break
-        }
-
-        case 1:
-        {
-            let g: bool = i > 0
-        }
-    }
+fn main(): void {
+    let a: float = 0.0F
+    a /= 10.0F
 }

@@ -10,16 +10,27 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 {
 	OperationNode* op_node = &node->operation_node.operation;
 	
-	int right_force_arg = 1;
+	int right_force_reg = 1;
+	int left_force_reg = 1;
 	
-	if (node->operation_node.operation.right->type == NODE_LITERAL)
+	if (op_node->right->type == NODE_LITERAL)
 	{
-		right_force_arg = 0;
+		right_force_reg = 0;
+	}
+
+	if (op_node->op == TOKEN_OPERATOR_INCREMENT || op_node->op == TOKEN_OPERATOR_DECREMENT || op_node->op == TOKEN_OPERATOR_PLUS_EQUALS || op_node->op == TOKEN_OPERATOR_MINUS_EQUALS || op_node->op == TOKEN_OPERATOR_TIMES_EQUALS || op_node->op == TOKEN_OPERATOR_DIVIDED_EQUALS)
+	{
+		left_force_reg = 0;
 	}
 	
-	AsmReturn* left = generate_expression(codegen, node->operation_node.operation.left, area, 1, 0, 0);
-	AsmReturn* right = generate_expression(codegen, node->operation_node.operation.right, area, right_force_arg, 1, 0);
+	AsmReturn* left = generate_expression(codegen, node->operation_node.operation.left, area, left_force_reg, 0, 0);
+	AsmReturn* right = NULL;
 	
+	if (op_node->op != TOKEN_OPERATOR_INCREMENT && op_node->op != TOKEN_OPERATOR_DECREMENT)
+	{
+		right = generate_expression(codegen, node->operation_node.operation.right, area, right_force_reg, 1, 0);
+	}
+
 	switch (op_node->op)
 	{
 		case TOKEN_OPERATOR_PLUS:
@@ -74,12 +85,42 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 
 		case TOKEN_OPERATOR_INCREMENT:
 		{
-			return generate_increment_operation(codegen, left, right, area);
+			return generate_increment_operation(codegen, left, area, argument_flag);
 		}
 		
 		case TOKEN_OPERATOR_DECREMENT:
 		{
-			return generate_decrement_operation(codegen, left, right, area);
+			return generate_decrement_operation(codegen, left, area, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_DIVIDED:
+		{
+			return generate_div_operation(codegen, left, right, area, argument_flag);
+		}
+
+		case TOKEN_CHAR_STAR:
+		{
+			return generate_multiply_operation(codegen, left, right, area, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_PLUS_EQUALS:
+		{
+			return generate_plus_equals_operation(codegen, left, right, area, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_MINUS_EQUALS:
+		{
+			return generate_minus_equals_operation(codegen, left, right, area, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_TIMES_EQUALS:
+		{
+			return generate_times_equals_operation(codegen, left, right, area, argument_flag);
+		}
+
+		case TOKEN_OPERATOR_DIVIDED_EQUALS:
+		{
+			return generate_div_equals_operation(codegen, left, right, area, argument_flag);
 		}
 
 		default:

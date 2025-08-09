@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "codegen.h"
+#include "impl/expressions/operations/codegen-op.h"
 #include "impl/oop/codegen-class.h"
 #include "impl/statements/assign/fields/codegen-field-assgn.h"
 #include "impl/statements/break/codegen-break.h"
@@ -190,6 +191,33 @@ Constant* generate_constant(Node* literal)
 	return constant;
 }
 
+Constant* generate_directly_constant(double value, int is_double)
+{
+	Constant* constant = create_constant();
+	char buff[64];
+
+	char* size = (is_double) ? "dq" : "dd";
+	snprintf(buff, 64, "%s %f", size, value);
+	
+	constant->value = strdup(buff);
+
+	Constant* cache = check_constants_cache(constant);
+
+	if (cache != NULL)
+	{
+		free(constant->value);
+		free(constant);
+
+		constant = cache;
+	}
+	else
+	{
+		add_to_constant_table(constant);
+	}
+
+	return constant;
+}
+
 static int check_externs_cache(ExternEntry* entry)
 {
 	for (int i = 0; i < extern_table->externs_length; i++)
@@ -351,6 +379,13 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 		case NODE_CLASS:
 		{
 			generate_class(codegen, node, area);
+
+			return;
+		}
+
+		case NODE_OPERATION:
+		{
+			generate_operation(codegen, node, area, 0, 0, 0);
 
 			return;
 		}
