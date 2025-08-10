@@ -21,6 +21,47 @@ static Node* parse_block(Parser* parser);
 static Node* parse_and(Parser* parser);
 static Node* parse_or(Parser* parser);
 
+ClassTable* class_table = NULL;
+
+static void setup_class_table()
+{
+	ClassTable* table = malloc(sizeof(ClassTable));
+	
+	table->classes = malloc(sizeof(char*) * 4);
+	table->length = 0;
+	table->capacity = 4;
+
+	class_table = table;
+}
+
+static int has_in_table(char* class_name)
+{
+	for (int i = 0; i < class_table->length; i++)
+	{
+		char* curr = class_table->classes[i];
+
+		if (strcmp(class_name, curr) == 0)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static void add_class_to_table(char* class_name)
+{
+	if (class_table->length >= class_table->capacity)
+	{
+		class_table->capacity *= 2;
+
+		class_table->classes = malloc(sizeof(char*) * class_table->capacity);
+	}
+
+	class_table->classes[class_table->length] = strdup(class_name);
+	class_table->length++;
+}
+
 static Token* peek_tkn(const Parser* parser)
 {
 	return parser->current;
@@ -1837,6 +1878,8 @@ static Node* parse_class(Parser* parser)
 
 	char* identifier = strndup(identifier_token->start, identifier_token->length);
 
+	add_class_to_table(identifier);
+
 	int decl_count = 0;
 
 	Node* constructor = NULL;
@@ -2102,36 +2145,52 @@ Node* parse_stmt(Parser* parser)
 	return left;
 }
 
+static int is_class_identifier(char* class_name)
+{
+	return has_in_table(class_name);
+}
+
 static Node* parse_unary(Parser* parser)
 {
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_TYPE)
+	if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_PAREN && (peek_ahead(parser)->token_type == TOKEN_KEYWORD_TYPE || peek_ahead(parser)->token_type == TOKEN_IDENTIFIER))
 	{
-		Type* type = create_type(peek_tkn(parser)->var_type, NULL);
+		int maybe_class = peek_ahead(parser)->token_type == TOKEN_IDENTIFIER;
+		int can_pass = 1;
 		
-		advance_tkn(parser);
+		if (maybe_class)
+		{
+			Token* token = peek_ahead(parser);
 
-		expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
-		advance_tkn(parser);
-
-		Node* expression = parse_expression(parser);
-
-		expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_CLOSE_PAREN }, 1);
-		advance_tkn(parser);
-		
-		Node* node = malloc(sizeof(Node));
-
-		if (node == NULL) 
-		{ 
-			parser_error("Failed to allocate memory for cast node..."); 
-			exit(1); 
+			if (!is_class_identifier(strndup(token->start, token->length)))
+			{
+				can_pass = 0;
+			}
 		}
 
-		node->type = NODE_CAST;
+		if (can_pass)	
+		{
+			Type* type = handle_type_declaration(parser);
+			
+			expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_CLOSE_PAREN }, 1);
+			advance_tkn(parser);
 
-		node->cast_statement_node.cast_node.cast_type = type;
-		node->cast_statement_node.cast_node.expression = expression;
-
-		return node;
+			Node* expression = parse_unary(parser);
+			
+			Node* node = malloc(sizeof(Node));
+	
+			if (node == NULL)
+			{ 
+				parser_error("Failed to allocate memory for cast node..."); 
+				exit(1); 
+			}
+	
+			node->type = NODE_CAST;
+	
+			node->cast_statement_node.cast_node.cast_type = type;
+			node->cast_statement_node.cast_node.expression = expression;
+	
+			return node;
+		}
 	}
 	
 	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_ADRESS)

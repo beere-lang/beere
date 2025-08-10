@@ -3019,7 +3019,9 @@ static void analyzer_handle_var_assign(Module* module, Node* node, SymbolTable* 
 		exit(1);
 	}
 
-	analyzer_implictly_cast_all(module, type, expression, scope);
+	analyzer_analyze_node(module, expression, scope, NULL);
+	
+	node->variable_assign_node.variable_assign.assign_value = analyzer_implictly_cast_all(module, type, expression, scope);
 }
 
 static Node* analyzer_get_function_from_class(Symbol* class, char* func_name)
