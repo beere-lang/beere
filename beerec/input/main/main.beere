@@ -1,4 +1,6 @@
 fn main(): void {
     let a: float = 0.0F
-    a = (int) 10.0F
+    let ap: float* = &a
+
+    let b: int* = (int*) ap
 }

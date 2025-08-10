@@ -112,6 +112,13 @@ AsmReturn* generate_cast(CodeGen* codegen, Node* node, AsmArea* area, int prefer
 		{
 			return generate_to_double(codegen, node, area, prefer_second);
 		}
+
+		case TYPE_PTR:
+		{
+			AsmReturn* ret = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, prefer_second, argument_flag);
+
+			return ret;
+		}
 		
 		default:
 		{

@@ -286,6 +286,14 @@ TokenType get_by_keyword_type(Lexer* lexer, const char* start, const size_t leng
 			break;
 		}
 
+		case 'd':
+		{
+			if (length == 6 && strncmp(start, "double", 6) == 0)
+			{
+				return TOKEN_KEYWORD_TYPE;
+			}
+		}
+
 		case 'l':
 		{
 			if (length == 3 && strncmp(start, "let", 3) == 0)

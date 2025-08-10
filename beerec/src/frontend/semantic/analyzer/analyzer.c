@@ -1007,6 +1007,38 @@ static int analyzer_is_equals(Type* type, VarType enum_type)
 	return 0;
 }
 
+static int pointers_has_the_same_depth(Type* type, Type* _type)
+{
+	if (type->type != TYPE_PTR || _type->type != TYPE_PTR)
+	{
+		exit(1);
+	}
+
+	Type* next = type;
+	Type* _next = _type;
+
+	while (1)
+	{
+		if (next->type != TYPE_PTR || _next->type != TYPE_PTR)
+		{
+			if (next->type == TYPE_PTR || _next->type == TYPE_PTR)
+			{
+				return 0;
+			}
+		}
+
+		if (next->type != TYPE_PTR && _next->type != TYPE_PTR)
+		{
+			break;
+		}
+
+		next = next->base;
+		_next = _next->base;
+	}
+
+	return 1;
+}
+
 /**
  * Checa se dois tipos são compativeis
  * 
@@ -1014,7 +1046,7 @@ static int analyzer_is_equals(Type* type, VarType enum_type)
  *   INT e FLOAT --> compativeis, são numericos.
  *   INT e BOOL --> não são compativeis.
  */
-static int analyzer_is_compatible(Type* first, Type* second, SymbolTable* scope)
+static int analyzer_is_compatible(Type* first, Type* second, SymbolTable* scope, int cast)
 {
 	if (analyzer_is_numeric(first) && analyzer_is_numeric(second))
 	{
@@ -1052,7 +1084,7 @@ static int analyzer_is_compatible(Type* first, Type* second, SymbolTable* scope)
 
 	if (analyzer_is_equals(first, TYPE_PTR) || analyzer_is_equals(second, TYPE_PTR))
 	{
-		if (analyzer_is_type_identic(first, second, scope))
+		if ((cast && pointers_has_the_same_depth(first, second)) || analyzer_is_type_identic(first, second, scope))
 		{
 			return 1;
 		}
@@ -1099,7 +1131,7 @@ static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scop
 
 		if (type->type == TYPE_CLASS)
 		{
-			if (!analyzer_is_compatible(type, _type, scope))
+			if (!analyzer_is_compatible(type, _type, scope, 0))
 			{
 				return 0;
 			}
@@ -2181,7 +2213,7 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 		case TOKEN_OPERATOR_INCREMENT: // ++
 		case TOKEN_OPERATOR_DECREMENT: // --
 		{
-			if (analyzer_is_compatible(left, right, scope))
+			if (analyzer_is_compatible(left, right, scope, 0))
 			{
 				return 1;
 			}
@@ -2194,7 +2226,7 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 		case TOKEN_OPERATOR_EQUALS: // ==
 		case TOKEN_OPERATOR_NOT_EQUALS:
 		{
-			if (analyzer_is_compatible(left, right, scope))
+			if (analyzer_is_compatible(left, right, scope, 0))
 			{
 				return 1;
 			}
@@ -2226,7 +2258,7 @@ static Node* analyzer_implictly_cast_all(Module* module, Type* preffered, Node* 
 		}
 	}
 
-	if (!analyzer_is_compatible(type, preffered, scope))
+	if (!analyzer_is_compatible(type, preffered, scope, 0))
 	{
 		printf("[Analyzer] [Debug] Expression type is incompatible...\n");
 		exit(1);
@@ -3355,7 +3387,7 @@ static void analyzer_handle_cast(Module* module, Node* node, SymbolTable* scope)
 		exit(1);
 	}
 
-	if (!analyzer_is_compatible(node->cast_statement_node.cast_node.cast_type, expression_type, scope))
+	if (!analyzer_is_compatible(node->cast_statement_node.cast_node.cast_type, expression_type, scope, 1))
 	{
 		printf("[Analyzer] [Debug] Incompatible cast types...\n");
 		exit(1);
