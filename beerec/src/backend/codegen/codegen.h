@@ -85,6 +85,7 @@ struct ExternEntry
 	char* label;
 };
 
+Constant* generate_directly_constant(double value, int is_double);
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area);
 AsmReturn* create_asm_return(char* value, Type* type);
 void setup_codegen(Module* module, CodeGen* codegen);
