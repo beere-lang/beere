@@ -13,14 +13,16 @@ typedef struct CodeGen CodeGen;
 typedef struct Constant Constant;
 typedef struct ExternTable ExternTable;
 typedef struct ClassOffsetsTable ClassOffsetsTable;
-typedef struct ConstantTable ConstantTable;
-typedef struct ExternEntry ExternEntry;
-typedef struct AsmReturn AsmReturn;
+typedef struct MethodRegisterStack MethodRegisterStack;
+typedef struct MethodRegisterStackTable MethodRegisterStackTable;
 typedef struct RegistersTable RegistersTable;
 typedef struct RegistersClass RegistersClass;
 typedef struct AsmReturnValue AsmReturnValue;
-typedef struct AsmArea AsmArea;
+typedef struct ConstantTable ConstantTable;
+typedef struct ExternEntry ExternEntry;
+typedef struct AsmReturn AsmReturn;
 typedef struct Register Register;
+typedef struct AsmArea AsmArea;
 
 extern AsmArea* externs_section;
 extern AsmArea* text_section;
@@ -146,10 +148,28 @@ struct Register
 	Register* child;
 };
 
+struct MethodRegisterStack
+{
+	Symbol* method;
+	
+	Register** registers;
+
+	int registers_capacity;
+	int registers_length;
+};
+
+struct MethodRegisterStackTable
+{
+	MethodRegisterStack** stacks;
+
+	int stacks_capacity;
+	int stacks_length;
+};
+
 AsmReturn* create_asm_return(char* value, Register* reg, Type* type, int is_reg);
+Register* find_and_use_register(Type* type, BitsSize size, Symbol* method);
 Constant* generate_directly_constant(double value, int is_double);
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area);
-Register* find_and_use_register(Type* type, BitsSize size);
 void setup_codegen(Module* module, CodeGen* codegen);
 void add_extern_entry_to_table(ExternEntry* entry);
 void add_line_to_area(AsmArea* area, char* line);

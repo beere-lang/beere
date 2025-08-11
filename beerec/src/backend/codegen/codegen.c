@@ -28,6 +28,31 @@ AsmArea* bss_section = NULL;
 ExternTable* extern_table = NULL;
 ClassOffsetsTable* class_offsets_table = NULL;
 RegistersTable* registers_table = NULL;
+MethodRegisterStackTable* register_stack_table = NULL;
+
+static void setup_register_stack_table()
+{
+	MethodRegisterStackTable* stack_table = malloc(sizeof(MethodRegisterStackTable));
+
+	stack_table->stacks = malloc(sizeof(MethodRegisterStack*) * 4);
+	stack_table->stacks_capacity = 4;
+	stack_table->stacks_length = 0;
+
+	register_stack_table = stack_table;
+}
+
+static void add_stack_to_table(MethodRegisterStack* stack)
+{
+	if (register_stack_table->stacks_length >= register_stack_table->stacks_capacity)
+	{
+		register_stack_table->stacks_capacity *= 2;
+
+		register_stack_table->stacks = realloc(register_stack_table->stacks, sizeof(RegistersClass*) * register_stack_table->stacks_capacity);
+	}
+
+	register_stack_table->stacks[register_stack_table->stacks_length] = stack;
+	register_stack_table->stacks_length++;
+}
 
 static void setup_registers_table()
 {
@@ -45,7 +70,7 @@ static void add_class_to_table(RegistersClass* class)
 	{
 		registers_table->registers_classes_capacity *= 2;
 
-		registers_table->registers_classes = realloc(registers_table->registers_classes, registers_table->registers_classes_capacity);
+		registers_table->registers_classes = realloc(registers_table->registers_classes, sizeof(RegistersClass*) * registers_table->registers_classes_capacity);
 	}
 
 	registers_table->registers_classes[registers_table->registers_classes_length] = class;
@@ -72,7 +97,7 @@ static void add_register_to_class(Register* reg, RegistersClass* class)
 	{
 		class->registers_capacity *= 2;
 
-		class->registers = realloc(class->registers, class->registers_capacity);
+		class->registers = realloc(class->registers, sizeof(Register*) * class->registers_capacity);
 	}
 
 	class->registers[class->registers_length] = reg;
@@ -364,6 +389,26 @@ static void init_registers_table()
 	}
 }
 
+Register* find_register_piece_with_size(Register* reg, BitsSize size)
+{
+	if (reg == NULL)
+	{
+		return NULL;
+	}
+
+	if (reg->size == size)
+	{
+		return reg;
+	}
+
+	if (size > reg->size) // * a ordem declarada no enum importa *
+	{
+		return find_register_piece_with_size(reg->parent, size);
+	}
+
+	return find_register_piece_with_size(reg->child, size);
+}
+
 static void set_all_family_registers(int in_use, Register* reg)
 {
 	Register* parent_reg = reg->parent;
@@ -387,7 +432,22 @@ static void set_all_family_registers(int in_use, Register* reg)
 	reg->in_use = in_use;
 }
 
-Register* find_and_use_register(Type* type, BitsSize size)
+MethodRegisterStack* find_method_stack(Symbol* method)
+{
+	for (int i = 0; i < register_stack_table->stacks_length; i++)
+	{
+		MethodRegisterStack* curr = register_stack_table->stacks[i];
+
+		if (curr->method == method)
+		{
+			return curr;
+		}
+	}
+
+	return NULL;
+}
+
+Register* find_and_use_register(Type* type, BitsSize size, Symbol* method)
 {
 	RegistersClass* class = find_registers_class(CLASS_GENERALS);
 
@@ -424,6 +484,55 @@ Register* find_and_use_register(Type* type, BitsSize size)
 void unuse_register(Register* reg)
 {
 	set_all_family_registers(0, reg);
+}
+
+MethodRegisterStack* setup_method_register_stack(Symbol* method)
+{
+	MethodRegisterStack* stack = malloc(sizeof(MethodRegisterStack));
+
+	stack->method = method;
+	
+	stack->registers = malloc(sizeof(Register*) * 4);
+	
+	stack->registers_capacity = 4;
+	stack->registers_length = 0;
+
+	add_stack_to_table(stack);
+
+	return stack;
+}
+
+Register* has_register_in_stack(MethodRegisterStack* stack, Register* reg)
+{
+	for (int i = 0; i < stack->registers_length; i++)
+	{
+		Register* curr = stack->registers[i];
+
+		if (curr == reg) // todos os registers usados devem apontar pro mesmo endereço
+		{
+			return curr;
+		}
+	}
+
+	return NULL;
+}
+
+void add_register_to_stack(MethodRegisterStack* stack, Register* reg)
+{
+	if (has_register_in_stack(stack, reg) != NULL)
+	{
+		return;
+	}
+	
+	if (stack->registers_length >= stack->registers_capacity)
+	{
+		stack->registers_capacity *= 2;
+
+		stack->registers = realloc(stack->registers, sizeof(Register*) * stack->registers_capacity);
+	}
+
+	stack->registers[stack->registers_length] = reg;
+	stack->registers_length++;
 }
 
 AsmReturn* create_asm_return(char* value, Register* reg, Type* type, int is_reg)
@@ -697,6 +806,8 @@ void setup_codegen(Module* module, CodeGen* codegen)
 
 	setup_registers_table();
 	init_registers_table();
+
+	setup_register_stack_table();
 }
 
 static void print_constants()
