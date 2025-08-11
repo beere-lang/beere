@@ -389,6 +389,28 @@ static void init_registers_table()
 	}
 }
 
+Register* find_register_by_name(char* name, Type* type)
+{
+	RegistersClass* class = find_registers_class(CLASS_GENERALS);
+
+	if (type->type == TYPE_DOUBLE || type->type == TYPE_FLOAT)
+	{
+		class = find_registers_class(CLASS_FLOATS);
+	}
+
+	for (int i = 0; i < class->registers_length; i++)
+	{
+		Register* curr = class->registers[i];
+
+		if (strcmp(name, curr->reg) == 0)
+		{
+			return curr;
+		}
+	}
+
+	return NULL;
+}
+
 Register* find_register_piece_with_size(Register* reg, BitsSize size)
 {
 	if (reg == NULL)
@@ -844,6 +866,21 @@ void print_code_generated(CodeGen* codegen)
 	print_area(text_section);
 }
 
+Symbol* find_owner_method(SymbolTable* scope)
+{
+	if (scope == NULL)
+	{
+		return NULL;
+	}
+
+	if (scope->scope_kind == SYMBOL_FUNCTION)
+	{
+		return scope->owner_statement;
+	}
+
+	return find_owner_method(scope->parent);
+}
+
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 {
 	switch (node->type)
@@ -899,7 +936,7 @@ void generate_node(CodeGen* codegen, Node* node, AsmArea* area)
 
 		case NODE_OPERATION:
 		{
-			generate_operation(codegen, node, area, 0, 0, 0, 0);
+			generate_operation(codegen, node, area, 0);
 
 			return;
 		}

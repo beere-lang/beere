@@ -3,24 +3,22 @@
 #include "codegen-lit.h"
 #include "../../../../../frontend/structure/parser/parser.h"
 
-static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int prefer_third, int argument_flag)
+static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	int value = literal->int_value;
 	
 	char buff[64];
-	char* result = NULL;
+	
+	Register* result = NULL;
+	char* val = NULL;
 	
 	if (force_reg)
 	{
-		char* reg = prefer_second ? "ebx" : "eax";
+		Type* type = create_type(TYPE_INT, NULL);
+		Register* reg = find_and_use_register(type, BITS_SIZE_32, find_owner_method(codegen->scope));
 
-		if (prefer_third)
-		{
-			reg = "edx";
-		}
-
-		snprintf(buff, 64, "	mov	%s, %d", reg, value);
+		snprintf(buff, 64, "	mov	%s, %d", reg->reg, value);
 		result = reg;
 
 		add_line_to_area(area, buff);
@@ -28,75 +26,54 @@ static AsmReturn* generate_int_literal(CodeGen* codegen, Node* node, AsmArea* ar
 	else
 	{
 		snprintf(buff, 64, "%d", value);
-		result = buff;
+		val = buff;
 	}
 
-	if (argument_flag && force_reg)
-	{
-		char* regs = prefer_second ? "rbx" : "rax";
+	Type* type = create_type(TYPE_INT, NULL);
 
-		if (prefer_third)
-		{
-			regs = "rdx";
-		}
-
-		result = regs;
-	}
-
-	return create_asm_return(result, create_type(TYPE_INT, NULL));
+	return create_asm_return(val, result, type, force_reg);
 }
 
-static AsmReturn* generate_float_literal(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int prefer_third)
+static AsmReturn* generate_float_literal(CodeGen* codegen, Node* node, AsmArea* area)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	int value = literal->int_value;
 	
+	Type* type = create_type(TYPE_FLOAT, NULL);
+	
 	Constant* constant = generate_constant(node);
-
-	char* reg = prefer_second ? "xmm1" : "xmm0";
-
-	if (prefer_third)
-	{
-		reg = "xmm3";
-	}
+	Register* reg = find_and_use_register(type, BITS_SIZE_32, find_owner_method(codegen->scope));
 
 	char buff[64];
-	snprintf(buff, 64, "	movss	%s, dword [rel .LC%d]", reg, constant->id);
+	snprintf(buff, 64, "	movss	%s, dword [rel .LC%d]", reg->reg, constant->id);
 
 	add_line_to_area(area, buff);
 
-	return create_asm_return(reg, create_type(TYPE_FLOAT, NULL));
+	return create_asm_return(NULL, reg, type, 1);
 }
 
-static AsmReturn* generate_bool_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int prefer_third)
+static AsmReturn* generate_bool_literal(CodeGen* codegen, Node* node, AsmArea* area, int force_reg)
 {
 	LiteralNode* literal = &node->literal_node.literal;
 	int value = literal->bool_value;
 	
-	char* reg = prefer_second ? "bl" : "al";
-
-	if (prefer_third)
-	{
-		reg = "dl";
-	}
+	Type* type = create_type(TYPE_BOOL, NULL);
+	Register* reg = find_and_use_register(type, BITS_SIZE_8, find_owner_method(codegen->scope));
 
 	char buff[64];
 	
 	if (force_reg)
 	{
-		snprintf(buff, 64, "	mov	%s, %d", reg, value);
+		snprintf(buff, 64, "	mov	%s, %d", reg->reg, value);
 		add_line_to_area(area, buff);
 	
-		AsmReturn* ret = create_asm_return(reg, create_type(TYPE_BOOL, NULL));
-		ret->is_reg = 1;
-
-		return ret;
+		return create_asm_return(NULL, reg, type, 1);
 	}
 	else
 	{
 		snprintf(buff, 64, "%d", value);
 		
-		return create_asm_return(buff, create_type(TYPE_BOOL, NULL));
+		return create_asm_return(buff, NULL, type, 0);
 	}
 }
 
@@ -108,17 +85,17 @@ AsmReturn* generate_literal(CodeGen* codegen, Node* node, AsmArea* area, int for
 	{
 		case TYPE_INT:
 		{
-			return generate_int_literal(codegen, node, area, force_reg, prefer_second, prefer_third, argument_flag);
+			return generate_int_literal(codegen, node, area, force_reg);
 		}
 		
 		case TYPE_FLOAT:
 		{
-			return generate_float_literal(codegen, node, area, prefer_second, prefer_third);
+			return generate_float_literal(codegen, node, area);
 		}
 
 		case TYPE_BOOL:
 		{
-			return generate_bool_literal(codegen, node, area, force_reg, prefer_second, prefer_third);
+			return generate_bool_literal(codegen, node, area, force_reg);
 		}
 		
 		default:

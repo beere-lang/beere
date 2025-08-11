@@ -170,9 +170,11 @@ AsmReturn* create_asm_return(char* value, Register* reg, Type* type, int is_reg)
 Register* find_and_use_register(Type* type, BitsSize size, Symbol* method);
 Constant* generate_directly_constant(double value, int is_double);
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area);
+Register* find_register_by_name(char* name, Type* type);
 void setup_codegen(Module* module, CodeGen* codegen);
 void add_extern_entry_to_table(ExternEntry* entry);
 void add_line_to_area(AsmArea* area, char* line);
+Symbol* find_owner_method(SymbolTable* scope);
 ExternEntry* create_extern_entry(char* label);
 AsmArea* create_area_with_label(char* label);
 void print_code_generated(CodeGen* codegen);

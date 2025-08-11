@@ -87,282 +87,300 @@ static char* get_mov_opcode_for_type(Type* type)
 AsmReturn* generate_plus_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
 	char buff[64];
-	snprintf(buff, 64, "	%s	%s, %s", get_add_opcode_for_type(left_value->type), left_value->result, right_value->result);
 
+	snprintf(buff, 64, "	%s	%s, %s", get_add_opcode_for_type(left_value->type), left_value->value->reg->reg, right_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	if (argument_flag && left_value->type->type != TYPE_DOUBLE && left_value->type->type != TYPE_FLOAT)
-	{
-		snprintf(buff, 64, "	mov	rax, %s", left_value->result);
-		add_line_to_area(area, buff);
+	unuse_register(right_value->value->reg);
 
-		return create_asm_return("rax", left_value->type);
-	}
-	
-	return create_asm_return(left_value->result, left_value->type);
+	return create_asm_return(NULL, left_value->value->reg, left_value->type, 1);
 }
 
 AsmReturn* generate_minus_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
 	char buff[64];
-	snprintf(buff, 64, "	%s	%s, %s", get_sub_opcode_for_type(left_value->type), left_value->result, right_value->result);
 
+	snprintf(buff, 64, "	%s	%s, %s", get_sub_opcode_for_type(left_value->type), left_value->value->reg->reg, right_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	if (argument_flag && left_value->type->type != TYPE_DOUBLE && left_value->type->type != TYPE_FLOAT)
-	{
-		snprintf(buff, 64, "	mov	rax, %s", left_value->result);
-		add_line_to_area(area, buff);
+	unuse_register(right_value->value->reg);
 
-		return create_asm_return("rax", left_value->type);
-	}
-	
-	return create_asm_return(left_value->result, left_value->type);
+	return create_asm_return(NULL, left_value->value->reg, left_value->type, 1);
 }
 
-static AsmReturn* generate_floating_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
+AsmReturn* generate_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area, int argument_flag)
 {
 	char buff[64];
 
-	int is_double = (left_value->type->type == TYPE_DOUBLE);
-	char* opcode = (is_double) ? "movsd" : "movss";
-	char* _opcode = (is_double) ? "addsd" : "addss";
+	Register* reg = find_and_use_register(left_value->type, BITS_SIZE_32, find_owner_method(codegen->scope));
 
-	snprintf(buff, 64, "	%s	xmm0, %s", opcode, left_value->result);
+	snprintf(buff, 64, "	mov	%s, %s", reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	Constant* constant = generate_directly_constant(1, is_double);
+	snprintf(buff, 64, "	dec	%s", reg->reg);
+	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	xmm1, [rel .LC%d]", opcode, constant->id);
+	snprintf(buff, 64, "	mov	%s, %s", left_value->value->reg->reg, reg->reg);
 	add_line_to_area(area, buff);
-	
-	snprintf(buff, 64, "	%s	%s, xmm1", _opcode, left_value->result);
-	add_line_to_area(area, buff);
-	
-	return create_asm_return("xmm0", left_value->type);
+
+	unuse_register(left_value->value->reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
 
 AsmReturn* generate_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area, int argument_flag)
 {
-	if (left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE)
-	{
-		return generate_floating_increment_operation(codegen, left_value, area);
-	}
-	
 	char buff[64];
 
-	snprintf(buff, 64, "	mov	eax, %s", left_value->result);
+	Register* reg = find_and_use_register(left_value->type, BITS_SIZE_32, find_owner_method(codegen->scope));
+
+	snprintf(buff, 64, "	mov	%s, %s", reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
-	
-	snprintf(buff, 64, "	inc	%s", left_value->result);
+
+	snprintf(buff, 64, "	inc	%s", reg->reg);
 	add_line_to_area(area, buff);
-	
-	return create_asm_return(argument_flag ? "rax" : "eax", left_value->type);
+
+	snprintf(buff, 64, "	mov	%s, %s", left_value->value->reg->reg, reg->reg);
+	add_line_to_area(area, buff);
+
+	unuse_register(left_value->value->reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
 
 static AsmReturn* generate_floating_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
 {
 	char buff[64];
 
-	int is_double = (left_value->type->type == TYPE_DOUBLE);
+	Register* reg = find_and_use_register(left_value->type, BITS_SIZE_32, find_owner_method(codegen->scope));
+
+	snprintf(buff, 64, "	mov	%s, %s", reg->reg, left_value->value->reg->reg);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	dec	%s", reg->reg);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	mov	%s, %s", left_value->value->reg->reg, reg->reg);
+	add_line_to_area(area, buff);
+
+	unuse_register(left_value->value->reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
+}
+
+static AsmReturn* generate_floating_increment_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area)
+{
+	char buff[64];
+	int is_double = left_value->type->type == TYPE_DOUBLE;
+
+	Register* reg = find_and_use_register(left_value->type, is_double ? BITS_SIZE_64 : BITS_SIZE_32, find_owner_method(codegen->scope));
+	
 	char* opcode = (is_double) ? "movsd" : "movss";
-	char* _opcode = (is_double) ? "subsd" : "subss";
+	char* add_opcode = (is_double) ? "addsd" : "addss";
 
-	snprintf(buff, 64, "	%s	xmm0, %s", opcode, left_value->result);
+	snprintf(buff, 64, "	%s	%s, %s", opcode, reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	Constant* constant = generate_directly_constant(1, is_double);
+	snprintf(buff, 64, "	%s	%s", add_opcode, reg->reg);
+	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	xmm1, [rel .LC%d]", opcode, constant->id);
+	snprintf(buff, 64, "	%s	%s, %s", opcode, left_value->value->reg->reg, reg->reg);
 	add_line_to_area(area, buff);
-	
-	snprintf(buff, 64, "	%s	%s, xmm1", _opcode, left_value->result);
-	add_line_to_area(area, buff);
-	
-	return create_asm_return("xmm0", left_value->type);
+
+	unuse_register(left_value->value->reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
 
-AsmReturn* generate_decrement_operation(CodeGen* codegen, AsmReturn* left_value, AsmArea* area, int argument_flag)
-{
-	if (left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE)
-	{
-		return generate_floating_decrement_operation(codegen, left_value, area);
-	}
-
-	char buff[64];
-
-	snprintf(buff, 64, "	mov	eax, %s", left_value->result);
-	add_line_to_area(area, buff);
-
-	snprintf(buff, 64, "	dec	%s", left_value->result);
-	add_line_to_area(area, buff);
-
-	return create_asm_return(argument_flag ? "rax" : "eax", left_value->type);
-}
-
-static AsmReturn* generate_floating_multiply(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int is_double)
+static AsmReturn* generate_floating_multiply(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int is_double)
 {
 	char buff[64];
-
 	char* opcode = (is_double) ? "mulsd" : "mulss";
 
-	snprintf(buff, 64, "	%s	%s, %s", opcode, lreg->result, rreg->result);
-	add_line_to_area(area, buff);
-	
-	return create_asm_return(lreg->result, lreg->type);
-}
-
-AsmReturn* generate_multiply_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int argument_flag)
-{
-	if (lreg->type->type == TYPE_FLOAT || lreg->type->type == TYPE_DOUBLE)
-	{
-		generate_floating_multiply(codegen, lreg, rreg, area, (lreg->type->type == TYPE_DOUBLE));
-	}
-
-	char buff[64];
-
-	snprintf(buff, 64, "	imul	%s, %s", lreg->result, rreg->result);
+	snprintf(buff, 64, "	%s	%s, %s", opcode, left_value->value->reg->reg, right_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	if (argument_flag)
-	{
-		snprintf(buff, 64, "	mov	eax, %s", lreg->result);
-		add_line_to_area(area, buff);
-	}
-	
-	return create_asm_return(argument_flag ? "rax" : lreg->result, lreg->type);
+	unuse_register(right_value->value->reg);
+
+	return create_asm_return(NULL, left_value->value->reg, left_value->type, 1);
 }
 
-static AsmReturn* generate_floating_div(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int is_double)
+AsmReturn* generate_multiply_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
 	char buff[64];
 
+	snprintf(buff, 64, "	imul	%s, %s", left_value->value->reg->reg, right_value->value->reg->reg);
+	add_line_to_area(area, buff);
+
+	unuse_register(right_value->value->reg);
+
+	return create_asm_return(NULL, left_value->value->reg, left_value->type, 1);
+}
+
+static AsmReturn* generate_floating_div(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int is_double)
+{
+	char buff[64];
 	char* opcode = (is_double) ? "divsd" : "divss";
 
-	snprintf(buff, 64, "	%s	%s, %s", opcode, lreg->result, rreg->result);
+	snprintf(buff, 64, "	%s	%s, %s", opcode, left_value->value->reg->reg, right_value->value->reg->reg);
 	add_line_to_area(area, buff);
-	
-	return create_asm_return(lreg->result, lreg->type);
+
+	unuse_register(right_value->value->reg);
+
+	return create_asm_return(NULL, left_value->value->reg, left_value->type, 1);
 }
 
-AsmReturn* generate_div_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int argument_flag)
+// used registers (eax, edx)
+AsmReturn* generate_div_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
-	if (lreg->type->type == TYPE_FLOAT || lreg->type->type == TYPE_DOUBLE)
-	{
-		generate_floating_div(codegen, lreg, rreg, area, (lreg->type->type == TYPE_DOUBLE));
-	}
-
 	char buff[64];
 
-	add_line_to_area(area, "	cdq");
-
-	snprintf(buff, 64, "	mov	ebx, %s", rreg->result);
+	snprintf(buff, 64, "	mov	eax, %s", left_value->value->reg->reg);
 	add_line_to_area(area, buff);
-	
-	add_line_to_area(area, "	idiv	ebx");
-	
-	return create_asm_return(argument_flag ? "rax" : "eax", lreg->type);
+
+	add_line_to_area(area, "cdq");
+
+	snprintf(buff, 64, "	idiv	%s", right_value->value->reg->reg);
+	add_line_to_area(area, buff);
+
+	unuse_register(right_value->value->reg);
+	unuse_register(left_value->value->reg);
+
+	Register* eax = find_register_by_name("eax", left_value->type);
+
+	return create_asm_return(NULL, eax, left_value->type, 1);
 }
 
 AsmReturn* generate_plus_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
 	char buff[64];
-	int is_floating = (left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE);
-	char* reg = (is_floating) ? "xmm4" : "ecx";
-	
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg, left_value->result);
+	const BitsSize SIZE = (left_value->type->type == TYPE_DOUBLE) ? BITS_SIZE_64 : BITS_SIZE_32;
+
+	Register* reg = find_and_use_register(left_value->type, SIZE, find_owner_method(codegen->scope));
+
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", get_add_opcode_for_type(left_value->type), reg, right_value->result);
+	snprintf(buff, 64, "	%s	%s, %s", get_add_opcode_for_type(left_value->type), reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, reg);
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->value->reg->reg, reg->reg);
 	add_line_to_area(area, buff);
 
-	return create_asm_return((argument_flag && !is_floating) ? "rcx" : reg, left_value->type);
+	unuse_register(left_value->value->reg);
+	unuse_register(right_value->value->reg);
+	unuse_register(reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
 
 AsmReturn* generate_minus_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
 	char buff[64];
-	int is_floating = left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE;
-	char* reg = (is_floating) ? "xmm0" : "ecx";
-	
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg, left_value->result);
+	const BitsSize SIZE = (left_value->type->type == TYPE_DOUBLE) ? BITS_SIZE_64 : BITS_SIZE_32;
+
+	Register* reg = find_and_use_register(left_value->type, SIZE, find_owner_method(codegen->scope));
+
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", get_sub_opcode_for_type(left_value->type), reg, right_value->result);
+	snprintf(buff, 64, "	%s	%s, %s", get_sub_opcode_for_type(left_value->type), reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, reg);
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->value->reg->reg, reg->reg);
 	add_line_to_area(area, buff);
 
-	return create_asm_return((argument_flag && !is_floating) ? "rcx" : reg, left_value->type);
+	unuse_register(left_value->value->reg);
+	unuse_register(right_value->value->reg);
+	unuse_register(reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
 
 AsmReturn* generate_times_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
 	char buff[64];
-	int is_floating = left_value->type->type == TYPE_FLOAT || left_value->type->type == TYPE_DOUBLE;
-	char* reg = (is_floating) ? "xmm0" : "ecx";
+	const BitsSize SIZE = (left_value->type->type == TYPE_DOUBLE) ? BITS_SIZE_64 : BITS_SIZE_32;
+	
 	char* opcode = "imul";
 
-	if (is_floating)
+	if (left_value->type->type == TYPE_DOUBLE || left_value->type->type == TYPE_FLOAT)
 	{
 		opcode = (left_value->type->type == TYPE_DOUBLE) ? "mulsd" : "mulss";
 	}
-	
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg, left_value->result);
+
+	Register* reg = find_and_use_register(left_value->type, SIZE, find_owner_method(codegen->scope));
+
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", opcode, reg, right_value->result);
+	snprintf(buff, 64, "	%s	%s, %s", opcode, reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, reg);
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->value->reg->reg, reg->reg);
 	add_line_to_area(area, buff);
 
-	return create_asm_return((argument_flag && !is_floating) ? "rcx" : reg, left_value->type);
+	unuse_register(left_value->value->reg);
+	unuse_register(right_value->value->reg);
+	unuse_register(reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
 
-static AsmReturn* generate_floating_div_equals(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
+static AsmReturn* generate_floating_div_equals(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int is_double)
 {
 	char buff[64];
-	char* reg = "xmm0";
-	char* opcode = (left_value->type->type == TYPE_DOUBLE) ? "divsd" : "divss";
+
+	const BitsSize size = (is_double) ? BITS_SIZE_64 : BITS_SIZE_32;
+	Register* reg = find_and_use_register(left_value->type, size, find_owner_method(codegen->scope));
+
+	char* opcode = (is_double) ? "divsd" : "divss";
 	
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg, left_value->result);
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), reg->reg, left_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", opcode, reg, right_value->result);
+	snprintf(buff, 64, "	%s	%s, %s", opcode, reg->reg, right_value->value->reg->reg);
 	add_line_to_area(area, buff);
 
-	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->result, reg);
+	snprintf(buff, 64, "	%s	%s, %s", get_mov_opcode_for_type(left_value->type), left_value->value->reg->reg, reg->reg);
 	add_line_to_area(area, buff);
 
-	return create_asm_return(reg, left_value->type);
+	unuse_register(left_value->value->reg);
+	unuse_register(right_value->value->reg);
+	unuse_register(reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
 
-AsmReturn* generate_div_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int argument_flag)
+// used registers (eax, edx)
+AsmReturn* generate_div_equals_operation(CodeGen* codegen, AsmReturn* left_value, AsmReturn* right_value, AsmArea* area, int argument_flag)
 {
-	if (lreg->type->type == TYPE_FLOAT || lreg->type->type == TYPE_DOUBLE)
+	if (left_value->type->type == TYPE_FLOAT || right_value->type->type == TYPE_DOUBLE)
 	{
-		return generate_floating_div_equals(codegen, lreg, rreg, area, (lreg->type->type == TYPE_DOUBLE));
+		return generate_floating_div_equals(codegen, left_value, right_value, area, (left_value->type->type == TYPE_DOUBLE));
 	}
 
 	char buff[64];
-
-	snprintf(buff, 64, "	mov	eax, %s", lreg->result);
-	add_line_to_area(area, buff);
-
-	add_line_to_area(area, "	cdq");
-
-	snprintf(buff, 64, "	mov	ebx, %s", rreg->result);
-	add_line_to_area(area, buff);
+	const BitsSize SIZE = BITS_SIZE_32;
 	
-	add_line_to_area(area, "	idiv	ebx");
+	char* opcode = "idiv";
 
-	snprintf(buff, 64, "	mov	%s, eax", lreg->result);
+	Register* reg = find_and_use_register(left_value->type, SIZE, find_owner_method(codegen->scope));
+
+	snprintf(buff, 64, "	%s	eax, %s", get_mov_opcode_for_type(left_value->type), left_value->value->reg->reg);
 	add_line_to_area(area, buff);
-	
-	return create_asm_return("eax", lreg->type);
+
+	add_line_to_area(area, "cdq");
+
+	snprintf(buff, 64, "	%s	%s", opcode, reg->reg);
+	add_line_to_area(area, buff);
+
+	snprintf(buff, 64, "	%s	%s, eax", get_mov_opcode_for_type(left_value->type), left_value->value->reg->reg);
+	add_line_to_area(area, buff);
+
+	unuse_register(left_value->value->reg);
+	unuse_register(right_value->value->reg);
+	unuse_register(reg);
+
+	return create_asm_return(NULL, reg, left_value->type, 1);
 }
