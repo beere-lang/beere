@@ -5,6 +5,7 @@
 #include "codegen.h"
 #include "impl/expressions/operations/codegen-op.h"
 #include "impl/oop/codegen-class.h"
+#include "impl/segments/codegen-segment.h"
 #include "impl/statements/assign/fields/codegen-field-assgn.h"
 #include "impl/statements/break/codegen-break.h"
 #include "impl/statements/calls/codegen-method-call.h"
@@ -29,6 +30,54 @@ ExternTable* extern_table = NULL;
 ClassOffsetsTable* class_offsets_table = NULL;
 RegistersTable* registers_table = NULL;
 MethodRegisterStackTable* register_stack_table = NULL;
+
+static SegmentNode* generate_segment_node(SegmentNodeType type)
+{
+	SegmentNode* node = malloc(sizeof(SegmentNode));
+	
+	node->type = type;
+
+	return node;
+}
+
+SegmentNode* generate_segment_register(Register* reg)
+{
+	SegmentRegister* segment_reg = malloc(sizeof(SegmentRegister));
+
+	segment_reg->reg = reg;
+
+	SegmentNode* node = generate_segment_node(SEGMENT_REGISTER);
+	node->reg = segment_reg;
+
+	return node;
+}
+
+SegmentNode* generate_segment_literal(SegmentLiteralType type, int integer) // value needs to be the same from type
+{
+	SegmentLiteral* literal = malloc(sizeof(SegmentLiteral));
+
+	literal->type = type;
+	literal->integer = integer;
+
+	SegmentNode* node = generate_segment_node(SEGMENT_NODE_LITERAL);
+	node->literal = literal;
+
+	return node;
+}
+
+SegmentNode* generate_segment_operation(SegmentNode* left, SegmentNode* right, SegmentOperationType type)
+{
+	SegmentOperation* operation = malloc(sizeof(SegmentOperation));
+
+	operation->op = type;
+	operation->left = left;
+	operation->right = right;
+
+	SegmentNode* node = generate_segment_node(SEGMENT_NODE_OPERATION);
+	node->operation = operation;
+
+	return node;
+}
 
 static void setup_register_stack_table()
 {
@@ -539,6 +588,38 @@ Register* has_register_in_stack(MethodRegisterStack* stack, Register* reg)
 	return NULL;
 }
 
+char* get_asm_value(CodeGen* codegen, AsmReturnValue* value, Type* type)
+{
+	if (value->type == SEGMENT_RETURN_TYPE)
+	{
+		return generate_segment(codegen, value->segment, type);
+	}
+
+	if (value->type == REGISTER_RETURN_TYPE)
+	{
+		return strdup(value->reg->reg);
+	}
+
+	return NULL;
+}
+
+void unuse_asm_value(AsmReturnValue* value)
+{
+	if (value->type == SEGMENT_RETURN_TYPE)
+	{
+		unuse_segment_registers(value->segment);
+
+		return;
+	}
+
+	if (value->type == REGISTER_RETURN_TYPE)
+	{
+		unuse_register(value->reg);
+
+		return;
+	}
+}
+
 void add_register_to_stack(MethodRegisterStack* stack, Register* reg)
 {
 	if (has_register_in_stack(stack, reg) != NULL)
@@ -557,14 +638,14 @@ void add_register_to_stack(MethodRegisterStack* stack, Register* reg)
 	stack->registers_length++;
 }
 
-AsmReturn* create_asm_return(char* value, Register* reg, Type* type, int is_reg)
+AsmReturn* create_asm_return(SegmentNode* segment, Register* reg, Type* type, int is_reg)
 {
 	AsmReturn* asm_ret = malloc(asm_return_size);
 
 	asm_ret->type = type;
-	asm_ret->value->type = (is_reg) ? REGISTER_RETURN_TYPE : TEXT_RETURN_TYPE;
+	asm_ret->value->type = (is_reg) ? REGISTER_RETURN_TYPE : SEGMENT_RETURN_TYPE;
 
-	asm_ret->value->text = value;
+	asm_ret->value->segment = segment;
 	asm_ret->value->reg = reg;
 	
 	return asm_ret;

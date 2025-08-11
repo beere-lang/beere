@@ -15,10 +15,15 @@ typedef struct ExternTable ExternTable;
 typedef struct ClassOffsetsTable ClassOffsetsTable;
 typedef struct MethodRegisterStack MethodRegisterStack;
 typedef struct MethodRegisterStackTable MethodRegisterStackTable;
+typedef struct SegmentOperation SegmentOperation;
+typedef struct SegmentRegister SegmentRegister;
+typedef struct SegmentLiteral SegmentLiteral;
 typedef struct RegistersTable RegistersTable;
 typedef struct RegistersClass RegistersClass;
 typedef struct AsmReturnValue AsmReturnValue;
 typedef struct ConstantTable ConstantTable;
+typedef struct SegmentValue SegmentValue;
+typedef struct SegmentNode SegmentNode;
 typedef struct ExternEntry ExternEntry;
 typedef struct AsmReturn AsmReturn;
 typedef struct Register Register;
@@ -73,7 +78,7 @@ struct AsmArea
 typedef enum
 {
 	REGISTER_RETURN_TYPE,
-	TEXT_RETURN_TYPE
+	SEGMENT_RETURN_TYPE
 }
 AsmReturnValueType;
 
@@ -82,7 +87,7 @@ struct AsmReturnValue
 	AsmReturnValueType type;
 	
 	Register* reg;
-	char* text;
+	SegmentNode* segment;
 };
 
 struct AsmReturn
@@ -166,8 +171,69 @@ struct MethodRegisterStackTable
 	int stacks_length;
 };
 
-AsmReturn* create_asm_return(char* value, Register* reg, Type* type, int is_reg);
+typedef enum
+{
+	SEGMENT_OPERATION_ADD,
+	SEGMENT_OPERATION_SUB
+}
+SegmentOperationType;
+
+struct SegmentOperation
+{
+	SegmentOperationType op;
+	
+	SegmentNode* left;
+	SegmentNode* right;
+};
+
+typedef enum
+{
+	SEGMENT_LITERAL_INT
+}
+SegmentLiteralType;
+
+struct SegmentLiteral
+{
+	SegmentLiteralType type;
+
+	union
+	{
+		int integer;
+	};
+};
+
+typedef enum
+{
+	SEGMENT_NODE_OPERATION,
+	SEGMENT_NODE_LITERAL,
+	SEGMENT_REGISTER
+}
+SegmentNodeType;
+
+struct SegmentRegister
+{
+	Register* reg;
+};
+
+struct SegmentNode
+{
+	SegmentNodeType type;
+	
+	union
+	{
+		SegmentOperation* operation;
+		SegmentLiteral* literal;
+		SegmentRegister* reg;
+	};
+};
+
+SegmentNode* generate_segment_operation(SegmentNode* left, SegmentNode* right, SegmentOperationType type);
+SegmentNode* generate_segment_literal(SegmentLiteralType type, int integer);
+SegmentNode* generate_segment_register(Register* reg);
+
+AsmReturn* create_asm_return(SegmentNode* segment, Register* reg, Type* type, int is_reg);
 Register* find_and_use_register(Type* type, BitsSize size, Symbol* method);
+char* get_asm_value(CodeGen* codegen, AsmReturnValue* value, Type* type);
 Constant* generate_directly_constant(double value, int is_double);
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area);
 Register* find_register_by_name(char* name, Type* type);

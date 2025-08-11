@@ -55,7 +55,7 @@ static void add_class_to_table(char* class_name)
 	{
 		class_table->capacity *= 2;
 
-		class_table->classes = malloc(sizeof(char*) * class_table->capacity);
+		class_table->classes = realloc(class_table->classes, sizeof(char*) * class_table->capacity);
 	}
 
 	class_table->classes[class_table->length] = strdup(class_name);
