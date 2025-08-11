@@ -3,6 +3,6 @@
 
 #include "../../../codegen.h"
 
-AsmReturn* generate_cast(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int argument_flag);
+AsmReturn* generate_cast(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int prefer_third, int argument_flag);
 
 #endif

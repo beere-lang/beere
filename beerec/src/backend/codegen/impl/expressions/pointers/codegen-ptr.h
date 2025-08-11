@@ -3,7 +3,7 @@
 
 #include "../../../codegen.h"
 
-AsmReturn* generate_reference(CodeGen* codege, Node* node, AsmArea* area, int force_reg, int prefer_second);
-AsmReturn* generate_dereference(CodeGen* codege, Node* node, AsmArea* area, int force_reg, int prefer_second);
+AsmReturn* generate_reference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int prefer_third);
+AsmReturn* generate_dereference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int prefer_third);
 
 #endif

@@ -4,9 +4,9 @@
 #include "../codegen-expr.h"
 #include "../../../../../frontend/structure/parser/parser.h"
 
-static AsmReturn* generate_to_int(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second)
+static AsmReturn* generate_to_int(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int prefer_third)
 {
-	AsmReturn* expr = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, 0, 0);
+	AsmReturn* expr = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, prefer_second, prefer_third, 0);
 	char buff[64];
 	
 	switch (expr->type->type)
@@ -34,9 +34,9 @@ static AsmReturn* generate_to_int(CodeGen* codegen, Node* node, AsmArea* area, i
 	}
 }
 
-static AsmReturn* generate_to_float(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second)
+static AsmReturn* generate_to_float(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int prefer_third)
 {
-	AsmReturn* expr = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, 0, 0);
+	AsmReturn* expr = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, prefer_second, prefer_third, 0);
 	char buff[64];
 	
 	switch (expr->type->type)
@@ -64,9 +64,9 @@ static AsmReturn* generate_to_float(CodeGen* codegen, Node* node, AsmArea* area,
 	}
 }
 
-static AsmReturn* generate_to_double(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second)
+static AsmReturn* generate_to_double(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int prefer_third)
 {
-	AsmReturn* expr = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, 0, 0);
+	AsmReturn* expr = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, prefer_second, prefer_third, 0);
 	char buff[64];
 	
 	switch (expr->type->type)
@@ -94,28 +94,28 @@ static AsmReturn* generate_to_double(CodeGen* codegen, Node* node, AsmArea* area
 	}
 }
 
-AsmReturn* generate_cast(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_cast(CodeGen* codegen, Node* node, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	switch (node->cast_statement_node.cast_node.cast_type->type)
 	{
 		case TYPE_INT:
 		{
-			return generate_to_int(codegen, node, area, prefer_second);
+			return generate_to_int(codegen, node, area, prefer_second, prefer_third);
 		}
 
 		case TYPE_FLOAT:
 		{
-			return generate_to_float(codegen, node, area, prefer_second);
+			return generate_to_float(codegen, node, area, prefer_second, prefer_third);
 		}
 
 		case TYPE_DOUBLE:
 		{
-			return generate_to_double(codegen, node, area, prefer_second);
+			return generate_to_double(codegen, node, area, prefer_second, prefer_third);
 		}
 
 		case TYPE_PTR:
 		{
-			AsmReturn* ret = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, prefer_second, argument_flag);
+			AsmReturn* ret = generate_expression(codegen, node->cast_statement_node.cast_node.expression, area, 1, prefer_second, prefer_third, argument_flag);
 
 			return ret;
 		}

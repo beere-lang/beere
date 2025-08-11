@@ -178,7 +178,7 @@ void generate_local_field_declaration(CodeGen* codegen, Node* node, AsmArea* are
 
 	Symbol* symbol = analyzer_find_symbol_from_scope(node->declare_node.declare.identifier, codegen->scope, 1, 0, 0, 0);
 	
-	AsmReturn* expr = generate_expression(codegen, node->declare_node.declare.default_value, area, 1, 0, 0);
+	AsmReturn* expr = generate_expression(codegen, node->declare_node.declare.default_value, area, 1, 0, 0, 0);
 		
 	snprintf(buff, 64, "	%s	%s [rbp%+d], %s", field_get_mov_op_code_access(codegen, expr->type), field_get_reference_access_size(codegen, symbol->symbol_variable->type), symbol->symbol_variable->offset, expr->result);
 	add_line_to_area(area, buff);

@@ -10,48 +10,48 @@
 #include "../oop/instances/codegen-create-instance.h"
 #include "../statements/calls/codegen-method-call.h"
 
-AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
+AsmReturn* generate_expression(CodeGen* codegen, Node* node, AsmArea* area, int force_reg)
 {
 	switch (node->type)
 	{
 		case NODE_OPERATION:
 		{
-			return generate_operation(codegen, node, area, force_reg, prefer_second, argument_flag);
+			return generate_operation(codegen, node, area, force_reg);
 		}
 
 		case NODE_LITERAL:
 		{
-			return generate_literal(codegen, node, area, force_reg, prefer_second, argument_flag);
+			return generate_literal(codegen, node, area, force_reg);
 		}
 
 		case NODE_IDENTIFIER:
 		{
-			return generate_variable_reference(codegen, node, area, force_reg, prefer_second, argument_flag);
+			return generate_variable_reference(codegen, node, area, force_reg);
 		}
 
 		case NODE_CAST:
 		{
-			return generate_cast(codegen, node, area, prefer_second, argument_flag);
+			return generate_cast(codegen, node, area);
 		}
 
 		case NODE_DEREFERENCE:
 		{
-			return generate_dereference(codegen, node, area, force_reg, prefer_second);
+			return generate_dereference(codegen, node, area, force_reg);
 		}
 
 		case NODE_ADRESS_OF:
 		{
-			return generate_reference(codegen, node, area, force_reg, prefer_second);
+			return generate_reference(codegen, node, area, force_reg);
 		}
 
 		case NODE_MEMBER_ACCESS:
 		{
-			return generate_member_access(codegen, node, area, force_reg, prefer_second, argument_flag);
+			return generate_member_access(codegen, node, area, force_reg);
 		}
 
 		case NODE_FUNCTION_CALL:
 		{
-			return generate_method_call(codegen, node, area, prefer_second, argument_flag);
+			return generate_method_call(codegen, node, area);
 		}
 
 		case NODE_CREATE_INSTANCE:

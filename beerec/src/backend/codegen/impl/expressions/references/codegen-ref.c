@@ -148,7 +148,7 @@ char* get_mov_op_code_access(CodeGen* codegen, Type* type)
 	}
 }
 
-char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
+char* get_register_access(CodeGen* codegen, Type* type, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* temp = NULL;
 	
@@ -156,7 +156,24 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 	{
 		case TYPE_INT:
 		{
+			if (argument_flag)
+			{
+				temp = prefer_second ? "rbx" : "rax";
+
+				if (prefer_third)
+				{
+					temp = "rdx";
+				}
+
+				return strdup(temp);
+			}
+			
 			temp = prefer_second ? "ebx" : "eax";
+
+			if (prefer_third)
+			{
+				temp = "edx";
+			}
 
 			return strdup(temp);
 		}
@@ -165,12 +182,22 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 		{
 			temp = prefer_second ? "xmm1" : "xmm0";
 
+			if (prefer_third)
+			{
+				temp = "xmm3";
+			}
+
 			return strdup(temp);
 		}
 
 		case TYPE_DOUBLE:
 		{
 			temp = prefer_second ? "xmm1" : "xmm0";
+
+			if (prefer_third)
+			{
+				temp = "xmm3";
+			}
 
 			return strdup(temp);
 		}
@@ -179,12 +206,22 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 		{
 			temp = prefer_second ? "rbx" : "rax";
 
+			if (prefer_third)
+			{
+				temp = "rdx";
+			}
+
 			return strdup(temp);
 		}
 
 		case TYPE_STRING:
 		{
 			temp = prefer_second ? "rbx" : "rax";
+
+			if (prefer_third)
+			{
+				temp = "rdx";
+			}
 
 			return strdup(temp);
 		}
@@ -193,12 +230,34 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 		{
 			temp = prefer_second ? "rbx" : "rax";
 
+			if (prefer_third)
+			{
+				temp = "rdx";
+			}
+
 			return strdup(temp);
 		}
 
 		case TYPE_BOOL:
 		{
+			if (argument_flag)
+			{
+				temp = prefer_second ? "rbx" : "rax";
+
+				if (prefer_third)
+				{
+					temp = "rdx";
+				}
+
+				return strdup(temp);
+			}
+
 			temp = prefer_second ? "bl" : "al";
+
+			if (prefer_third)
+			{
+				temp = "dl";
+			}
 
 			return strdup(temp);
 		}
@@ -211,14 +270,14 @@ char* get_register_access(CodeGen* codegen, Type* type, int prefer_second)
 	}
 }
 
-AsmReturn* generate_local_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)
+AsmReturn* generate_local_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second, int prefer_third, int argument_flag)
 {
 	char buff[64];
 	Type* type = symbol->symbol_variable->type;
 	
 	if (force_reg)
 	{
-		char* reg = get_register_access(codegen, type, prefer_second);
+		char* reg = get_register_access(codegen, type, prefer_second, prefer_third, argument_flag);
 
 		snprintf(buff, 64, "	%s	%s, %s [rbp%+d]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->offset);
 		add_line_to_area(area, buff);
@@ -238,14 +297,14 @@ AsmReturn* generate_local_variable_reference(CodeGen* codegen, Symbol* symbol, A
 	} 
 }
 
-AsmReturn* generate_global_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)
+AsmReturn* generate_global_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second, int prefer_third, int argument_flag)
 {
 	char buff[64];
 	Type* type = symbol->symbol_variable->type;
 	
 	if (force_reg)
 	{
-		char* reg = get_register_access(codegen, type, prefer_second);
+		char* reg = get_register_access(codegen, type, prefer_second, prefer_third, argument_flag);
 
 		snprintf(buff, 64, "	%s	%s, %s [rel %s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
 		add_line_to_area(area, buff);
@@ -264,14 +323,14 @@ AsmReturn* generate_global_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	}
 }
 
-AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)
+AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second, int prefer_third, int argument_flag)
 {
 	char buff[64];
 	Type* type = symbol->symbol_variable->type;
 	
 	if (force_reg)
 	{
-		char* reg = get_register_access(codegen, type, prefer_second);
+		char* reg = get_register_access(codegen, type, prefer_second, prefer_third, argument_flag);
 
 		snprintf(buff, 64, "	%s	%s, %s [rel .static_%s]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), symbol->symbol_variable->identifier);
 		add_line_to_area(area, buff);
@@ -290,7 +349,7 @@ AsmReturn* generate_static_variable_reference(CodeGen* codegen, Symbol* symbol, 
 	}
 }
 
-AsmReturn* generate_class_global_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second)
+AsmReturn* generate_class_global_variable_reference(CodeGen* codegen, Symbol* symbol, AsmArea* area, int force_reg, int prefer_second, int prefer_third, int argument_flag)
 {
 	char buff[64];
 	Type* type = symbol->symbol_variable->type;
@@ -302,7 +361,7 @@ AsmReturn* generate_class_global_variable_reference(CodeGen* codegen, Symbol* sy
 	
 	if (force_reg)
 	{
-		char* reg = get_register_access(codegen, type, prefer_second);
+		char* reg = get_register_access(codegen, type, prefer_second, prefer_third, argument_flag);
 
 		snprintf(buff, 64, "	%s	%s, %s [r8%+d]", get_mov_op_code_access(codegen, type), reg, get_reference_access_size(codegen, type), offset);
 		add_line_to_area(area, buff);
@@ -322,7 +381,7 @@ AsmReturn* generate_class_global_variable_reference(CodeGen* codegen, Symbol* sy
 	}
 }
 
-AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int argument_flag)
+AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* area, int force_reg, int prefer_second, int prefer_third, int argument_flag)
 {
 	VariableNode* identifier_node = &node->variable_node.variable;
 	
@@ -330,18 +389,18 @@ AsmReturn* generate_variable_reference(CodeGen* codegen, Node* node, AsmArea* ar
 
 	if (symbol->symbol_variable->is_static)
 	{
-		return generate_static_variable_reference(codegen, symbol, area, force_reg, prefer_second);
+		return generate_static_variable_reference(codegen, symbol, area, force_reg, prefer_second, prefer_third, argument_flag);
 	}
 	
 	if (symbol->symbol_variable->is_global)
 	{
-		return generate_global_variable_reference(codegen, symbol, area, force_reg, prefer_second);
+		return generate_global_variable_reference(codegen, symbol, area, force_reg, prefer_second, prefer_third, argument_flag);
 	}
 
 	if (symbol->symbol_variable->is_class_global)
 	{
-		return generate_class_global_variable_reference(codegen, symbol, area, force_reg, prefer_second);
+		return generate_class_global_variable_reference(codegen, symbol, area, force_reg, prefer_second, prefer_third, argument_flag);
 	}
 
-	return generate_local_variable_reference(codegen, symbol, area, force_reg, prefer_second);
+	return generate_local_variable_reference(codegen, symbol, area, force_reg, prefer_second, prefer_third, argument_flag);
 }

@@ -2609,7 +2609,7 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 
 	int local_offset = -8;
 
-	int param_offset = 8;
+	int param_offset = 16;
 
 	analyzer_analyze_type(node->function_node.function.return_type, scope);
 

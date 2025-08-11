@@ -35,10 +35,15 @@ char* get_opcode_for_cmp(Type* type)
 	}
 }
 
-AsmReturn* generate_is_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_is_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* temp = prefer_second ? "bl" : "al";
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 	
@@ -60,10 +65,15 @@ AsmReturn* generate_is_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmRe
 	return ret;
 }
 
-AsmReturn* generate_is_not_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_is_not_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* temp = prefer_second ? "bl" : "al";
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 	
@@ -85,10 +95,15 @@ AsmReturn* generate_is_not_equals_operation(CodeGen* codegen, AsmReturn* lreg, A
 	return ret;
 }
 
-AsmReturn* generate_is_greater_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_is_greater_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* temp = prefer_second ? "bl" : "al";
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 
@@ -110,10 +125,15 @@ AsmReturn* generate_is_greater_operation(CodeGen* codegen, AsmReturn* lreg, AsmR
 	return ret;
 }
 
-AsmReturn* generate_is_less_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_is_less_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* temp = prefer_second ? "bl" : "al";
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 	
@@ -135,10 +155,15 @@ AsmReturn* generate_is_less_operation(CodeGen* codegen, AsmReturn* lreg, AsmRetu
 	return ret;
 }
 
-AsmReturn* generate_is_greater_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_is_greater_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* temp = prefer_second ? "bl" : "al";
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 	
@@ -160,10 +185,15 @@ AsmReturn* generate_is_greater_equals_operation(CodeGen* codegen, AsmReturn* lre
 	return ret;
 }
 
-AsmReturn* generate_is_less_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_is_less_equals_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* temp = prefer_second ? "bl" : "al";
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 	
@@ -185,9 +215,14 @@ AsmReturn* generate_is_less_equals_operation(CodeGen* codegen, AsmReturn* lreg, 
 	return ret;
 }
 
-AsmReturn* generate_or_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_or_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 	
@@ -203,9 +238,14 @@ AsmReturn* generate_or_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* r
 	return ret;
 }
 
-AsmReturn* generate_and_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int argument_flag)
+AsmReturn* generate_and_operation(CodeGen* codegen, AsmReturn* lreg, AsmReturn* rreg, AsmArea* area, int prefer_second, int prefer_third, int argument_flag)
 {
 	char* _temp = prefer_second ? "rbx" : "rax";
+
+	if (prefer_third)
+	{
+		_temp = "rdx";
+	}
 
 	char buff[64];
 	

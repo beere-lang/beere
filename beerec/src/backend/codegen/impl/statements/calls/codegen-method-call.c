@@ -59,7 +59,7 @@ void generate_method_args(CodeGen* codegen, NodeList* args, AsmArea* area, int* 
 	while (next != NULL)
 	{
 		Type* type = analyzer_return_type_of_expression(NULL, next->argument_node.argument.value, codegen->scope, 0, 0, NULL);
-		AsmReturn* ret = generate_expression(codegen, next->argument_node.argument.value, area, 1, 0, 1);
+		AsmReturn* ret = generate_expression(codegen, next->argument_node.argument.value, area, 1, 0, 0, 1);
 		
 		if (ret->type->type == TYPE_FLOAT || ret->type->type == TYPE_DOUBLE)
 		{
@@ -103,8 +103,6 @@ char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 		{
 			if (argument_flag)
 			{
-				add_line_to_area(area, "	mov	rax, al");
-
 				return strdup("rax");
 			}
 			
@@ -115,8 +113,6 @@ char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 		{
 			if (argument_flag)
 			{
-				add_line_to_area(area, "	mov	rax, al");
-
 				return strdup("rax");
 			}
 			
@@ -127,8 +123,6 @@ char* call_get_return_register(Type* type, int argument_flag, AsmArea* area)
 		{
 			if (argument_flag)
 			{
-				add_line_to_area(area, "	mov	rax, eax");
-
 				return strdup("rax");
 			}
 			
@@ -273,13 +267,13 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	}
 
 	Symbol* owner_method = find_method_owner(codegen->scope);
-	Type* type = owner_method->symbol_function->return_type;
+	Type* type = symbol_method->symbol_function->return_type;
 	int stack_size = get_method_stack_size(owner_method);
 
 	int padding = 0;
 	int backup_size = 0;
 
-	if ((stack_size + 8) % 16 != 0) // +8 pro return point do call
+	if ((stack_size + 16) % 16 != 0) // +16 pro return point da call e o ponteiro da instancia
 	{
 		snprintf(buff, 64, "	sub	rsp, 8");
 		add_line_to_area(area, buff);
@@ -302,7 +296,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	// mover a instance pra algum registrador nao utilizado pra methods de classes.
 	if (callee->type != NODE_IDENTIFIER && callee->type != NODE_SUPER)
 	{
-		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0);
+		AsmReturn* ret = generate_expression(codegen, callee->member_access_node.member_access.object, area, 1, prefer_second, 0, 0);
 		Symbol* object_symbol = analyzer_find_symbol_from_scope(ret->type->class_name, codegen->scope, 0, 0, 1, 0);
 		
 		char* class_name_ref = NULL;
@@ -324,7 +318,7 @@ AsmReturn* generate_method_call(CodeGen* codegen, Node* node, AsmArea* area, int
 	}
 	else if (callee->type == NODE_SUPER)
 	{
-		AsmReturn* ret = generate_expression(codegen, callee, area, 0, 0, 0);
+		AsmReturn* ret = generate_expression(codegen, callee, area, 0, 0, 0, 0);
 
 		// ponteiro da instancia ja ta no 'R8'
 		// snprintf(buff, 64, "	mov	r8, %s", ret->result);

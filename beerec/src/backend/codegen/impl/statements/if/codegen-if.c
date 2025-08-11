@@ -60,7 +60,7 @@ static void generate_post(CodeGen* codegen, Node* node, AsmArea* area)
 
 static AsmReturn* generate_if_condition(CodeGen* codegen, Node* expr, AsmArea* area)
 {
-	AsmReturn* ret = generate_expression(codegen, expr, area, 0, 0, 0);
+	AsmReturn* ret = generate_expression(codegen, expr, area, 0, 0, 0, 0);
 
 	return ret;
 }

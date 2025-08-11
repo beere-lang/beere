@@ -1,6 +1,10 @@
-fn main(): void {
-    let a: float = 0.0F
-    let ap: float* = &a
+fn increment_ptr(p: int*): void {
+    *p = *p + 1
+}
 
-    let b: int* = (int*) ap
+fn main(): void {
+    let x: int = 41
+    let ptr: int* = &x
+
+    increment_ptr(ptr)
 }

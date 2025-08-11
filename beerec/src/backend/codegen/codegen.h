@@ -16,7 +16,11 @@ typedef struct ClassOffsetsTable ClassOffsetsTable;
 typedef struct ConstantTable ConstantTable;
 typedef struct ExternEntry ExternEntry;
 typedef struct AsmReturn AsmReturn;
+typedef struct RegistersTable RegistersTable;
+typedef struct RegistersClass RegistersClass;
+typedef struct AsmReturnValue AsmReturnValue;
 typedef struct AsmArea AsmArea;
+typedef struct Register Register;
 
 extern AsmArea* externs_section;
 extern AsmArea* text_section;
@@ -64,12 +68,25 @@ struct AsmArea
 	int lines_length;
 };
 
+typedef enum
+{
+	REGISTER_RETURN_TYPE,
+	TEXT_RETURN_TYPE
+}
+AsmReturnValueType;
+
+struct AsmReturnValue
+{
+	AsmReturnValueType type;
+	
+	Register* reg;
+	char* text;
+};
+
 struct AsmReturn
 {
-	char* result;
 	Type* type;
-
-	int is_reg;
+	AsmReturnValue* value;
 };
 
 struct ExternTable
@@ -85,9 +102,54 @@ struct ExternEntry
 	char* label;
 };
 
+typedef enum
+{
+	BITS_SIZE_8,
+	BITS_SIZE_16,
+	BITS_SIZE_32,
+	BITS_SIZE_64
+}
+BitsSize;
+
+typedef enum
+{
+	CLASS_GENERALS,
+	CLASS_FLOATS
+}
+RegistersClassType;
+
+struct RegistersClass
+{
+	RegistersClassType class;
+
+	Register** registers;
+
+	int registers_capacity;
+	int registers_length;
+};
+
+struct RegistersTable
+{
+	RegistersClass** registers_classes;
+
+	int registers_classes_capacity;
+	int registers_classes_length;
+};
+
+struct Register
+{
+	char* reg;
+	int in_use;
+	BitsSize size;
+
+	Register* parent;
+	Register* child;
+};
+
+AsmReturn* create_asm_return(char* value, Register* reg, Type* type, int is_reg);
 Constant* generate_directly_constant(double value, int is_double);
 void generate_node(CodeGen* codegen, Node* node, AsmArea* area);
-AsmReturn* create_asm_return(char* value, Type* type);
+Register* find_and_use_register(Type* type, BitsSize size);
 void setup_codegen(Module* module, CodeGen* codegen);
 void add_extern_entry_to_table(ExternEntry* entry);
 void add_line_to_area(AsmArea* area, char* line);
@@ -95,6 +157,7 @@ ExternEntry* create_extern_entry(char* label);
 AsmArea* create_area_with_label(char* label);
 void print_code_generated(CodeGen* codegen);
 Constant* generate_constant(Node* literal);
+void unuse_register(Register* reg);
 AsmArea* create_area();
 
 #endif

@@ -55,7 +55,7 @@ char* get_return_register(Type* type)
 
 AsmReturn* generate_return(CodeGen* codegen, Node* node, AsmArea* area)
 {
-	AsmReturn* ret = generate_expression(codegen, node->return_statement_node.return_statement.return_value, area, 0, 1, 0);
+	AsmReturn* ret = generate_expression(codegen, node->return_statement_node.return_statement.return_value, area, 0, 0, 0, 0);
 	char* reg = get_return_register(ret->type);
 
 	char buff[64];

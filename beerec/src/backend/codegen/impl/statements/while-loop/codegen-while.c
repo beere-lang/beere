@@ -35,7 +35,7 @@ static void generate_while_block(CodeGen* codegen, Node* node, AsmArea* area, in
 
 static void generate_while_condition(CodeGen* codegen, Node* node, AsmArea* area, int id)
 {
-	AsmReturn* ret = generate_expression(codegen, node->while_loop_node.while_loop.condition, area, 1, 0, 0);
+	AsmReturn* ret = generate_expression(codegen, node->while_loop_node.while_loop.condition, area, 1, 0, 0, 0);
 	char buff[64];
 
 	snprintf(buff, 64, "	test	%s, %s", ret->result, ret->result);

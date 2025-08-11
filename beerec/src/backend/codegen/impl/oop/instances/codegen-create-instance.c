@@ -126,6 +126,9 @@ static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea*
 
 	char* reg = codegen->inner_class ? "r10" : "r8";
 
+	snprintf(buff, 64, "	mov	qword [rsp], %s", reg);
+	add_line_to_area(area, buff);
+
 	snprintf(buff, 64, "%s [%s+%d]", access_size, reg, offset);
 	destiny = strdup(buff);
 
@@ -136,7 +139,7 @@ static void generate_field_initialization(CodeGen* codegen, Node* node, AsmArea*
 	int backup = codegen->inner_class;
 	codegen->inner_class = 1;
 	
-	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, force_reg, 0, 0);
+	AsmReturn* ret = generate_expression(codegen, node->declare_node.declare.default_value, area, force_reg, 0, 0, 0);
 
 	codegen->inner_class = backup;
 
@@ -180,11 +183,16 @@ AsmReturn* generate_create_class_instance(CodeGen* codegen, Node* node, AsmArea*
 
 	char buff[64];
 	snprintf(buff, 64, "	mov	qword [%s], .%s_v-table", reg, identifier);
-
 	add_line_to_area(area, buff);
-	
+
+	snprintf(buff, 64, "	push	%s", reg);
+	add_line_to_area(area, buff);
+
 	generate_class_fields(codegen, symbol, area);
 	generate_method_constructor_call(codegen, node, area);
+
+	snprintf(buff, 64, "	pop	%s", reg);
+	add_line_to_area(area, buff);
 
 	Type* type = create_type(TYPE_CLASS, identifier);
 	AsmReturn* ret = create_asm_return(reg, type);

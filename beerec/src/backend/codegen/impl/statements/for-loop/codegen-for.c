@@ -17,7 +17,7 @@ static void generate_for_then(CodeGen* codegen, Node* node, AsmArea* area, int i
 
 static void generate_for_condition(CodeGen* codegen, Node* node, AsmArea* area, int id)
 {
-	AsmReturn* ret = generate_expression(codegen, node->for_loop_node.for_loop.condition, area, 1, 0, 0);
+	AsmReturn* ret = generate_expression(codegen, node->for_loop_node.for_loop.condition, area, 1, 0, 0, 0);
 	char buff[64];
 
 	snprintf(buff, 64, ".for_then_%d:", id);
