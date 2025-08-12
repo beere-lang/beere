@@ -173,7 +173,7 @@ static AsmReturn* generate_floating_increment_operation(CodeGen* codegen, AsmRet
 	char buff[64];
 	int is_double = left_value->type->type == TYPE_DOUBLE;
 
-	Register* reg = find_and_use_register(left_value->type, is_double ? BITS_SIZE_64 : BITS_SIZE_32, find_owner_method(codegen->scope));
+	Register* reg = find_and_use_register(left_value->type, (is_double) ? BITS_SIZE_64 : BITS_SIZE_32, find_owner_method(codegen->scope));
 	
 	char* opcode = (is_double) ? "movsd" : "movss";
 	char* add_opcode = (is_double) ? "addsd" : "addss";
