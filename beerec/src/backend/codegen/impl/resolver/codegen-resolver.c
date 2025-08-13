@@ -1,18 +1,39 @@
+#include <stdlib.h>
+
 #include "codegen-resolver.h"
 #include "../../../../frontend/semantic/analyzer/analyzer.h"
 
 static Register* resolve_expression(SymbolTable* scope, Node* node);
 
+static void add_register_to_blacklist(Register* reg, Register*** blacklist, int* length)
+{
+	for (int i = 0; i < *length; i++)
+	{
+		if (*blacklist[i] == reg)
+		{
+			return;
+		}
+	}
+	
+	if (*blacklist == NULL)
+	{
+		*blacklist = malloc(sizeof(Register*) * 4); // não precisa de mais que isso.
+	}
+
+	*blacklist[*length] = reg;
+	(*length)++;
+}
+
 static char* get_method_name(Node* callee)
 {
 	if (callee->type == NODE_IDENTIFIER)
 	{
-		return callee->variable_node.variable.identifier;
+		return callee->variable.identifier;
 	}
 
 	if (callee->type == NODE_MEMBER_ACCESS)
 	{
-		return callee->member_access_node.member_access.member_name;
+		return callee->member_access.member_name;
 	}
 
 	return NULL;
@@ -20,18 +41,30 @@ static char* get_method_name(Node* callee)
 
 static Register* resolve_operation(SymbolTable* scope, Node* node)
 {
-	Register* left = resolve_expression(scope, node->operation_node.operation.left); // retorna um registrador caso ele seja fixo.
-	Register* right = resolve_expression(scope, node->operation_node.operation.right); // retorna um registrador caso ele seja fixo.
+	Register* left = resolve_expression(scope, node->operation.left); // retorna um registrador caso ele seja fixo.
+	Register* right = resolve_expression(scope, node->operation.right); // retorna um registrador caso ele seja fixo.
+	node->operation.registers_blacklist = NULL;
+	node->operation.blacklist_length = 0;
 
-	if (left == right)
+	if ((left != NULL && right != NULL) && (left == right))
 	{
-		/* ADICIONAR CHECK PRA CASO LEFT FOR IGUAL A RIGHT, ELE MOVE O LEFT PRA OUTRO REGISTER */
+		node->operation.change_left = 1;
+	}
+
+	if (left != NULL)
+	{
+		add_register_to_blacklist(left, &(node->operation.registers_blacklist), &(node->operation.blacklist_length));
+	}
+
+	if (right != NULL)
+	{
+		add_register_to_blacklist(right, &(node->operation.registers_blacklist), &(node->operation.blacklist_length));
 	}
 	
 	Type* type = analyzer_return_type_of_expression(NULL, node, scope, NULL, 0, NULL);
 	int is_floating = (type->type == TYPE_FLOAT || type->type == TYPE_DOUBLE);
 	
-	switch (node->operation_node.operation.op)
+	switch (node->operation.op)
 	{
 		case TOKEN_OPERATOR_PLUS:
 		{
@@ -74,7 +107,7 @@ static Register* resolve_operation(SymbolTable* scope, Node* node)
 
 static Register* resolve_method_call(SymbolTable* scope, Node* node)
 {
-	char* method_name = get_method_name(node->function_call_node.function_call.callee);
+	char* method_name = get_method_name(node->function_call.callee);
 	Symbol* symbol = analyzer_find_symbol_from_scope(method_name, scope, 0, 1, 0, 0);
 
 	Type* type = symbol->symbol_function->return_type;
@@ -121,7 +154,7 @@ static Register* resolve_expression(SymbolTable* scope, Node* node)
 	{
 		case NODE_OPERATION:
 		{
-			return resolve_expression(scope, node);
+			return resolve_operation(scope, node);
 		}
 
 		case NODE_FUNCTION_CALL:
@@ -144,9 +177,9 @@ void resolve_instruction(SymbolTable* scope, Node* node)
 	{
 		case NODE_DECLARATION:
 		{
-			if (node->declare_node.declare.default_value != NULL)
+			if (node->declare.default_value != NULL)
 			{
-				resolve_expression(scope, node->declare_node.declare.default_value);
+				resolve_expression(scope, node->declare.default_value);
 			}
 
 			break;
@@ -161,31 +194,31 @@ void resolve_instruction(SymbolTable* scope, Node* node)
 
 		case NODE_VARIABLE_ASSIGN:
 		{
-			resolve_expression(scope, node->variable_assign_node.variable_assign.assign_value);
+			resolve_expression(scope, node->variable_assign.assign_value);
 
 			break;
 		}
 
 		case NODE_IF:
 		{
-			resolve_expression(scope, node->if_statement_node.if_statement.condition_top);
+			resolve_expression(scope, node->if_statement.condition_top);
 
-			Node* next = node->if_statement_node.if_statement.then_branch->block_node.block.statements->head;
+			Node* next = node->if_statement.then_branch->block.statements->head;
 
 			while (next != NULL)
 			{
-				resolve_instruction(node->if_statement_node.if_statement.then_scope, next);
+				resolve_instruction(node->if_statement.then_scope, next);
 
 				next = next->next;
 			}
 
-			if (node->if_statement_node.if_statement.then_branch != NULL)
+			if (node->if_statement.then_branch != NULL)
 			{
-				Node* next = node->if_statement_node.if_statement.else_branch->block_node.block.statements->head;
+				Node* next = node->if_statement.else_branch->block.statements->head;
 
 				while (next != NULL)
 				{
-					resolve_instruction(node->if_statement_node.if_statement.else_scope, next);
+					resolve_instruction(node->if_statement.else_scope, next);
 
 					next = next->next;
 				}

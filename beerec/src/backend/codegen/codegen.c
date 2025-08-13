@@ -784,7 +784,7 @@ static Constant* create_constant()
 Constant* generate_constant(Node* literal)
 {
 	Constant* constant = create_constant();
-	constant->value = get_literal_value(&literal->literal_node.literal);
+	constant->value = get_literal_value(&literal->literal);
 
 	Constant* cache = check_constants_cache(constant);
 

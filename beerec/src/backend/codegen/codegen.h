@@ -86,8 +86,11 @@ struct AsmReturnValue
 {
 	AsmReturnValueType type;
 	
-	Register* reg;
-	SegmentNode* segment;
+	union
+	{
+		Register* reg;
+		SegmentNode* segment;
+	};
 };
 
 struct AsmReturn

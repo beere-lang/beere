@@ -7,6 +7,7 @@
 typedef struct Node Node;
 typedef struct NodeList NodeList;
 typedef struct SymbolTable SymbolTable;
+typedef struct Register Register;
 
 typedef enum
 {
@@ -29,7 +30,14 @@ typedef struct
 {
 	Node* left;
 	Node* right;
+	
 	TokenType op;
+
+	Register** registers_blacklist; // usado no codegen (vai ser mudado pras IRNodes).
+	int blacklist_length;
+
+	int change_left; // usado no codegen (vai ser mudado pras IRNodes).
+	int change_right; // usado no codegen (vai ser mudado pras IRNodes).
 }
 OperationNode;
 
@@ -104,9 +112,8 @@ typedef struct
 		int bool_value;
 		float float_value;
 		double double_value;
-		// doesnt need a null value
 	};
-} 
+}
 LiteralNode;
 
 typedef struct
