@@ -8,7 +8,7 @@
 
 AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int force_reg)
 {
-	OperationNode* op_node = &node->operation_node.operation;
+	OperationNode* op_node = &node->operation;
 	
 	int right_force_reg = 1;
 	int left_force_reg = 1;
@@ -26,104 +26,144 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 		left_prefer_third = 1;
 	}
 	
-	AsmReturn* left = generate_expression(codegen, node->operation_node.operation.left, area, left_force_reg);
+	/* DAR HANDLE NOS REGISTERS DA BLACKLIST */
+	
+	AsmReturn* left = generate_expression(codegen, node->operation.left, area, left_force_reg);
 	AsmReturn* right = NULL;
 	
 	if (op_node->op != TOKEN_OPERATOR_INCREMENT && op_node->op != TOKEN_OPERATOR_DECREMENT)
 	{
-		right = generate_expression(codegen, node->operation_node.operation.right, area, right_force_reg);
+		right = generate_expression(codegen, node->operation.right, area, right_force_reg);
 	}
+
+	AsmReturn* result = NULL;
 
 	switch (op_node->op)
 	{
 		case TOKEN_OPERATOR_EQUALS:
 		{
-			return generate_is_equals_operation(codegen, left, right, area);
+			result = generate_is_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_NOT_EQUALS:
 		{
-			return generate_is_not_equals_operation(codegen, left, right, area);
+			result = generate_is_not_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_GREATER:
 		{
-			return generate_is_greater_operation(codegen, left, right, area);
+			result = generate_is_greater_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_LESS:
 		{
-			return generate_is_less_operation(codegen, left, right, area);
+			result = generate_is_less_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_GREATER_EQUALS:
 		{
-			return generate_is_greater_equals_operation(codegen, left, right, area);
+			result = generate_is_greater_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_LESS_EQUALS:
 		{
-			return generate_is_less_equals_operation(codegen, left, right, area);
+			result = generate_is_less_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_OR:
 		{
-			return generate_or_operation(codegen, left, right, area);
+			result = generate_or_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_AND:
 		{
-			return generate_and_operation(codegen, left, right, area);
+			result = generate_and_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_PLUS:
 		{
-			return generate_plus_operation(codegen, left, right, area);
+			result = generate_plus_operation(codegen, left, right, area);
+
+			break;
 		}
 
 		case TOKEN_OPERATOR_MINUS:
 		{
-			return generate_minus_operation(codegen, left, right, area);
+			result = generate_minus_operation(codegen, left, right, area);
+
+			break;
 		}
 
 		case TOKEN_OPERATOR_INCREMENT:
 		{
-			return generate_increment_operation(codegen, left, area);
+			result = generate_increment_operation(codegen, left, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_DECREMENT:
 		{
-			return generate_decrement_operation(codegen, left, area);
+			result = generate_decrement_operation(codegen, left, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_DIVIDED:
 		{
-			return generate_div_operation(codegen, left, right, area);
+			result = generate_div_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_CHAR_STAR:
 		{
-			return generate_multiply_operation(codegen, left, right, area);
+			result = generate_multiply_operation(codegen, left, right, area);
+
+			break;
 		}
 		
 		case TOKEN_OPERATOR_PLUS_EQUALS:
 		{
-			return generate_plus_equals_operation(codegen, left, right, area);
+			result = generate_plus_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 
 		case TOKEN_OPERATOR_MINUS_EQUALS:
 		{
-			return generate_minus_equals_operation(codegen, left, right, area);
+			result = generate_minus_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 
 		case TOKEN_OPERATOR_TIMES_EQUALS:
 		{
-			return generate_times_equals_operation(codegen, left, right, area);
+			result = generate_times_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 
 		case TOKEN_OPERATOR_DIVIDED_EQUALS:
 		{
-			return generate_div_equals_operation(codegen, left, right, area);
+			result = generate_div_equals_operation(codegen, left, right, area);
+
+			break;
 		}
 
 		default:
@@ -132,4 +172,8 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 			exit(1);
 		}
 	}
+
+	/* DAR UNBLOCK NOS REGISTERS DA BLACKLIST */
+
+	return result;
 }
