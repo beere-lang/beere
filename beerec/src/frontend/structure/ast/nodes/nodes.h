@@ -331,179 +331,35 @@ struct Node
 
 	union
 	{
-		struct
-		{
-			OperationNode operation;
-		} 
-		operation_node;
-
-		struct
-		{
-			IfNode if_statement;
-		} 
-		if_statement_node;
-
-		struct
-		{
-			LiteralNode literal;
-		} 
-		literal_node;
-
-		struct
-		{
-			DeclareNode declare;
-		}
-		declare_node;
-
-		struct
-		{
-			FunctionNode function;
-		}
-		function_node;
-
-		struct
-		{
-			ArgumentNode argument;
-		}
-		argument_node;
-
-		struct
-		{
-			VariableNode variable;
-		} 
-		variable_node;
-
-		struct
-		{
-			ReturnNode return_statement;
-		}
-		return_statement_node;
-
-		struct
-		{
-			BlockNode block;
-		}
-		block_node;
-
-		struct
-		{
-			FunctionCallNode function_call;
-		}
-		function_call_node;
-
-		struct
-		{
-			VariableAssignNode variable_assign;
-		}
-		variable_assign_node;
-
-		struct
-		{
-			ParamNode param;
-		}
-		param_node;
-
-		struct
-		{
-			WhileLoopNode while_loop;
-		}
-		while_loop_node;
-
-		struct
-		{
-			ForLoopNode for_loop;
-		}
-		for_loop_node;
-
-		struct
-		{
-			SwitchCaseStatement switch_statement;
-		}
-		switch_statement_node;
-
-		struct
-		{
-			SwitchCaseBlock switch_case_block;
-		}
-		switch_case_block_node;
-
-		struct
-		{
-			ImportStatement import_node;
-		}
-		import_statement_node;
-
-		struct
-		{
-			CastNode cast_node;
-		}
-		cast_statement_node;
-
-		struct
-		{
-			ClassNode class_node;
-		}
-		class_node;
-
-		struct
-		{
-			AdressOfNode adress_of;
-		}
-		adress_of_node;
-
-		struct
-		{
-			DereferenceNode dereference;
-		}
-		dereference_node;
-
-		struct
-		{
-			MemberAccessNode member_access;
-		}
-		member_access_node;
-
-		struct
-		{
-			CreateInstanceNode create_instance;
-		}
-		create_instance_node;
-
-		struct
-		{
-			AccessArrayNode acess_array;
-		}
-		acess_array_node;
-
-		struct
-		{
-			ArrayLiteralNode array_literal;
-		}
-		array_literal_node;
-
-		struct
-		{
-			PushArrayNode array_push;
-		}
-		array_push_node;
-		
-		struct
-		{
-			PopArrayNode array_pop;
-		}
-		array_pop_node;
-		
-		struct
-		{
-			ArrayLengthNode array_length;
-		}
-		array_length_node;
-
-		struct
-		{
-			DirectClassAccessNode direct_class_access;
-		}
-		direct_class_access_node;
+		OperationNode operation;
+		IfNode if_statement;
+		LiteralNode literal;
+		DeclareNode declare;
+		FunctionNode function;
+		ArgumentNode argument;
+		VariableNode variable;
+		ReturnNode return_statement;
+		BlockNode block;
+		FunctionCallNode function_call;
+		VariableAssignNode variable_assign;
+		ParamNode param;
+		WhileLoopNode while_loop;
+		ForLoopNode for_loop;
+		SwitchCaseStatement switch_statement;
+		SwitchCaseBlock switch_case_block;
+		ImportStatement import_node;
+		CastNode cast_node;
+		ClassNode class_node;
+		AdressOfNode adress_of;
+		DereferenceNode dereference;
+		MemberAccessNode member_access;
+		CreateInstanceNode create_instance;
+		AccessArrayNode acess_array;
+		ArrayLiteralNode array_literal;
+		PushArrayNode array_push;
+		PopArrayNode array_pop;
+		ArrayLengthNode array_length;
+		DirectClassAccessNode direct_class_access;
 	};
 };
 
