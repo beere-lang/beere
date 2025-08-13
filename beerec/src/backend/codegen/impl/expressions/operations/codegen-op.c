@@ -27,6 +27,7 @@ AsmReturn* generate_operation(CodeGen* codegen, Node* node, AsmArea* area, int f
 	}
 	
 	/* DAR HANDLE NOS REGISTERS DA BLACKLIST */
+	/* IMPLEMENTAR OS CHECKS PRA FIX RETURN TAMBÉM */
 	
 	AsmReturn* left = generate_expression(codegen, node->operation.left, area, left_force_reg);
 	AsmReturn* right = NULL;

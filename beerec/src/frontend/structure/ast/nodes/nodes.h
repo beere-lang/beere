@@ -38,6 +38,9 @@ typedef struct
 
 	int change_left; // usado no codegen (vai ser mudado pras IRNodes).
 	int change_right; // usado no codegen (vai ser mudado pras IRNodes).
+
+	int unuse_fix_return;
+	Register* fix_return;
 }
 OperationNode;
 
