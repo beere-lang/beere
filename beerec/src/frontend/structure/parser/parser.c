@@ -9,17 +9,58 @@
 #include "../../../utils/logger/logger.h"
 #include "../../../utils/utils.h"
 
-static Node* parse_array_access(Parser* parser, Node* array_access);
-static Node* parse_func_call(Parser* parser, Node* callee);
-static Node* parse_expression(Parser* parser);
-static Node* parse_comparator(Parser* parser);
-static NodeList* parse_params(Parser* parser);
-static NodeList* parse_args(Parser* parser);
-static Node* parse_primary(Parser* parser);
-static Node* parse_unary(Parser* parser);
-static Node* parse_block(Parser* parser);
-static Node* parse_and(Parser* parser);
-static Node* parse_or(Parser* parser);
+static ASTNode* parse_array_access(Parser* parser, ASTNode* array_access);
+static ASTNode* parse_func_call(Parser* parser, ASTNode* callee);
+static ASTNode* parse_expression(Parser* parser);
+static ASTNode* parse_comparator(Parser* parser);
+static ASTNodeList* parse_params(Parser* parser);
+static ASTNodeList* parse_args(Parser* parser);
+static ASTNode* parse_primary(Parser* parser);
+static ASTNode* parse_unary(Parser* parser);
+static ASTNode* parse_block(Parser* parser);
+static ASTNode* parse_and(Parser* parser);
+static ASTNode* parse_or(Parser* parser);
+
+ClassTable* class_table = NULL;
+
+static void setup_class_table()
+{
+	ClassTable* table = malloc(sizeof(ClassTable));
+	
+	table->classes = malloc(sizeof(char*) * 4);
+	table->length = 0;
+	table->capacity = 4;
+
+	class_table = table;
+}
+
+static int has_in_table(char* class_name)
+{
+	for (int i = 0; i < class_table->length; i++)
+	{
+		char* curr = class_table->classes[i];
+
+		if (strcmp(class_name, curr) == 0)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static void add_class_to_table(char* class_name)
+{
+	if (class_table->length >= class_table->capacity)
+	{
+		class_table->capacity *= 2;
+
+		class_table->classes = realloc(class_table->classes, sizeof(char*) * class_table->capacity);
+	}
+
+	class_table->classes[class_table->length] = strdup(class_name);
+	class_table->length++;
+}
 
 static Token* peek_tkn(const Parser* parser)
 {
@@ -219,16 +260,16 @@ static int is_literal(TokenType tkn_type)
 	return tkn_type == TOKEN_LITERAL_INT || tkn_type == TOKEN_LITERAL_FLOAT || tkn_type == TOKEN_LITERAL_BOOL || tkn_type == TOKEN_LITERAL_CHAR || tkn_type == TOKEN_LITERAL_STRING ||tkn_type == TOKEN_LITERAL_NULL || tkn_type == TOKEN_LITERAL_DOUBLE;
 }
 
-static Node* parse_literal(Parser* parser)
+static ASTNode* parse_literal(Parser* parser)
 {
-	Node* expr = NULL;
+	ASTNode* expr = NULL;
 
 	const Token* tkn = peek_tkn(parser);
 	const TokenType tkn_type = tkn->token_type;
 	
 	if (is_literal(tkn_type))
 	{
-		Node* literal_node = malloc(sizeof(Node));
+		ASTNode* literal_node = malloc(sizeof(ASTNode));
 
 		if (literal_node == NULL) 
 		{ 
@@ -243,8 +284,8 @@ static Node* parse_literal(Parser* parser)
 			{
 				Type* type = create_type(TYPE_INT, NULL);
 				
-				literal_node->literal_node.literal.literal_type = type;
-				literal_node->literal_node.literal.int_value = convert_number_int(peek_tkn(parser)->start);
+				literal_node->literal.literal_type = type;
+				literal_node->literal.int_value = convert_number_int(peek_tkn(parser)->start);
 				
 				break;
 			}
@@ -253,8 +294,8 @@ static Node* parse_literal(Parser* parser)
 			{
 				Type* type = create_type(TYPE_STRING, NULL);
 				
-				literal_node->literal_node.literal.literal_type = type;
-				literal_node->literal_node.literal.string_value = strdup(peek_tkn(parser)->str_value);
+				literal_node->literal.literal_type = type;
+				literal_node->literal.string_value = strdup(peek_tkn(parser)->str_value);
 				
 				break;
 			}
@@ -263,8 +304,8 @@ static Node* parse_literal(Parser* parser)
 			{
 				Type* type = create_type(TYPE_FLOAT, NULL);
 				
-				literal_node->literal_node.literal.literal_type = type;
-				literal_node->literal_node.literal.float_value = convert_number_float(peek_tkn(parser)->start);
+				literal_node->literal.literal_type = type;
+				literal_node->literal.float_value = convert_number_float(peek_tkn(parser)->start);
 				
 				break;
 			}
@@ -273,8 +314,8 @@ static Node* parse_literal(Parser* parser)
 			{
 				Type* type = create_type(TYPE_BOOL, NULL);
 
-				literal_node->literal_node.literal.literal_type = type;
-				literal_node->literal_node.literal.bool_value = peek_tkn(parser)->bool_value;
+				literal_node->literal.literal_type = type;
+				literal_node->literal.bool_value = peek_tkn(parser)->bool_value;
 				
 				break;
 			}
@@ -283,8 +324,8 @@ static Node* parse_literal(Parser* parser)
 			{
 				Type* type = create_type(TYPE_CHAR, NULL);
 
-				literal_node->literal_node.literal.literal_type = type;
-				literal_node->literal_node.literal.char_value = tkn->ch_value;
+				literal_node->literal.literal_type = type;
+				literal_node->literal.char_value = tkn->ch_value;
 				
 				break;
 			}
@@ -293,17 +334,8 @@ static Node* parse_literal(Parser* parser)
 			{
 				Type* type = create_type(TYPE_DOUBLE, NULL);
 
-				literal_node->literal_node.literal.literal_type = type;
-				literal_node->literal_node.literal.double_value = convert_number_double(peek_tkn(parser)->start);
-				
-				break;
-			}
-
-			case TOKEN_LITERAL_NULL: 
-			{
-				Type* type = create_type(TYPE_NULL, NULL);
-				
-				literal_node->literal_node.literal.literal_type = type;
+				literal_node->literal.literal_type = type;
+				literal_node->literal.double_value = convert_number_double(peek_tkn(parser)->start);
 				
 				break;
 			}
@@ -327,7 +359,7 @@ static Node* parse_literal(Parser* parser)
 
 		if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_PAREN) 
 		{
-			Node* callee = malloc(sizeof(Node));
+			ASTNode* callee = malloc(sizeof(ASTNode));
 
 			if (callee == NULL) 
 			{ 
@@ -335,8 +367,8 @@ static Node* parse_literal(Parser* parser)
 				exit(1); 
 			}
 
-			callee->type = NODE_IDENTIFIER;
-			callee->variable_node.variable.identifier = identifier;
+			callee->type = NODE_IDENT;
+			callee->variable.identifier = identifier;
 
 			parser_info("Found a function in primary expression part...");
 
@@ -346,7 +378,7 @@ static Node* parse_literal(Parser* parser)
 		}
 		else if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACKET) 
 		{
-			Node* callee = malloc(sizeof(Node));
+			ASTNode* callee = malloc(sizeof(ASTNode));
 
 			if (callee == NULL) 
 			{ 
@@ -354,8 +386,8 @@ static Node* parse_literal(Parser* parser)
 				exit(1); 
 			}
 
-			callee->type = NODE_IDENTIFIER;
-			callee->variable_node.variable.identifier = identifier;
+			callee->type = NODE_IDENT;
+			callee->variable.identifier = identifier;
 
 			parser_info("Found a array access in primary expression part...");
 
@@ -363,16 +395,16 @@ static Node* parse_literal(Parser* parser)
 		}
 		else 
 		{
-			Node* var_node = malloc(sizeof(Node));
+			ASTNode* var_node = malloc(sizeof(ASTNode));
 
 			if (var_node == NULL) 
 			{ 
-				parser_error("Failed to allocate memory for variable node..."); 
+				parser_error("Failed to allocate memory for variable ASTNode..."); 
 				exit(1); 
 			}
 
-			var_node->type = NODE_IDENTIFIER;
-			var_node->variable_node.variable.identifier = identifier;
+			var_node->type = NODE_IDENT;
+			var_node->variable.identifier = identifier;
 
 			expr = var_node;
 		}
@@ -381,11 +413,11 @@ static Node* parse_literal(Parser* parser)
 	{
 		advance_tkn(parser);
 
-		Node* node = malloc(sizeof(Node));
+		ASTNode* node = malloc(sizeof(ASTNode));
 
 		if (node == NULL)
 		{
-			parser_error("Failed to allocate memory for super node..."); 
+			parser_error("Failed to allocate memory for super ASTNode..."); 
 			exit(1);
 		}
 
@@ -397,11 +429,11 @@ static Node* parse_literal(Parser* parser)
 	{
 		advance_tkn(parser);
 
-		Node* this_node = malloc(sizeof(Node));
+		ASTNode* this_node = malloc(sizeof(ASTNode));
 
 		if (this_node == NULL) 
 		{ 
-			parser_error("Failed to allocate memory for this node..."); 
+			parser_error("Failed to allocate memory for this ASTNode..."); 
 			exit(1); 
 		}
 
@@ -432,9 +464,9 @@ static Node* parse_literal(Parser* parser)
 	return expr;
 }
 
-static Node* parse_primary(Parser* parser)
+static ASTNode* parse_primary(Parser* parser)
 {
-	Node* expr = parse_literal(parser);
+	ASTNode* expr = parse_literal(parser);
    
 	while (1)
 	{
@@ -449,22 +481,22 @@ static Node* parse_primary(Parser* parser)
 
 			char* _identifier = strndup(identifier->start, identifier->length);
 
-			Node* object = expr;
+			ASTNode* object = expr;
 
-			Node* node = malloc(sizeof(Node));
+			ASTNode* node = malloc(sizeof(ASTNode));
 
 			if (node == NULL) 
 			{ 
-				parser_error("Failed to allocate memory for member access node..."); 
+				parser_error("Failed to allocate memory for member access ASTNode..."); 
 				exit(1); 
 			}
 
 			node->type = NODE_MEMBER_ACCESS;
 
-			node->member_access_node.member_access.object = object;
-			node->member_access_node.member_access.member_name = _identifier;
-			node->member_access_node.member_access.ptr_acess = ptr_acess;
-			node->member_access_node.member_access.is_function = 0;
+			node->member_access.object = object;
+			node->member_access.member_name = _identifier;
+			node->member_access.ptr_acess = ptr_acess;
+			node->member_access.is_function = 0;
 
 			expr = node;
 		}
@@ -476,17 +508,17 @@ static Node* parse_primary(Parser* parser)
 
 			if (expr->type == NODE_MEMBER_ACCESS)
 			{
-				expr->member_access_node.member_access.is_function = 1;
+				expr->member_access.is_function = 1;
 			}
 
-			Node* func_call = parse_func_call(parser, expr);
+			ASTNode* func_call = parse_func_call(parser, expr);
 			expr = func_call;
 		}
 		else if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACKET)
 		{
 			printf("[Parser] [Debug] Accessing a array...\n");
 
-			Node* array_access = parse_array_access(parser, expr);
+			ASTNode* array_access = parse_array_access(parser, expr);
 			expr = array_access;
 		}
 		else
@@ -498,15 +530,12 @@ static Node* parse_primary(Parser* parser)
 	return expr;
 }
 
-static Node* parse_arithmetic(Parser* parser)
+static ASTNode* parse_arithmetic(Parser* parser)
 {
-	Node* left = parse_unary(parser);
+	ASTNode* left = parse_unary(parser);
 
 	TokenType tkn_type = peek_tkn(parser)->token_type;
 
-	/**
-	 * +, -, *, /, +=, -=, *=, /=
-	 */
 	while (
 		tkn_type == TOKEN_OPERATOR_PLUS ||
 		tkn_type == TOKEN_OPERATOR_MINUS ||
@@ -522,9 +551,9 @@ static Node* parse_arithmetic(Parser* parser)
 
 		advance_tkn(parser);
 		
-		Node* right = parse_unary(parser);
+		ASTNode* right = parse_unary(parser);
 		
-		Node* node = malloc(sizeof(Node));
+		ASTNode* node = malloc(sizeof(ASTNode));
 
 		if (node == NULL)
 		{
@@ -533,9 +562,9 @@ static Node* parse_arithmetic(Parser* parser)
 		}
 
 		node->type = NODE_OPERATION;
-		node->operation_node.operation.left = left;
-		node->operation_node.operation.right = right;
-		node->operation_node.operation.op = operator;
+		node->operation.left = left;
+		node->operation.right = right;
+		node->operation.op = operator;
 
 		left = node;
 		tkn_type = peek_tkn(parser)->token_type;
@@ -544,15 +573,12 @@ static Node* parse_arithmetic(Parser* parser)
 	return left;
 }
 
-static Node* parse_comparator(Parser* parser)
+static ASTNode* parse_comparator(Parser* parser)
 {
-	Node* left = parse_arithmetic(parser);
+	ASTNode* left = parse_arithmetic(parser);
 
 	TokenType tkn_type = peek_tkn(parser)->token_type;
 
-	/**
-	 * ==, >, >=, <, <=, !=
-	 */
 	while (
 		tkn_type == TOKEN_OPERATOR_EQUALS ||
 		tkn_type == TOKEN_OPERATOR_GREATER ||
@@ -566,9 +592,9 @@ static Node* parse_comparator(Parser* parser)
 
 		advance_tkn(parser);
 		
-		Node* right = parse_arithmetic(parser);
+		ASTNode* right = parse_arithmetic(parser);
 		
-		Node* node = malloc(sizeof(Node));
+		ASTNode* node = malloc(sizeof(ASTNode));
 
 		if (node == NULL)
 		{
@@ -577,9 +603,9 @@ static Node* parse_comparator(Parser* parser)
 		}
 
 		node->type = NODE_OPERATION;
-		node->operation_node.operation.left = left;
-		node->operation_node.operation.right = right;
-		node->operation_node.operation.op = operator;
+		node->operation.left = left;
+		node->operation.right = right;
+		node->operation.op = operator;
 
 		left = node;
 		tkn_type = peek_tkn(parser)->token_type;
@@ -588,17 +614,17 @@ static Node* parse_comparator(Parser* parser)
 	return left;
 }
 
-static Node* parse_and(Parser* parser)
+static ASTNode* parse_and(Parser* parser)
 {
-	Node* left = parse_comparator(parser);
+	ASTNode* left = parse_comparator(parser);
 
 	while (peek_tkn(parser)->token_type == TOKEN_OPERATOR_AND) 
 	{
 		advance_tkn(parser);
 
-		Node* right = parse_comparator(parser);
+		ASTNode* right = parse_comparator(parser);
 
-		Node* node = malloc(sizeof(Node));
+		ASTNode* node = malloc(sizeof(ASTNode));
 
 		if (node == NULL) 
 		{
@@ -607,9 +633,9 @@ static Node* parse_and(Parser* parser)
 		}
 
 		node->type = NODE_OPERATION;
-		node->operation_node.operation.left = left;
-		node->operation_node.operation.right = right;
-		node->operation_node.operation.op = TOKEN_OPERATOR_AND;
+		node->operation.left = left;
+		node->operation.right = right;
+		node->operation.op = TOKEN_OPERATOR_AND;
 
 		left = node;
 	}
@@ -617,17 +643,17 @@ static Node* parse_and(Parser* parser)
 	return left;
 }
 
-static Node* parse_or(Parser* parser)
+static ASTNode* parse_or(Parser* parser)
 {
-	Node* left = parse_and(parser);
+	ASTNode* left = parse_and(parser);
 
 	while (peek_tkn(parser)->token_type == TOKEN_OPERATOR_OR)
 	{
 		advance_tkn(parser);
 
-		Node* right = parse_and(parser);
+		ASTNode* right = parse_and(parser);
 
-		Node* node = malloc(sizeof(Node));
+		ASTNode* node = malloc(sizeof(ASTNode));
 
 		if (node == NULL) 
 		{
@@ -636,9 +662,9 @@ static Node* parse_or(Parser* parser)
 		}
 
 		node->type = NODE_OPERATION;
-		node->operation_node.operation.left = left;
-		node->operation_node.operation.right = right;
-		node->operation_node.operation.op = TOKEN_OPERATOR_OR;
+		node->operation.left = left;
+		node->operation.right = right;
+		node->operation.op = TOKEN_OPERATOR_OR;
 
 		left = node;
 	}
@@ -646,31 +672,31 @@ static Node* parse_or(Parser* parser)
 	return left;
 }
 
-static Node* parse_expression(Parser* parser)
+static ASTNode* parse_expression(Parser* parser)
 {
 	return parse_or(parser);
 }
 
-static Node* parse_block(Parser* parser)
+static ASTNode* parse_block(Parser* parser)
 {
 	expect_tkn(parser, (TokenType[]){ TOKEN_CHAR_OPEN_BRACE }, 1);
 	advance_tkn(parser);
 
 	skip_end_lines(parser);
 
-	NodeList* node_list = malloc(sizeof(NodeList));
+	ASTNodeList* node_list = malloc(sizeof(ASTNodeList));
 
 	if (node_list == NULL) 
-	{ 
-		parser_error("Failed to allocate memory for node list..."); 
+	{
+		parser_error("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
-	Node** current = &node_list->head;
+	ASTNode** current = &node_list->head;
 
 	while (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_BRACE) 
 	{
-		Node* statement = parse_stmt(parser);
+		ASTNode* statement = parse_stmt(parser);
 	
 		if (statement == NULL) 
 		{
@@ -688,16 +714,16 @@ static Node* parse_block(Parser* parser)
 
 	*current = NULL;
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory for block node");
+		parser_error("Failed to allocate memory for block ASTNode");
 		exit(1);
 	}
   
 	node->type = NODE_BLOCK;
-	node->block_node.block.statements = node_list;
+	node->block.statements = node_list;
 
 	return node;
 }
@@ -712,21 +738,21 @@ static int check_case_scope(Parser* parser, int true)
 	return peek_tkn(parser)->token_type != TOKEN_KEYWORD_CASE && peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_BRACE;
 }
 
-static Node* parse_switch_label_content(Parser* parser, Node* condition, int new_scope)
+static ASTNode* parse_switch_label_content(Parser* parser, ASTNode* condition, int new_scope)
 {
-	NodeList* statement_list = malloc(sizeof(NodeList));
+	ASTNodeList* statement_list = malloc(sizeof(ASTNodeList));
 
 	if (statement_list == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for node list..."); 
+		parser_error("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
-	Node** current = &statement_list->head;
+	ASTNode** current = &statement_list->head;
 	
 	while (check_case_scope(parser, new_scope)) 
 	{
-		Node* statement = parse_stmt(parser);
+		ASTNode* statement = parse_stmt(parser);
 
 		if (statement == NULL)
 		{
@@ -748,72 +774,72 @@ static Node* parse_switch_label_content(Parser* parser, Node* condition, int new
 		skip_end_lines(parser);
 	}
 
-	Node* block_node = malloc(sizeof(Node));
+	ASTNode* block_node = malloc(sizeof(ASTNode));
 
 	if (block_node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for block node..."); 
+		parser_error("Failed to allocate memory for block ASTNode..."); 
 		exit(1); 
 	}
 
 	block_node->type = NODE_BLOCK;
 
-	block_node->block_node.block.statements = statement_list;
+	block_node->block.statements = statement_list;
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for switch case block node..."); 
+		parser_error("Failed to allocate memory for switch case block ASTNode..."); 
 		exit(1); 
 	}
 	
-	node->type = NODE_SWITCH_CASE_BLOCK;
-	node->switch_case_block_node.switch_case_block.condition = condition;
-	node->switch_case_block_node.switch_case_block.block = block_node;
+	node->type = NODE_CASE;
+	node->switch_case_block.condition = condition;
+	node->switch_case_block.block = block_node;
 
 	return node;
 }
 
-static Node* parse_var_assign(Parser* parser, Node* left)
+static ASTNode* parse_var_assign(Parser* parser, ASTNode* left)
 {
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for variable assign node..."); 
+		parser_error("Failed to allocate memory for variable assign ASTNode..."); 
 		exit(1); 
 	}
 
-	node->type = NODE_VARIABLE_ASSIGN;
+	node->type = NODE_ASSIGN;
 
-	node->variable_assign_node.variable_assign.left = left;
-	node->variable_assign_node.variable_assign.assign_value = expression;
+	node->variable_assign.left = left;
+	node->variable_assign.expr = expression;
 
 	skip_end_lines(parser);
 
 	return node;
 }
 
-static Node* parse_var_increment(Parser* parser, Node* left)
+static ASTNode* parse_var_increment(Parser* parser, ASTNode* left)
 {
 	printf("[Parser] [Debug] Parsing a increment operation...\n");
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation node..."); 
+		parser_error("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
-	Node* node_literal = malloc(sizeof(Node));
+	ASTNode* node_literal = malloc(sizeof(ASTNode));
 
 	if (node_literal == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for literal node..."); 
+		parser_error("Failed to allocate memory for literal ASTNode..."); 
 		exit(1); 
 	}
 
@@ -821,38 +847,37 @@ static Node* parse_var_increment(Parser* parser, Node* left)
 
 	Type* type = create_type(TYPE_INT, NULL);
 
-	node_literal->literal_node.literal.literal_type = type;
-	node_literal->literal_node.literal.int_value = 1;
+	node_literal->literal.literal_type = type;
+	node_literal->literal.int_value = 1;
 
 	node->type = NODE_OPERATION;
-	node->operation_node.operation.op = TOKEN_OPERATOR_INCREMENT;
-	node->operation_node.operation.left = left;
-	node->operation_node.operation.right = node_literal;
+	node->operation.op = TOKEN_OPERATOR_INCREMENT;
+	node->operation.left = left;
+	node->operation.right = node_literal;
 
 	advance_tkn(parser);
-
 	skip_end_lines(parser);
 
 	return node;
 }
 
-static Node* parse_var_decrement(Parser* parser, Node* left)
+static ASTNode* parse_var_decrement(Parser* parser, ASTNode* left)
 {
 	printf("[Parser] [Debug] Parsing a increment operation...\n");
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation node..."); 
+		parser_error("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
-	Node* node_literal = malloc(sizeof(Node));
+	ASTNode* node_literal = malloc(sizeof(ASTNode));
 
 	if (node_literal == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for literal node..."); 
+		parser_error("Failed to allocate memory for literal ASTNode..."); 
 		exit(1); 
 	}
 
@@ -860,13 +885,13 @@ static Node* parse_var_decrement(Parser* parser, Node* left)
 
 	Type* type = create_type(TYPE_INT, NULL);
 
-	node_literal->literal_node.literal.literal_type = type;
-	node_literal->literal_node.literal.int_value = 1;
+	node_literal->literal.literal_type = type;
+	node_literal->literal.int_value = 1;
 
 	node->type = NODE_OPERATION;
-	node->operation_node.operation.op = TOKEN_OPERATOR_DECREMENT;
-	node->operation_node.operation.left = left;
-	node->operation_node.operation.right = node_literal;
+	node->operation.op = TOKEN_OPERATOR_DECREMENT;
+	node->operation.left = left;
+	node->operation.right = node_literal;
 
 	advance_tkn(parser);
 
@@ -875,103 +900,103 @@ static Node* parse_var_decrement(Parser* parser, Node* left)
 	return node;
 }
 
-static Node* parse_var_plus_equals(Parser* parser, Node* left) 
+static ASTNode* parse_var_plus_equals(Parser* parser, ASTNode* left) 
 {
 	advance_tkn(parser);
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation node..."); 
+		parser_error("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
 	node->type = NODE_OPERATION;
 
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 	
-	node->operation_node.operation.op = TOKEN_OPERATOR_PLUS_EQUALS;
-	node->operation_node.operation.left = left;
-	node->operation_node.operation.right = expression;
+	node->operation.op = TOKEN_OPERATOR_PLUS_EQUALS;
+	node->operation.left = left;
+	node->operation.right = expression;
 
 	return node;
 }
 
-static Node* parse_var_minus_equals(Parser* parser, Node* left) 
+static ASTNode* parse_var_minus_equals(Parser* parser, ASTNode* left) 
 {
 	advance_tkn(parser);
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation node..."); 
+		parser_error("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
 	node->type = NODE_OPERATION;
 
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 
-	node->operation_node.operation.op = TOKEN_OPERATOR_MINUS_EQUALS;
-	node->operation_node.operation.left = left;
-	node->operation_node.operation.right = expression;
+	node->operation.op = TOKEN_OPERATOR_MINUS_EQUALS;
+	node->operation.left = left;
+	node->operation.right = expression;
 
 	return node;
 }
 
-static Node* parse_var_times_equals(Parser* parser, Node* left) 
+static ASTNode* parse_var_times_equals(Parser* parser, ASTNode* left) 
 {
 	advance_tkn(parser);
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation node..."); 
+		parser_error("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
 	node->type = NODE_OPERATION;
 
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 	
-	node->operation_node.operation.op = TOKEN_OPERATOR_TIMES_EQUALS;
-	node->operation_node.operation.left = left;
-	node->operation_node.operation.right = expression;
+	node->operation.op = TOKEN_OPERATOR_TIMES_EQUALS;
+	node->operation.left = left;
+	node->operation.right = expression;
 
 	return node;
 }
 
-static Node* parse_var_divided_equals(Parser* parser, Node* left) 
+static ASTNode* parse_var_divided_equals(Parser* parser, ASTNode* left) 
 {
 	advance_tkn(parser);
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation node..."); 
+		parser_error("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
 	node->type = NODE_OPERATION;
 
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 	
-	node->operation_node.operation.op = TOKEN_OPERATOR_DIVIDED_EQUALS;
-	node->operation_node.operation.left = left;
-	node->operation_node.operation.right = expression;
+	node->operation.op = TOKEN_OPERATOR_DIVIDED_EQUALS;
+	node->operation.left = left;
+	node->operation.right = expression;
 
 	return node;
 }
 
-static Node* parse_return(Parser* parser)
+static ASTNode* parse_return(Parser* parser)
 {
 	advance_tkn(parser);
 
-	Node* expression = NULL;
+	ASTNode* expression = NULL;
 
 	if (peek_tkn(parser)->token_type != TOKEN_END_LINE && peek_tkn(parser)->token_type != TOKEN_END_SRC)
 	{
@@ -984,28 +1009,28 @@ static Node* parse_return(Parser* parser)
 
 	skip_end_lines(parser);
 
-	Node* node = calloc(1, sizeof(Node));
-	node->type = NODE_RETURN;
-	node->return_statement_node.return_statement.return_value = expression;
+	ASTNode* node = calloc(1, sizeof(ASTNode));
+	node->type = NODE_RET;
+	node->return_statement.return_value = expression;
 
 	return node;
 }
 
-static Node* parse_if(Parser* parser)
+static ASTNode* parse_if(Parser* parser)
 {
 	advance_tkn(parser);
 
 	expect_tkn(parser, (TokenType[]){ TOKEN_CHAR_OPEN_PAREN }, 1);
 	advance_tkn(parser);
 
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 
 	expect_tkn(parser, (TokenType[]){ TOKEN_CHAR_CLOSE_PAREN }, 1);
 	advance_tkn(parser);
 
 	skip_end_lines(parser);
 
-	Node* statements = parse_block(parser);
+	ASTNode* statements = parse_block(parser);
 
 	skip_end_lines(parser);
 
@@ -1014,25 +1039,25 @@ static Node* parse_if(Parser* parser)
 
 	skip_end_lines(parser);
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for if node..."); 
+		parser_error("Failed to allocate memory for if ASTNode..."); 
 		exit(1); 
 	}
 
-	node->if_statement_node.if_statement.else_branch = NULL;
+	node->if_statement.else_branch = NULL;
 
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_ELSE)
 	{
 		parser_info("Parsing else...");
 
-		Node* else_statements = malloc(sizeof(Node));
+		ASTNode* else_statements = malloc(sizeof(ASTNode));
 
 		if (else_statements == NULL) 
 		{
-			parser_error("Failed to allocate memory for block node..."); 
+			parser_error("Failed to allocate memory for block ASTNode..."); 
 			exit(1); 
 		}
 
@@ -1054,7 +1079,7 @@ static Node* parse_if(Parser* parser)
 
 		skip_end_lines(parser);
 
-		node->if_statement_node.if_statement.else_branch = else_statements;
+		node->if_statement.else_branch = else_statements;
 	}
 
 	if (node == NULL) 
@@ -1065,45 +1090,42 @@ static Node* parse_if(Parser* parser)
 
 	node->type = NODE_IF;
 
-	node->if_statement_node.if_statement.condition_top = expression;
-	node->if_statement_node.if_statement.then_branch = statements;
+	node->if_statement.condition_top = expression;
+	node->if_statement.then_branch = statements;
 
 	return node;
 }
 
-/**
- * Deve ser chamada quando o parser encontrar um '['
- */
-static Node* parse_array_access(Parser* parser, Node* array_access)
+static ASTNode* parse_array_access(Parser* parser, ASTNode* array_access)
 {
 	advance_tkn(parser);
 	
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_CLOSE_BRACKET }, 1);
 	advance_tkn(parser);
 
-	Node* access_node = malloc(sizeof(Node));
+	ASTNode* access_node = malloc(sizeof(ASTNode));
 
 	if (access_node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for array access node..."); 
+		parser_error("Failed to allocate memory for array access ASTNode..."); 
 		exit(1); 
 	}
 
-	access_node->type = NODE_ARRAY_ACCESS;
+	access_node->type = NODE_ARR_ACCESS;
 
-	access_node->acess_array_node.acess_array.array = array_access;
-	access_node->acess_array_node.acess_array.index_expr = expression;
+	access_node->acess_array.array = array_access;
+	access_node->acess_array.index_expr = expression;
 
 	skip_end_lines(parser);
 
 	return access_node;
 }
 
-static Node* parse_func_call(Parser* parser, Node* callee_expr)
+static ASTNode* parse_func_call(Parser* parser, ASTNode* callee_expr)
 {
-	NodeList* args = NULL;
+	ASTNodeList* args = NULL;
    
 	if (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_PAREN)
 	{
@@ -1112,7 +1134,7 @@ static Node* parse_func_call(Parser* parser, Node* callee_expr)
 
 	advance_tkn(parser);
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{
@@ -1120,31 +1142,28 @@ static Node* parse_func_call(Parser* parser, Node* callee_expr)
 		exit(1);
 	}
 
-	node->type = NODE_FUNCTION_CALL;
+	node->type = NODE_CALL;
 
-	node->function_call_node.function_call.arguments = args;
-	node->function_call_node.function_call.callee = callee_expr;
-	node->function_call_node.function_call.is_prototype = 0;
+	node->function_call.arguments = args;
+	node->function_call.callee = callee_expr;
+	node->function_call.is_prototype = 0;
 
 	return node;
 }
 
-static Node* parse_func(
-	Parser* parser,
-	VisibilityType visibility,
-	const Token* identifier_token,
-	NodeList* parameters,
-	Type* type,
+static ASTNode* parse_func(
+	Parser* parser, VisibilityType visibility, const Token* identifier_token, ASTNodeList* parameters, Type* type,
 	int is_static,
 	int is_virtual,
 	int is_override,
 	int is_constructor
-) {
+) 
+{
 	parser_info("Parsing function declaration...");
 	
 	skip_end_lines(parser);
 
-	FunctionNode function_node = { 0 };
+	ASTNodeFunc function_node = { 0 };
 	function_node.return_type = type;
 	function_node.identifier = strndup(identifier_token->start, identifier_token->length);
 	function_node.is_static = is_static;
@@ -1154,7 +1173,7 @@ static Node* parse_func(
 	function_node.is_virtual = is_virtual;
 	function_node.is_override = is_override;
 	
-	Node* statements = NULL;
+	ASTNode* statements = NULL;
 
 	// lazy fix, talvez melhor depois...
 	int backup = parser->inside_class;
@@ -1178,26 +1197,26 @@ static Node* parse_func(
 
 	skip_end_lines(parser);
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory for function node");
+		parser_error("Failed to allocate memory for function ASTNode");
 		exit(1);
 	}
 
-	node->type = NODE_FUNCTION;
-	node->function_node.function = function_node;
-	node->function_node.function.block_node = statements;
-	node->function_node.function.is_constructor = is_constructor;
-	node->function_node.function.only_declaration = (statements == NULL);
+	node->type = NODE_FUNC;
+	node->function = function_node;
+	node->function.block_node = statements;
+	node->function.is_constructor = is_constructor;
+	node->function.only_declaration = (statements == NULL);
 	
 	parser_info(statements ? "Normal function found..." : "Only declaration function found...");
 
 	return node;
 }
 
-static Node* parse_var(
+static ASTNode* parse_var(
 	Parser* parser, 
 	VisibilityType visibility,
 	const Token* identifier_token, 
@@ -1208,7 +1227,7 @@ static Node* parse_var(
 {
 	parser_info("Parsing variable declaration");
 
-	DeclareNode declare_node = { 0 };
+	ASTNodeField declare_node = { 0 };
 	
 	declare_node.identifier = strndup(identifier_token->start, identifier_token->length);
 	declare_node.default_value = NULL;
@@ -1221,39 +1240,39 @@ static Node* parse_var(
 	{
 		advance_tkn(parser);
 
-		Node* expression = parse_expression(parser);
+		ASTNode* expression = parse_expression(parser);
 
 		declare_node.default_value = expression;
 	}
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory for declaration node");
+		parser_error("Failed to allocate memory for declaration ASTNode");
 		exit(1);
 	}
 
-	node->type = NODE_DECLARATION;
-	node->declare_node.declare = declare_node;
+	node->type = NODE_FIELD;
+	node->declare = declare_node;
 
 	skip_end_lines(parser);
 
 	return node;
 }
 
-static Node* parse_while_loop(Parser* parser)
+static ASTNode* parse_while_loop(Parser* parser)
 {
 	parser_info("Parsing a while loop statement...");
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 	node->type = NODE_WHILE_LOOP;
 
 	advance_tkn(parser);
 	expect_tkn(parser, (const TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
 	advance_tkn(parser);
 
-	Node* condition = parse_expression(parser);
+	ASTNode* condition = parse_expression(parser);
 	
 	expect_tkn(parser, (const TokenType[]) { TOKEN_CHAR_CLOSE_PAREN }, 1);
 	advance_tkn(parser);
@@ -1261,73 +1280,73 @@ static Node* parse_while_loop(Parser* parser)
 	skip_end_lines(parser);
 
 	expect_tkn(parser, (const TokenType[]) { TOKEN_CHAR_OPEN_BRACE }, 1);
-	Node* then_block = parse_block(parser);
+	ASTNode* then_block = parse_block(parser);
 	then_block->type = NODE_BLOCK;
 
 	advance_tkn(parser);
 	skip_end_lines(parser);
 
-	node->while_loop_node.while_loop.condition = condition;
-	node->while_loop_node.while_loop.then_block = then_block;
+	node->while_loop.condition = condition;
+	node->while_loop.then_block = then_block;
 
 	return node;
 }
 
-static Node* parse_for_loop(Parser* parser)
+static ASTNode* parse_for_loop(Parser* parser)
 {
 	advance_tkn(parser);
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
 	advance_tkn(parser);
 
-	Node* initializer = parse_stmt(parser);
+	ASTNode* initializer = parse_stmt(parser);
 
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_SEMI_COLON }, 1);
 	advance_tkn(parser);
 
-	Node* condition = parse_expression(parser);
+	ASTNode* condition = parse_expression(parser);
 
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_SEMI_COLON }, 1);
 	advance_tkn(parser);
 
-	Node* then_statement = parse_stmt(parser);
+	ASTNode* then_statement = parse_stmt(parser);
 
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_CLOSE_PAREN }, 1);
 	advance_tkn(parser);
 
 	skip_end_lines(parser);
 
-	Node* then_block = parse_block(parser);
+	ASTNode* then_block = parse_block(parser);
 
 	advance_tkn(parser);
 	skip_end_lines(parser);
 	
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for for loop node..."); 
+		parser_error("Failed to allocate memory for for loop ASTNode..."); 
 		exit(1); 
 	}
 
-	node->for_loop_node.for_loop.init = initializer;
-	node->for_loop_node.for_loop.condition = condition;
-	node->for_loop_node.for_loop.then_statement = then_statement;
+	node->for_loop.init = initializer;
+	node->for_loop.condition = condition;
+	node->for_loop.then_statement = then_statement;
 	
-	node->for_loop_node.for_loop.then_block = then_block;
+	node->for_loop.then_block = then_block;
 	
 	node->type = NODE_FOR_LOOP;
 
 	return node;
 }
 
-static Node* parse_switch(Parser* parser)
+static ASTNode* parse_switch(Parser* parser)
 {
 	advance_tkn(parser);
 
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
 	advance_tkn(parser);
 
-	Node* expression = parse_expression(parser);
+	ASTNode* expression = parse_expression(parser);
 
 	expect_tkn(parser, (TokenType[]){ TOKEN_CHAR_CLOSE_PAREN }, 1);
 	advance_tkn(parser);
@@ -1339,22 +1358,22 @@ static Node* parse_switch(Parser* parser)
 
 	skip_end_lines(parser);
 	
-	NodeList* cases = malloc(sizeof(NodeList));
+	ASTNodeList* cases = malloc(sizeof(ASTNodeList));
 
 	if (cases == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for node list..."); 
+		parser_error("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
-	Node** current = &cases->head;
+	ASTNode** current = &cases->head;
 
 	while (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_BRACE)
 	{
 		expect_tkn(parser, (TokenType[]){ TOKEN_KEYWORD_CASE }, 1);
 		advance_tkn(parser);
 
-		Node* condition = parse_expression(parser);
+		ASTNode* condition = parse_expression(parser);
 
 		expect_tkn(parser, (TokenType[]){ TOKEN_CHAR_COLON }, 1);
 		advance_tkn(parser);
@@ -1372,9 +1391,9 @@ static Node* parse_switch(Parser* parser)
 			skip_end_lines(parser);
 		}
 
-		Node* case_node = parse_switch_label_content(parser, condition, is_new_scope);
+		ASTNode* case_node = parse_switch_label_content(parser, condition, is_new_scope);
 
-		case_node->switch_case_block_node.switch_case_block.new_scope = is_new_scope;
+		case_node->switch_case_block.new_scope = is_new_scope;
 
 		*current = case_node;
 		current = &case_node->next;
@@ -1388,28 +1407,28 @@ static Node* parse_switch(Parser* parser)
 
 	skip_end_lines(parser);
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for switch statement node..."); 
+		parser_error("Failed to allocate memory for switch statement ASTNode..."); 
 		exit(1); 
 	}
 
-	node->type = NODE_SWITCH_STATEMENT;
-	node->switch_statement_node.switch_statement.value = expression;
-	node->switch_statement_node.switch_statement.case_list = cases;
+	node->type = NODE_SWITCH;
+	node->switch_statement.value = expression;
+	node->switch_statement.case_list = cases;
 
 	return node;
 }
 
-static Node* parse_continue(Parser* parser)
+static ASTNode* parse_continue(Parser* parser)
 {
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for continue node..."); 
+		parser_error("Failed to allocate memory for continue ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1418,13 +1437,13 @@ static Node* parse_continue(Parser* parser)
 	return node;
 }
 
-static Node* parse_break(Parser* parser)
+static ASTNode* parse_break(Parser* parser)
 {
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation node..."); 
+		parser_error("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1434,9 +1453,9 @@ static Node* parse_break(Parser* parser)
 	return node;
 }
 
-static NodeList* parse_params(Parser* parser)
+static ASTNodeList* parse_params(Parser* parser)
 {
-	NodeList* params_list = malloc(sizeof(NodeList));
+	ASTNodeList* params_list = malloc(sizeof(ASTNodeList));
 
 	if (params_list == NULL) 
 	{
@@ -1445,7 +1464,7 @@ static NodeList* parse_params(Parser* parser)
 	}
 
 	params_list->head = NULL;
-	Node** current = &params_list->head;
+	ASTNode** current = &params_list->head;
 
 	int offset = 0;
 
@@ -1469,17 +1488,17 @@ static NodeList* parse_params(Parser* parser)
 			exit(1);
 		}
 		
-		Node* arg_node = malloc(sizeof(Node));
+		ASTNode* arg_node = malloc(sizeof(ASTNode));
 
 		if (arg_node == NULL) 
 		{
-			parser_error("Failed to allocate memory for param node...");
+			parser_error("Failed to allocate memory for param ASTNode...");
 			exit(1);
 		}
 
-		arg_node->type = NODE_PARAMETER;
+		arg_node->type = NODE_PARAM;
 		arg_node->next = NULL;
-		arg_node->param_node.param = (ParamNode) { type, strndup(ident_token->start, ident_token->length) };
+		arg_node->param = (ASTNodeParam) { type, strndup(ident_token->start, ident_token->length) };
 		
 		offset++;
 		*current = arg_node;
@@ -1493,9 +1512,9 @@ static NodeList* parse_params(Parser* parser)
 	return params_list;
 }
 
-static NodeList* parse_args(Parser* parser)
+static ASTNodeList* parse_args(Parser* parser)
 {
-	NodeList* node_list = malloc(sizeof(NodeList));
+	ASTNodeList* node_list = malloc(sizeof(ASTNodeList));
 
 	if (node_list == NULL) 
 	{
@@ -1504,7 +1523,7 @@ static NodeList* parse_args(Parser* parser)
 
 	node_list->head = NULL;
 
-	Node** current = &node_list->head;
+	ASTNode** current = &node_list->head;
 
 	int offset = 0;
 
@@ -1516,14 +1535,14 @@ static NodeList* parse_args(Parser* parser)
 			advance_tkn(parser);
 		}
 
-		Node* expression = parse_expression(parser);
+		ASTNode* expression = parse_expression(parser);
 
 		if (expression == NULL)
 		{
 			exit(1);
 		}
 
-		Node* node_next = malloc(sizeof(Node));
+		ASTNode* node_next = malloc(sizeof(ASTNode));
 
 		if (node_next == NULL)
 		{
@@ -1531,7 +1550,7 @@ static NodeList* parse_args(Parser* parser)
 		}
 
 		node_next->type = NODE_ARGUMENT;
-		node_next->argument_node.argument.value = expression;
+		node_next->argument.value = expression;
 
 		*current = node_next;
 		current = &node_next->next;
@@ -1545,7 +1564,7 @@ static NodeList* parse_args(Parser* parser)
 	return node_list;
 }
 
-static Node* parse_import(Parser* parser)
+static ASTNode* parse_import(Parser* parser)
 {
 	advance_tkn(parser);
 
@@ -1564,31 +1583,31 @@ static Node* parse_import(Parser* parser)
 
 	char* import_path = token_lib_name->str_value;
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for import node..."); 
+		parser_error("Failed to allocate memory for import ASTNode..."); 
 		exit(1); 
 	}
 
 	node->type = NODE_IMPORT;
 
-	node->import_statement_node.import_node.is_local = 0;
+	node->import_node.is_local = 0;
 
-	node->import_statement_node.import_node.is_local = 1;
+	node->import_node.is_local = 1;
 
-	node->import_statement_node.import_node.import_path = token_lib_name->str_value;
-	node->import_statement_node.import_node.identifier = identifier_str;
+	node->import_node.import_path = token_lib_name->str_value;
+	node->import_node.identifier = identifier_str;
 
 	return node;
 }
 
-static Node* parse_new_class_instance(Parser* parser, char* class_name)
+static ASTNode* parse_new_class_instance(Parser* parser, char* class_name)
 {
 	advance_tkn(parser);
 
-	NodeList* args = NULL;
+	ASTNodeList* args = NULL;
 
 	if (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_PAREN)
 	{
@@ -1597,35 +1616,35 @@ static Node* parse_new_class_instance(Parser* parser, char* class_name)
 	
 	advance_tkn(parser);
 
-	Node* instance = malloc(sizeof(Node));
+	ASTNode* instance = malloc(sizeof(ASTNode));
 
 	if (instance == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for create instance node..."); 
+		parser_error("Failed to allocate memory for create instance ASTNode..."); 
 		exit(1); 
 	}
 
-	instance->type = NODE_CREATE_INSTANCE;
+	instance->type = NODE_CREATE_INST;
 
-	instance->create_instance_node.create_instance.class_name = class_name;
-	instance->create_instance_node.create_instance.constructor_args = args;
+	instance->create_instance.class_name = class_name;
+	instance->create_instance.constructor_args = args;
 
 	return instance;
 }
 
-static NodeList* parse_array_values(Parser* parser)
+static ASTNodeList* parse_array_values(Parser* parser)
 {
-	NodeList* list = malloc(sizeof(NodeList));
+	ASTNodeList* list = malloc(sizeof(ASTNodeList));
 
 	if (list == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for node list..."); 
+		parser_error("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
 	list->head = NULL;
 
-	Node** current = &list->head;
+	ASTNode** current = &list->head;
 
 	int size = 0;
 	
@@ -1637,7 +1656,7 @@ static NodeList* parse_array_values(Parser* parser)
 			advance_tkn(parser);
 		}
 		
-		Node* expr = parse_expression(parser);
+		ASTNode* expr = parse_expression(parser);
 
 		*current = expr;
 		current = &expr->next;
@@ -1650,12 +1669,12 @@ static NodeList* parse_array_values(Parser* parser)
 	return list;
 }
 
-static Node* parse_new_array(Parser* parser, Type* array_type)
+static ASTNode* parse_new_array(Parser* parser, Type* array_type)
 {
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_BRACE }, 1);
 	advance_tkn(parser);
 
-	NodeList* values = NULL;
+	ASTNodeList* values = NULL;
 	
 	if (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_BRACE)
 	{
@@ -1665,25 +1684,25 @@ static Node* parse_new_array(Parser* parser, Type* array_type)
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_CLOSE_BRACE }, 1);
 	advance_tkn(parser);
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for array literal node..."); 
+		parser_error("Failed to allocate memory for array literal ASTNode..."); 
 		exit(1); 
 	}
 
-	node->type = NODE_ARRAY_LITERAL;
+	node->type = NODE_ARR_LITERAL;
 
-	node->array_literal_node.array_literal.array_type = array_type;
-	node->array_literal_node.array_literal.values = values;
+	node->array_literal.array_type = array_type;
+	node->array_literal.values = values;
 
 	return node;
 }
 
-static Node* parse_new(Parser* parser)
+static ASTNode* parse_new(Parser* parser)
 {
-	Type* type = handle_type_declaration(parser); // Essa função automaticamente da jump no 'new'.
+	Type* type = handle_type_declaration(parser);
 
 	if (type->type == TYPE_CLASS)
 	{
@@ -1700,32 +1719,32 @@ static Node* parse_new(Parser* parser)
 	exit(1);
 }
 
-static Node** parse_class_declarations(Node* block, int* out_count, Node** constructor_ptr)
+static ASTNode** parse_class_declarations(ASTNode* block, int* out_count, ASTNode** constructor_ptr)
 {
 	int capacity = 4;
 	int count = 0;
 
 	int constructor_count = 0;
 
-	Node** node_list = malloc(sizeof(Node*) * capacity);
+	ASTNode** node_list = malloc(sizeof(ASTNode*) * capacity);
 
 	if (node_list == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for node array..."); 
+		parser_error("Failed to allocate memory for ASTNode array..."); 
 		exit(1); 
 	}
 
-	Node* statement = block->block_node.block.statements->head;
+	ASTNode* statement = block->block.statements->head;
 
 	while (statement != NULL)
 	{
-		if (statement->type != NODE_FUNCTION && statement->type != NODE_DECLARATION)
+		if (statement->type != NODE_FUNC && statement->type != NODE_FIELD)
 		{
 			printf("[Parser] [Error] Class global scope statements need to be a function or variable declaration...\n");
 			exit(1);
 		}
 
-		if (statement->type == NODE_FUNCTION && statement->function_node.function.is_constructor)
+		if (statement->type == NODE_FUNC && statement->function.is_constructor)
 		{
 			if (constructor_count > 0)
 			{
@@ -1743,7 +1762,7 @@ static Node** parse_class_declarations(Node* block, int* out_count, Node** const
 		if (capacity <= count)
 		{
 			capacity *= 2;
-			node_list = realloc(node_list, sizeof(Node*) * capacity);
+			node_list = realloc(node_list, sizeof(ASTNode*) * capacity);
 
 			if (node_list == NULL)
 			{
@@ -1756,7 +1775,7 @@ static Node** parse_class_declarations(Node* block, int* out_count, Node** const
 		statement = statement->next;
 	}
 
-	node_list = realloc(node_list, sizeof(Node*) * (count + 1));
+	node_list = realloc(node_list, sizeof(ASTNode*) * (count + 1));
 	node_list[count] = NULL;
 
 	*out_count = count;
@@ -1764,16 +1783,16 @@ static Node** parse_class_declarations(Node* block, int* out_count, Node** const
 	return node_list;
 }
 
-static Node** filter_declarations(Node** list, int type_filter, int* out_count)
+static ASTNode** filter_declarations(ASTNode** list, int type_filter, int* out_count)
 {
 	int capacity = 4;
 	int count = 0;
 
-	Node** result = malloc(sizeof(Node*) * capacity);
+	ASTNode** result = malloc(sizeof(ASTNode*) * capacity);
 
 	if (result == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for node array..."); 
+		parser_error("Failed to allocate memory for ASTNode array..."); 
 		exit(1); 
 	}
 
@@ -1784,7 +1803,7 @@ static Node** filter_declarations(Node** list, int type_filter, int* out_count)
 			if (capacity <= count)
 			{
 				capacity *= 2;
-				Node** new_result = realloc(result, sizeof(Node*) * capacity);
+				ASTNode** new_result = realloc(result, sizeof(ASTNode*) * capacity);
 				if (new_result == NULL)
 				{
 					printf("[Parser] [Error] Failed to realloc memory for filtered list...\n");
@@ -1797,14 +1816,14 @@ static Node** filter_declarations(Node** list, int type_filter, int* out_count)
 		}
 	}
 
-	result = realloc(result, sizeof(Node*) * (count + 1));
+	result = realloc(result, sizeof(ASTNode*) * (count + 1));
 	result[count] = NULL;
 
 	*out_count = count;
 	return result;
 }
 
-static Node* parse_class(Parser* parser)
+static ASTNode* parse_class(Parser* parser)
 {
 	advance_tkn(parser);
 	expect_tkn(parser, (TokenType[]) { TOKEN_IDENTIFIER }, 1);
@@ -1828,7 +1847,7 @@ static Node* parse_class(Parser* parser)
 
 	parser->inside_class = 1;
 
-	Node* block = parse_block(parser);
+	ASTNode* block = parse_block(parser);
 
 	parser->inside_class = 0;
 
@@ -1837,45 +1856,47 @@ static Node* parse_class(Parser* parser)
 
 	char* identifier = strndup(identifier_token->start, identifier_token->length);
 
+	add_class_to_table(identifier);
+
 	int decl_count = 0;
 
-	Node* constructor = NULL;
+	ASTNode* constructor = NULL;
 
-	Node** declarations = parse_class_declarations(block, &decl_count, &constructor);
+	ASTNode** declarations = parse_class_declarations(block, &decl_count, &constructor);
 
 	int var_count = 0;
 	int func_count = 0;
 
-	Node** var_list = filter_declarations(declarations, NODE_DECLARATION, &var_count);
-	Node** func_list = filter_declarations(declarations, NODE_FUNCTION, &func_count);
+	ASTNode** var_list = filter_declarations(declarations, NODE_FIELD, &var_count);
+	ASTNode** func_list = filter_declarations(declarations, NODE_FUNC, &func_count);
 
 	free(declarations);
 
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for class node..."); 
+		parser_error("Failed to allocate memory for class ASTNode..."); 
 		exit(1); 
 	}
 
 	node->type = NODE_CLASS;
 
-	node->class_node.class_node.identifer = identifier;
-	node->class_node.class_node.super_identifer = super_identifier;
+	node->class_node.identifer = identifier;
+	node->class_node.super_identifer = super_identifier;
 
-	node->class_node.class_node.constructor = constructor;
+	node->class_node.constructor = constructor;
 
-	node->class_node.class_node.var_declare_list = var_list;
-	node->class_node.class_node.func_declare_list = func_list;
+	node->class_node.fields = var_list;
+	node->class_node.funcs = func_list;
 
-	node->class_node.class_node.var_count = var_count;
-	node->class_node.class_node.func_count = func_count;
+	node->class_node.fields_count = var_count;
+	node->class_node.funcs_count = func_count;
 
 	return node;
 }
 
-Node* setup_parse_function(Parser* parser, int is_public, int is_static, int is_virtual, int is_override, int is_constructor)
+static ASTNode* setup_parse_function(Parser* parser, int is_public, int is_static, int is_virtual, int is_override, int is_constructor)
 {
 	VisibilityType visibility = (is_public) ? VISIBILITY_PUBLIC : VISIBILITY_PRIVATE;
 	
@@ -1890,7 +1911,7 @@ Node* setup_parse_function(Parser* parser, int is_public, int is_static, int is_
 	expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
 	advance_tkn(parser);
 
-	NodeList* parameters = NULL;
+	ASTNodeList* parameters = NULL;
 	
 	if (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_PAREN)
 	{
@@ -1910,7 +1931,7 @@ Node* setup_parse_function(Parser* parser, int is_public, int is_static, int is_
 	return parse_func(parser, visibility, identifier_token, parameters, type, is_static, is_virtual, is_override, is_constructor);
 }
 
-Node* setup_parse_variable(Parser* parser, int is_public, int is_static, int is_const)
+ASTNode* setup_parse_variable(Parser* parser, int is_public, int is_static, int is_const)
 {
 	if ((parser->inside_class && is_const) || !parser->inside_class)
 	{
@@ -1929,7 +1950,7 @@ Node* setup_parse_variable(Parser* parser, int is_public, int is_static, int is_
 	return parse_var(parser, visibility, identifier_token, type, is_const, is_static);
 }
 
-Node* handle_function_and_variable_parse(Parser* parser)
+ASTNode* handle_function_and_variable_parse(Parser* parser)
 {
 	int is_public = 0;
 	int is_static = 0;
@@ -2008,7 +2029,7 @@ int is_var_or_function(Parser* parser)
 	);
 }
 
-Node* parse_stmt(Parser* parser)
+ASTNode* parse_stmt(Parser* parser)
 {
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_IMPORT)
 	{
@@ -2060,7 +2081,7 @@ Node* parse_stmt(Parser* parser)
 		return parse_for_loop(parser);
 	}
 
-	Node* left = parse_unary(parser);
+	ASTNode* left = parse_unary(parser);
 
 	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_ASSIGN)
 	{
@@ -2102,54 +2123,70 @@ Node* parse_stmt(Parser* parser)
 	return left;
 }
 
-static Node* parse_unary(Parser* parser)
+static int is_class_identifier(char* class_name)
 {
-	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_TYPE)
+	return has_in_table(class_name);
+}
+
+static ASTNode* parse_unary(Parser* parser)
+{
+	if (peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_PAREN && (peek_ahead(parser)->token_type == TOKEN_KEYWORD_TYPE || peek_ahead(parser)->token_type == TOKEN_IDENTIFIER))
 	{
-		Type* type = create_type(peek_tkn(parser)->var_type, NULL);
+		int maybe_class = peek_ahead(parser)->token_type == TOKEN_IDENTIFIER;
+		int can_pass = 1;
 		
-		advance_tkn(parser);
+		if (maybe_class)
+		{
+			Token* token = peek_ahead(parser);
 
-		expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_OPEN_PAREN }, 1);
-		advance_tkn(parser);
-
-		Node* expression = parse_expression(parser);
-
-		expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_CLOSE_PAREN }, 1);
-		advance_tkn(parser);
-		
-		Node* node = malloc(sizeof(Node));
-
-		if (node == NULL) 
-		{ 
-			parser_error("Failed to allocate memory for cast node..."); 
-			exit(1); 
+			if (!is_class_identifier(strndup(token->start, token->length)))
+			{
+				can_pass = 0;
+			}
 		}
 
-		node->type = NODE_CAST;
+		if (can_pass)	
+		{
+			Type* type = handle_type_declaration(parser);
+			
+			expect_tkn(parser, (TokenType[]) { TOKEN_CHAR_CLOSE_PAREN }, 1);
+			advance_tkn(parser);
 
-		node->cast_statement_node.cast_node.cast_type = type;
-		node->cast_statement_node.cast_node.expression = expression;
-
-		return node;
+			ASTNode* expression = parse_unary(parser);
+			
+			ASTNode* node = malloc(sizeof(ASTNode));
+	
+			if (node == NULL)
+			{ 
+				parser_error("Failed to allocate memory for cast ASTNode..."); 
+				exit(1); 
+			}
+	
+			node->type = NODE_CAST;
+	
+			node->cast_node.cast_type = type;
+			node->cast_node.expr = expression;
+	
+			return node;
+		}
 	}
 	
 	if (peek_tkn(parser)->token_type == TOKEN_OPERATOR_ADRESS)
 	{
 		advance_tkn(parser);
 
-		Node* expr = parse_unary(parser);
+		ASTNode* expr = parse_unary(parser);
 
-		Node* node = malloc(sizeof(Node));
+		ASTNode* node = malloc(sizeof(ASTNode));
 
 		if (node == NULL) 
 		{ 
-			parser_error("Failed to allocate memory for adress of node..."); 
+			parser_error("Failed to allocate memory for adress of ASTNode..."); 
 			exit(1); 
 		}
 
-		node->type = NODE_ADRESS_OF;
-		node->adress_of_node.adress_of.expression = expr;
+		node->type = NODE_REFERENCE;
+		node->adress_of.expr = expr;
 
 		return node;
 	}
@@ -2158,18 +2195,18 @@ static Node* parse_unary(Parser* parser)
 	{
 		advance_tkn(parser);
 
-		Node* expr = parse_unary(parser);
+		ASTNode* expr = parse_unary(parser);
 
-		Node* node = malloc(sizeof(Node));
+		ASTNode* node = malloc(sizeof(ASTNode));
 
 		if (node == NULL) 
 		{ 
-			parser_error("Failed to allocate memory for dereference node..."); 
+			parser_error("Failed to allocate memory for dereference ASTNode..."); 
 			exit(1); 
 		}
 
 		node->type = NODE_DEREFERENCE;
-		node->dereference_node.dereference.ptr = expr;
+		node->dereference.expr = expr;
 
 		return node;
 	}
@@ -2182,17 +2219,10 @@ static Node* parse_unary(Parser* parser)
 	return parse_primary(parser);
 }
 
-void free_type(Type* type, Node* node)
+void free_type(Type* type, ASTNode* node)
 {
 	if (type == NULL)
 	{
-		return;
-	}
-
-	if (type->type > 28 || type->type < 0)
-	{
-		type = NULL;
-
 		return;
 	}
 
@@ -2207,18 +2237,18 @@ void free_type(Type* type, Node* node)
 	type = NULL;
 }
 
-void free_node_list(NodeList* list)
+void free_node_list(ASTNodeList* list)
 {
 	if (list == NULL) 
 	{
 		return;
 	}
 
-	Node* node = list->head;
+	ASTNode* node = list->head;
 
 	while (node) 
 	{
-		Node* next = node->next;
+		ASTNode* next = node->next;
 		free_node(node);
 		node = next;
 	}
@@ -2226,7 +2256,7 @@ void free_node_list(NodeList* list)
 	free(list);
 }
 
-void free_node_array(Node** array, int count)
+void free_node_array(ASTNode** array, int count)
 {
 	if (!array) 
 	{
@@ -2242,7 +2272,7 @@ void free_node_array(Node** array, int count)
 	}
 }
 
-void free_node(Node* node)
+void free_node(ASTNode* node)
 {
 	if (node == NULL)
 	{
@@ -2251,113 +2281,113 @@ void free_node(Node* node)
 
 	switch (node->type)
 	{
-		case NODE_DECLARATION:
+		case NODE_FIELD:
 		{ 
-			free(node->declare_node.declare.identifier);
+			free(node->declare.identifier);
 			
-			if (node->declare_node.declare.default_value != NULL) 
+			if (node->declare.default_value != NULL) 
 			{
-				free_node(node->declare_node.declare.default_value);
+				free_node(node->declare.default_value);
 			}
 
-			free_type(node->declare_node.declare.var_type, node);
+			free_type(node->declare.var_type, node);
 
 			break;
 		}
 
-		case NODE_FUNCTION:
+		case NODE_FUNC:
 		{
-			free(node->function_node.function.identifier);
+			free(node->function.identifier);
 			
-			if (node->function_node.function.params != NULL) 
+			if (node->function.params != NULL) 
 			{
-				free_node_list(node->function_node.function.params);
+				free_node_list(node->function.params);
 			}
 			
-			if (node->function_node.function.block_node != NULL)
+			if (node->function.block_node != NULL)
 			{
-				free_node(node->function_node.function.block_node);
+				free_node(node->function.block_node);
 			}
 
 			break;
 		}
 
-		case NODE_IDENTIFIER:
+		case NODE_IDENT:
 		{
-			free(node->variable_node.variable.identifier);
+			free(node->variable.identifier);
 			
 			break;
 		}
 
 		case NODE_OPERATION:
 		{
-			free_node(node->operation_node.operation.left);
-			free_node(node->operation_node.operation.right);
+			free_node(node->operation.left);
+			free_node(node->operation.right);
 
 			break;
 		}
 
-		case NODE_FUNCTION_CALL:
+		case NODE_CALL:
 		{
-			free_node(node->function_call_node.function_call.callee);
+			free_node(node->function_call.callee);
 			
-			if (node->function_call_node.function_call.arguments != NULL)
+			if (node->function_call.arguments != NULL)
 			{
-				free_node_list(node->function_call_node.function_call.arguments);
+				free_node_list(node->function_call.arguments);
 			}
 
 			break;
 		}
 
-		case NODE_VARIABLE_ASSIGN:
+		case NODE_ASSIGN:
 		{
-			free(node->variable_assign_node.variable_assign.left);
+			free(node->variable_assign.left);
 
-			free_node(node->variable_assign_node.variable_assign.assign_value);
+			free_node(node->variable_assign.expr);
 
 			break;
 		}
 
 		case NODE_ARGUMENT:
 		{
-			Node* value = node->argument_node.argument.value;
+			ASTNode* value = node->argument.value;
 
 			free_node(value);
 
 			break;
 		}
 
-		case NODE_RETURN:
+		case NODE_RET:
 		{
-			if (node->return_statement_node.return_statement.return_value != NULL)
+			if (node->return_statement.return_value != NULL)
 			{
-				free_node(node->return_statement_node.return_statement.return_value);
+				free_node(node->return_statement.return_value);
 			}
 			
 			break;
 		}
 
-		case NODE_SWITCH_STATEMENT:
+		case NODE_SWITCH:
 		{
-			free_node(node->switch_statement_node.switch_statement.value);
+			free_node(node->switch_statement.value);
 			
-			free_node_list(node->switch_statement_node.switch_statement.case_list);
+			free_node_list(node->switch_statement.case_list);
 
 			break;
 		}
 
-		case NODE_SWITCH_CASE_BLOCK:
+		case NODE_CASE:
 		{
-			free_node(node->switch_case_block_node.switch_case_block.condition);
+			free_node(node->switch_case_block.condition);
 
-			free_node(node->switch_case_block_node.switch_case_block.block);
+			free_node(node->switch_case_block.block);
 
 			break;
 		}
 
 		case NODE_BLOCK:
 		{
-			free_node_list(node->block_node.block.statements);
+			free_node_list(node->block.statements);
 
 			break;
 		}
@@ -2369,13 +2399,13 @@ void free_node(Node* node)
 
 		case NODE_IF:
 		{
-			free_node(node->if_statement_node.if_statement.condition_top);
+			free_node(node->if_statement.condition_top);
 			
-			free_node(node->if_statement_node.if_statement.then_branch);
+			free_node(node->if_statement.then_branch);
 			
-			if (node->if_statement_node.if_statement.else_branch != NULL) 
+			if (node->if_statement.else_branch != NULL) 
 			{
-				free_node(node->if_statement_node.if_statement.else_branch);
+				free_node(node->if_statement.else_branch);
 			}
 
 			break;
@@ -2383,117 +2413,117 @@ void free_node(Node* node)
 
 		case NODE_WHILE_LOOP:
 		{
-			free_node(node->while_loop_node.while_loop.then_block);
-			free_node(node->while_loop_node.while_loop.condition);
+			free_node(node->while_loop.then_block);
+			free_node(node->while_loop.condition);
 
 			break;
 		}
 
 		case NODE_FOR_LOOP:
 		{
-			free_node(node->for_loop_node.for_loop.init);
-			free_node(node->for_loop_node.for_loop.condition);
-			free_node(node->for_loop_node.for_loop.then_statement);
+			free_node(node->for_loop.init);
+			free_node(node->for_loop.condition);
+			free_node(node->for_loop.then_statement);
 
-			free_node(node->for_loop_node.for_loop.then_block);
+			free_node(node->for_loop.then_block);
 			
 			break;
 		}
 
 		case NODE_LITERAL:
 		{
-			if (node->literal_node.literal.literal_type->type == TYPE_STRING)
+			if (node->literal.literal_type->type == TYPE_STRING)
 			{
-				free(node->literal_node.literal.string_value);
+				free(node->literal.string_value);
 			}
 			
-			free_type(node->literal_node.literal.literal_type, node);
+			free_type(node->literal.literal_type, node);
 
 			break;
 		}
 
 		case NODE_CLASS:
 		{
-			if (node->class_node.class_node.super_identifer != NULL)
+			if (node->class_node.super_identifer != NULL)
 			{
-				free(node->class_node.class_node.super_identifer);
+				free(node->class_node.super_identifer);
 			}
 
-			free(node->class_node.class_node.identifer);
+			free(node->class_node.identifer);
 
-			if (node->class_node.class_node.constructor != NULL)
+			if (node->class_node.constructor != NULL)
 			{
-				free_node(node->class_node.class_node.constructor);
+				free_node(node->class_node.constructor);
 			}
 
-			free_node_array(node->class_node.class_node.func_declare_list, node->class_node.class_node.func_count);
+			free_node_array(node->class_node.funcs, node->class_node.funcs_count);
 			
-			free_node_array(node->class_node.class_node.var_declare_list, node->class_node.class_node.var_count);
+			free_node_array(node->class_node.fields, node->class_node.fields_count);
 
-			free(node->class_node.class_node.func_declare_list);
-			free(node->class_node.class_node.var_declare_list);
-
-			break;
-		}
-
-		case NODE_PARAMETER:
-		{
-			free_type(node->param_node.param.argument_type, node);
-
-			free(node->param_node.param.identifier);
+			free(node->class_node.funcs);
+			free(node->class_node.fields);
 
 			break;
 		}
 
-		case NODE_CREATE_INSTANCE:
+		case NODE_PARAM:
 		{
-			free(node->create_instance_node.create_instance.class_name);
+			free_type(node->param.argument_type, node);
 
-			free_node_list(node->create_instance_node.create_instance.constructor_args);
+			free(node->param.identifier);
+
+			break;
+		}
+
+		case NODE_CREATE_INST:
+		{
+			free(node->create_instance.class_name);
+
+			free_node_list(node->create_instance.constructor_args);
 
 			break;
 		}
 
 		case NODE_MEMBER_ACCESS:
 		{
-			free_node(node->member_access_node.member_access.object);
+			free_node(node->member_access.object);
 
-			free(node->member_access_node.member_access.member_name);
+			free(node->member_access.member_name);
 
 			break;
 		}
 
-		case NODE_ARRAY_ACCESS:
+		case NODE_ARR_ACCESS:
 		{
-			free_node(node->acess_array_node.acess_array.index_expr);
+			free_node(node->acess_array.index_expr);
 
-			free_node(node->acess_array_node.acess_array.array);
+			free_node(node->acess_array.array);
 
 			break;
 		}
 
 		case NODE_CAST:
 		{
-			free_node(node->cast_statement_node.cast_node.expression);
+			free_node(node->cast_node.expr);
 
-			free_type(node->cast_statement_node.cast_node.cast_type, node);
+			free_type(node->cast_node.cast_type, node);
 
 			break;
 		}
 
-		case NODE_ARRAY_LITERAL:
+		case NODE_ARR_LITERAL:
 		{
-			free_node_list(node->array_literal_node.array_literal.values);
+			free_node_list(node->array_literal.values);
 
-			free_type(node->array_literal_node.array_literal.array_type, node);
+			free_type(node->array_literal.array_type, node);
 
 			break;
 		}
 
 		case NODE_IMPORT:
 		{
-			free(node->import_statement_node.import_node.identifier);
-			free(node->import_statement_node.import_node.import_path);
+			free(node->import_node.identifier);
+			free(node->import_node.import_path);
 
 			break;
 		}
@@ -2505,19 +2535,19 @@ void free_node(Node* node)
 
 		case NODE_DEREFERENCE:
 		{
-			free_node(node->dereference_node.dereference.ptr);
+			free_node(node->dereference.expr);
 
 			break;
 		}
 
-		case NODE_ADRESS_OF:
+		case NODE_REFERENCE:
 		{
-			free_node(node->adress_of_node.adress_of.expression);
+			free_node(node->adress_of.expr);
 			
 			break;
 		}
 
-		case NODE_DIRECT_CLASS:
+		case NODE_STATIC_ACCESS:
 		{
 			break;
 		}
@@ -2529,12 +2559,11 @@ void free_node(Node* node)
 
 		default:
 		{
-			printf("[Parser] [Debug] Invalid node type: %d...\n", node->type);
+			printf("[Parser] [Debug] Invalid ASTNode type: %d...\n", node->type);
 			break;
 		}
 	}
 
 	
 	free(node);
-	node = NULL;
 }

@@ -13,11 +13,20 @@ typedef struct
 	Token* current;
 
 	int inside_class;
-} Parser;
+} 
+Parser;
+
+typedef struct
+{
+	char** classes;
+	
+	int capacity;
+	int length;
+}
+ClassTable;
 
 Type* create_type(VarType type_enum, char* class_name);
-Node* parse_stmt(Parser* parser);
-void print_tree(Type* head);
-void free_node(Node* node);
+ASTNode* parse_stmt(Parser* parser);
+void free_node(ASTNode* node);
 
-#endif //PARSER_H
+#endif
