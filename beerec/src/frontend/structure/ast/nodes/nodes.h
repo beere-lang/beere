@@ -4,10 +4,9 @@
 #include "../tokens/tokens.h"
 #include "../types/types.h"
 
-typedef struct Node Node;
-typedef struct NodeList NodeList;
+typedef struct ASTNode ASTNode;
+typedef struct ASTNodeList ASTNodeList;
 typedef struct SymbolTable SymbolTable;
-typedef struct Register Register;
 
 typedef enum
 {
@@ -21,35 +20,27 @@ typedef struct
 	SymbolTable* then_scope;
 	SymbolTable* else_scope;
 	
-	Node* condition_top;
-	Node* then_branch;
-	Node* else_branch;
-} IfNode;
+	ASTNode* condition_top;
+	ASTNode* then_branch;
+	ASTNode* else_branch;
+} 
+ASTNodeIf;
 
 typedef struct
 {
-	Node* left;
-	Node* right;
+	ASTNode* left;
+	ASTNode* right;
 	
 	TokenType op;
-
-	Register** registers_blacklist; // usado no codegen (vai ser mudado pras IRNodes).
-	int blacklist_length;
-
-	int change_left; // usado no codegen (vai ser mudado pras IRNodes).
-	int change_right; // usado no codegen (vai ser mudado pras IRNodes).
-
-	int unuse_fix_return;
-	Register* fix_return;
 }
-OperationNode;
+ASTNodeOperation;
 
 typedef struct
 {
 	char* identifier;
 	Type* var_type;
 	
-	Node* default_value;
+	ASTNode* default_value;
 
 	int is_const;
 	int is_static;
@@ -58,17 +49,17 @@ typedef struct
 
 	VisibilityType visibility;
 }
-DeclareNode;
+ASTNodeField;
 
 typedef struct
 {
 	char* identifier;
 
-	NodeList* params;
+	ASTNodeList* params;
 
 	Type* return_type;
 
-	Node* block_node;
+	ASTNode* block_node;
 	
 	int only_declaration;
 	
@@ -82,26 +73,26 @@ typedef struct
 
 	VisibilityType visibility;
 }
-FunctionNode;
+ASTNodeFunc;
 
 typedef struct
 {
-	Node* value;
+	ASTNode* value;
 }
-ArgumentNode;
+ASTNodeArgument;
 
 typedef struct
 {
 	Type* argument_type;
 	char* identifier;
 }
-ParamNode;
+ASTNodeParam;
 
 typedef struct
 {
-	Node* return_value;
+	ASTNode* return_value;
 }
-ReturnNode;
+ASTNodeRet;
 
 typedef struct
 {
@@ -117,35 +108,35 @@ typedef struct
 		double double_value;
 	};
 }
-LiteralNode;
+ASTNodeLiteral;
 
 typedef struct
 {
 	char* super_identifer;
 	char* identifer;
 
-	Node** var_declare_list;
-	Node** func_declare_list;
+	ASTNode** var_declare_list;
+	ASTNode** func_declare_list;
 
 	int var_count;
 	int func_count;
 
 	int is_export;
 
-	Node* constructor;
+	ASTNode* constructor;
 }
-ClassNode;
+ASTNodeClass;
 
 typedef struct
 {
 	char* identifier;
 }
-VariableNode;
+ASTNodeIdent;
 
 typedef struct
 {
-	Node* callee;
-	NodeList* arguments;
+	ASTNode* callee;
+	ASTNodeList* arguments;
 
 	int is_prototype;
 	int prototype_id;
@@ -153,53 +144,53 @@ typedef struct
 	int is_built_in;
 	int built_in_id;
 }
-FunctionCallNode;
+ASTNodeCall;
 
 typedef struct
 {
-	Node* left;
-	Node* assign_value;
+	ASTNode* left;
+	ASTNode* assign_value;
 }
-VariableAssignNode;
+ASTNodeAssign;
 
 typedef struct
 {
-	Node* init;
-	Node* condition;
-	Node* then_statement;
-	Node* then_block;
+	ASTNode* init;
+	ASTNode* condition;
+	ASTNode* then_statement;
+	ASTNode* then_block;
 
 	SymbolTable* then_scope;
 }
-ForLoopNode;
+ASTNodeForLoop;
 
 typedef struct
 {
 	SymbolTable* then_scope;
 
-	Node* condition;
-	Node* then_block;
+	ASTNode* condition;
+	ASTNode* then_block;
 
 	int loop_id;
 }
-WhileLoopNode;
+ASTNodeWhileLoop;
 
 typedef struct
 {
-	Node* value;
-	NodeList* case_list;
+	ASTNode* value;
+	ASTNodeList* case_list;
 }
-SwitchCaseStatement;
+ASTNodeSwitch;
 
 typedef struct
 {
-	Node* condition;
-	Node* block;
+	ASTNode* condition;
+	ASTNode* block;
 
 	int new_scope;
 	SymbolTable* scope;
 }
-SwitchCaseBlock;
+ASTNodeCase;
 
 typedef struct
 {
@@ -208,174 +199,174 @@ typedef struct
 
 	int is_local;
 }
-ImportStatement;
+ASTNodeImport;
 
 typedef struct
 {
 	Type* cast_type;
-	Node* expression;
+	ASTNode* expression;
 }
-CastNode;
+ASTNodeCast;
 
 typedef struct
 {
-	Node* expression;
+	ASTNode* expression;
 }
-AdressOfNode;
+ASTNodeReference;
 
 typedef struct
 {
-	Node* ptr;
+	ASTNode* ptr;
 }
-DereferenceNode;
+ASTNodeDereference;
 
 typedef struct
 {
-	Node* object;
+	ASTNode* object;
 	char* member_name;
 
 	int ptr_acess;
 
 	int is_function;
 }
-MemberAccessNode;
+ASTNodeMemberAccess;
 
 typedef struct
 {
 	char* class_name;
 
-	NodeList* constructor_args;
+	ASTNodeList* constructor_args;
 }
-CreateInstanceNode;
+ASTNodeCreateInst;
 
 typedef struct
 {
-	Node* array;
-	Node* index_expr;
+	ASTNode* array;
+	ASTNode* index_expr;
 }
-AccessArrayNode;
+ASTNodeAccessArr;
 
 typedef struct
 {
-	NodeList* values;
+	ASTNodeList* values;
 
 	Type* array_type;
 }
-ArrayLiteralNode;
+ASTNodeLiteralArr;
 
 typedef struct
 {
-	NodeList* statements;
+	ASTNodeList* statements;
 }
-BlockNode;
+ASTNodeBlock;
 
-typedef struct
-{
-	Node* array;
-	Node* expr;
-}
-PushArrayNode;
-
-typedef struct
-{
-	Node* array;
-}
-PopArrayNode;
-
-typedef struct
-{
-	Node* array;
-}
-ArrayLengthNode;
+//typedef struct
+//{
+//	ASTNode* array;
+//	ASTNode* expr;
+//}
+//PushArrayNode;
+//
+//typedef struct
+//{
+//	Node* array;
+//}
+//PopArrayNode;
+//
+//typedef struct
+//{
+//	Node* array;
+//}
+//ArrayLengthNode;
 
 typedef enum
 {
-	NODE_SWITCH_CASE_BLOCK, // 0
-	NODE_SWITCH_STATEMENT, // 1
-	NODE_VARIABLE_ASSIGN, // 2
-	NODE_FUNCTION_CALL, // 3
-	NODE_DEREFERENCE, // 4
-	NODE_DECLARATION, // 5
-	NODE_IDENTIFIER, // 6
-	NODE_WHILE_LOOP, // 7
-	NODE_ADRESS_OF, // 8
-	NODE_OPERATION, // 9
-	NODE_FOR_LOOP, // 10
-	NODE_FUNCTION, // 11
-	NODE_ARGUMENT, // 12
-	NODE_PARAMETER, // 13
-	NODE_CONTINUE, // 14
-	NODE_LITERAL, // 15
-	NODE_NUMBER, // 16
-	NODE_RETURN, // 17
-	NODE_IMPORT, // 18
-	NODE_CLASS, // 19
-	NODE_BLOCK, // 20
-	NODE_BREAK, // 21
-	NODE_CAST, // 22
-	NODE_IF, // 23
+	NODE_CASE,
+	NODE_SWITCH,
+	NODE_ASSIGN,
+	NODE_CALL,
+	NODE_DEREFERENCE,
+	NODE_FIELD,
+	NODE_IDENT,
+	NODE_WHILE_LOOP,
+	NODE_REFERENCE,
+	NODE_OPERATION,
+	NODE_FOR_LOOP,
+	NODE_FUNC,
+	NODE_ARGUMENT,
+	NODE_PARAM,
+	NODE_CONTINUE,
+	NODE_LITERAL,
+	NODE_RET,
+	NODE_IMPORT,
+	NODE_CLASS,
+	NODE_BLOCK,
+	NODE_BREAK,
+	NODE_CAST,
+	NODE_IF,
 
-	NODE_MEMBER_ACCESS, // 24
-	NODE_CREATE_INSTANCE, // 25
-	NODE_THIS, // 26
-	NODE_ARRAY_ACCESS, // 27
-	NODE_ARRAY_LITERAL, // 28
-	NODE_ARRAY_PUSH, // 29
-	NODE_ARRAY_POP, // 30
-	NODE_ARRAY_LENGTH, // 31
-	NODE_SUPER, // 32
-	NODE_DIRECT_CLASS // 33
+	NODE_MEMBER_ACCESS,
+	NODE_CREATE_INST,
+	NODE_THIS,
+	NODE_SUPER,
+	NODE_STATIC_ACCESS,
+	NODE_ARR_ACCESS,
+	NODE_ARR_LITERAL,
+
+	//NODE_ARRAY_POP,
+	//NODE_ARRAY_LENGTH,
+	//NODE_ARRAY_PUSH,
 }
-NodeType;
+ASTNodeType;
 
 typedef struct
 {
 	Symbol* class_symbol;
 }
-DirectClassAccessNode;
+ASTNodeStaticAccess;
 
-struct Node 
+struct ASTNode 
 {
-	NodeType type;
-	Node* next;
+	ASTNodeType type;
+	ASTNode* next;
 
 	union
 	{
-		OperationNode operation;
-		IfNode if_statement;
-		LiteralNode literal;
-		DeclareNode declare;
-		FunctionNode function;
-		ArgumentNode argument;
-		VariableNode variable;
-		ReturnNode return_statement;
-		BlockNode block;
-		FunctionCallNode function_call;
-		VariableAssignNode variable_assign;
-		ParamNode param;
-		WhileLoopNode while_loop;
-		ForLoopNode for_loop;
-		SwitchCaseStatement switch_statement;
-		SwitchCaseBlock switch_case_block;
-		ImportStatement import_node;
-		CastNode cast_node;
-		ClassNode class_node;
-		AdressOfNode adress_of;
-		DereferenceNode dereference;
-		MemberAccessNode member_access;
-		CreateInstanceNode create_instance;
-		AccessArrayNode acess_array;
-		ArrayLiteralNode array_literal;
-		PushArrayNode array_push;
-		PopArrayNode array_pop;
-		ArrayLengthNode array_length;
-		DirectClassAccessNode direct_class_access;
+		ASTNodeOperation operation;
+		ASTNodeIf if_statement;
+		ASTNodeLiteral literal;
+		ASTNodeField declare;
+		ASTNodeFunc function;
+		ASTNodeArgument argument;
+		ASTNodeIdent variable;
+		ASTNodeRet return_statement;
+		ASTNodeBlock block;
+		ASTNodeCall function_call;
+		ASTNodeAssign variable_assign;
+		ASTNodeParam param;
+		ASTNodeWhileLoop while_loop;
+		ASTNodeForLoop for_loop;
+		ASTNodeSwitch switch_statement;
+		ASTNodeCase switch_case_block;
+		ASTNodeImport import_node;
+		ASTNodeCast cast_node;
+		ASTNodeClass class_node;
+		ASTNodeReference adress_of;
+		ASTNodeDereference dereference;
+		ASTNodeMemberAccess member_access;
+		ASTNodeCreateInst create_instance;
+		ASTNodeAccessArr acess_array;
+		ASTNodeLiteralArr array_literal;
+		ASTNodeStaticAccess static_member_access;
+		//PushArrayNode array_push;
+		//PopArrayNode array_pop;
+		//ArrayLengthNode array_length;
 	};
 };
 
-struct NodeList
+struct ASTNodeList
 {
-	Node* head;
+	ASTNode* head;
 };
 
 #endif
