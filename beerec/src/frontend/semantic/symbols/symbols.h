@@ -12,6 +12,9 @@ typedef struct SymbolFunction SymbolFunction;
 typedef struct SymbolModule SymbolModule;
 typedef struct SymbolClass SymbolClass;
 
+typedef struct ClassVTable ClassVTable;
+typedef struct MethodEntry MethodEntry;
+
 typedef struct Module Module;
 
 typedef enum
@@ -55,7 +58,7 @@ struct SymbolFunction
 	Type* return_type;
 	const char* identifier;
 
-	Node* params_head;
+	ASTNode* params_head;
 
 	SymbolTable* scope;
 
@@ -67,28 +70,23 @@ struct SymbolFunction
 	int is_override;
 	
 	int is_static;
-
-	int method_id; // usado em classes (v table - virtual e override)
 };
 
-typedef struct
+struct MethodEntry
 {
 	char* method_name;
 	char* class_name;
 
 	int method_index;
-}
-MethodEntry;
+};
 
-
-typedef struct
+struct ClassVTable
 {
 	MethodEntry** entries;
 
 	int entries_count;
 	int entries_capacity;
-}
-ClassVTable;
+};
 
 struct SymbolClass
 {
@@ -103,10 +101,10 @@ struct SymbolClass
 	const char* identifier;
 	Symbol* super;
 
-	Node** functions;
-	Node** fields;
+	ASTNode** functions;
+	ASTNode** fields;
 
-	Node* constructor_node;
+	ASTNode* constructor_node;
 
 	int field_count;
 	int func_count;
@@ -151,8 +149,8 @@ struct SymbolTable
 
 	Symbol** symbols;
 
-	int capacity; // memory capacity for symbols array
-	int count; // symbols count inside symbols array
+	int capacity;
+	int count;
 };
 
 #endif

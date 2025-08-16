@@ -15,21 +15,21 @@ char* param_registers[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 int class_function_index = -1;
 
 Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
-Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct);
-static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype);
-static Node* analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope);
-static void analyzer_check_arguments(Module* module, Node* params_head, Node* args_head, SymbolTable* scope);
-static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope, int* offset);
+Type* analyzer_return_type_of_expression(Module* module, ASTNode* expression, SymbolTable* scope, ASTNodeList* args, int member_access, int* direct);
+static Symbol* analyzer_add_symbol_to_scope(Module* module, ASTNode* node, SymbolTable* scope, int* offset, int prototype);
+static ASTNode* analyzer_implictly_cast_all(Module* module, Type* preffered, ASTNode* expression, SymbolTable* scope);
+static void analyzer_check_arguments(Module* module, ASTNode* params_head, ASTNode* args_head, SymbolTable* scope);
+static void analyzer_analyze_node(Module* module, ASTNode* node, SymbolTable* scope, int* offset);
 static int check_module_has_symbol(Module* module, char* identifier, SymbolType type);
 static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scope);
-static Node* analyzer_get_function_from_class(Symbol* class, char* func_name);
-static Node* analyzer_get_member_from_class(Symbol* class, char* member_name);
+static ASTNode* analyzer_get_function_from_class(Symbol* class, char* func_name);
+static ASTNode* analyzer_get_member_from_class(Symbol* class, char* member_name);
 static int analyzer_is_class_assignable(Symbol* from, Symbol* to);
-static Node* _analyzer_create_cast(Node** node, Type* preferred);
-static void analyzer_create_cast(Node** node, Type* preferred);
+static ASTNode* _analyzer_create_cast(ASTNode** node, Type* preferred);
+static void analyzer_create_cast(ASTNode** node, Type* preferred);
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_is_inside_method(SymbolTable* scope);
-int analyzer_get_list_size(Node* list_head);
+int analyzer_get_list_size(ASTNode* list_head);
 
 int class_count;
 
@@ -51,7 +51,7 @@ typedef struct
 
 	int type_acurracy;
 
-	NodeList* params;
+	ASTNodeList* params;
 }
 PrototypeMethod;
 
@@ -59,10 +59,6 @@ int prototype_method_size = 0;
 
 PrototypeMethod* protype_methods[100]; // tamanho pra 100 metodos prototype, trocar caso necessario.
 
-/**
- * @param nodes:
- * - Sempre terminar a lista em NULL, caso contrario vai dar malfuncionamento.
- */
 static NodeList* chain_nodes_to_list(Node** nodes)
 {
 	NodeList* node_list = malloc(sizeof(NodeList));
@@ -203,10 +199,6 @@ static int check_module_has_symbol(Module* module, char* identifier, SymbolType 
 	return check_already_has_symbol(module, identifier, type);
 }
 
-/**
- * Declaração de funções prototype.
- * - IMPORTANT: Não esquecer de criar a lista de parametros caso necessario.
- */
 static void analyzer_setup_prototype_methods(Module* module)
 {
 	{
@@ -297,15 +289,6 @@ static PrototypeMethod* analyzer_is_prototype_call(Type* from_type, char* method
 	return NULL;
 }
 
-// +--------------------------------------+
-// | Parte principal do analyzer a seguir |
-// +--------------------------------------+
-
-/**
- * Offset alinhado pra 8
- * 
- * Exemplo: 7 --> 8, 14 --> 16, 9 --> 16
- */
 static int align_offset(int offset)
 {
 	if (offset % 8 == 0)
