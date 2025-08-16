@@ -18,6 +18,8 @@ typedef enum
 	IR_NODE_STORE,
 	IR_NODE_LITERAL,
 	IR_NODE_OPERATION,
+	IR_NODE_RET,
+	IR_NODE_CALL
 }
 IRNodeType;
 
@@ -74,8 +76,8 @@ struct IRNodeCall
 
 struct IRNodeStore
 {
-	VirtualReg* dest;
-	IRNode* src;
+	char* dest;
+	IRNode* expr;
 };
 
 struct IRNodeLiteral
@@ -96,7 +98,6 @@ struct IRNodeLiteral
 
 struct IRNode
 {
-	int id; // -1 caso não seja relativo a uma IRNode geral de uma função
 	IRNodeType type;
 
 	IRNodeBlock block;
