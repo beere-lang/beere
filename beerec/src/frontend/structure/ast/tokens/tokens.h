@@ -24,7 +24,8 @@ typedef enum
 	TYPE_MODULE,
 	
 	TYPE_UNKNOWN
-} VarType;
+} 
+VarType;
 
 typedef enum
 {

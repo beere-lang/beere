@@ -59,7 +59,7 @@ typedef struct
 
 	Type* return_type;
 
-	ASTNode* block_node;
+	ASTNode* block;
 	
 	int only_declaration;
 	

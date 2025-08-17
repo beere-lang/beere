@@ -1,5 +1,7 @@
-#ifndef IR_NODES_H
+#ifndef IR_NODES_H 
 #define IR_NODES_H
+
+#include "../../../frontend/structure/ast/types/types.h"
 
 typedef struct IRNode IRNode;
 typedef struct IRNodeBlock IRNodeBlock;
@@ -9,6 +11,10 @@ typedef struct IRNodeList IRNodeList;
 typedef struct IRNodeCall IRNodeCall;
 typedef struct IRNodeStore IRNodeStore;
 typedef struct IRNodeLiteral IRNodeLiteral;
+typedef struct IRNodeGoto IRNodeGoto;
+typedef struct IRNodeFunc IRNodeFunc;
+typedef struct IRNodeField IRNodeField;
+typedef struct IRType IRType;
 
 typedef struct VirtualReg VirtualReg;
 
@@ -19,7 +25,8 @@ typedef enum
 	IR_NODE_LITERAL,
 	IR_NODE_OPERATION,
 	IR_NODE_RET,
-	IR_NODE_CALL
+	IR_NODE_CALL,
+	IR_NODE_GOTO
 }
 IRNodeType;
 
@@ -28,20 +35,15 @@ typedef enum
 	IR_OPERATION_ADD,
 	IR_OPERATION_SUB,
 	IR_OPERATION_MUL,
-	IR_OPERATION_DIV
+	IR_OPERATION_DIV,
+	IR_OPERATION_EQUALS,
+	IR_OPERATION_NOT_EQUALS,
+	IR_OPERATION_GREATER,
+	IR_OPERATION_LESS,
+	IR_OPERATION_GREATER_EQUALS,
+	IR_OPERATION_LESS_EQUALS
 }
 IROperationType;
-
-typedef enum
-{
-	IR_LITERAL_INT,
-	IR_LITERAL_FLOAT,
-	IR_LITERAL_DOUBLE,
-	IR_LITERAL_STRING,
-	IR_LITERAL_BOOL,
-	IR_LITERAL_CHAR
-}
-IRLiteralType;
 
 struct IRNodeList
 {
@@ -53,7 +55,7 @@ struct IRNodeList
 
 struct IRNodeBlock
 {
-	IRNodeList* instructions;
+	IRNodeList* nodes;
 };
 
 struct IRNodeOperation
@@ -69,6 +71,14 @@ struct IRNodeRet
 	IRNode* value;
 };
 
+struct IRNodeFunc
+{
+	Type* type;
+	
+	char* name;
+	IRNode* block;
+};
+
 struct IRNodeCall
 {
 	char* func;
@@ -82,7 +92,7 @@ struct IRNodeStore
 
 struct IRNodeLiteral
 {
-	IRLiteralType type;
+	VarType type;
 
 	union
 	{
@@ -96,6 +106,20 @@ struct IRNodeLiteral
 	
 };
 
+struct IRNodeGoto
+{
+	char* label;
+	IRNode* cond;
+};
+
+struct IRNodeField
+{
+	Type* type;
+
+	char* name;
+	IRNode* value;
+};
+
 struct IRNode
 {
 	IRNodeType type;
@@ -106,6 +130,11 @@ struct IRNode
 	IRNodeCall call;
 	IRNodeStore store;
 	IRNodeLiteral literal;
+	IRNodeGoto jump;
+	IRNodeFunc func;
+	IRNodeField field;
 };
 
-#endif
+IRNode* create_ir_node(IRNodeType type);
+
+#endif 
