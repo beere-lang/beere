@@ -5,10 +5,12 @@
 
 IRNode* generate_func(ASTNode* node)
 {
-	IRNode* ir = create_ir_node(IR_NODE_BLOCK);
+	IRNode* ir = create_ir_node(IR_NODE_FUNC);
 	
 	ir->func.name = strdup(node->function.identifier);
 	ir->func.type = node->function.return_type;
+	
+	ir->func.block = create_ir_node(IR_NODE_BLOCK);
 
 	ir->func.block->block.nodes->elements = malloc(sizeof(IRNode*) * 4);
 	ir->func.block->block.nodes->capacity = 4;
@@ -34,7 +36,7 @@ IRNode* generate_func(ASTNode* node)
 
 IRNode* generate_field(ASTNode* node)
 {
-	IRNode* ir = create_ir_node(IR_NODE_BLOCK);
+	IRNode* ir = create_ir_node(IR_NODE_FIELD);
 	
 	ir->field.type = node->declare.var_type;
 	ir->field.name = strdup(node->declare.identifier);
