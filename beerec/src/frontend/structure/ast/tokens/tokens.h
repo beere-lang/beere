@@ -5,21 +5,19 @@
 
 typedef enum
 {
-	TYPE_CHAR, // 'a'
-	TYPE_STRING, // "Hello, World!"
-	TYPE_INT, // 10
-	TYPE_FLOAT, // 10.5F
-	TYPE_DOUBLE, // 10.5
-	TYPE_BOOL, // true, false
-	TYPE_PTR, // int*, double*, etc...
-	TYPE_ANY_PTR, // any, needs to be a pointer... (fuck js)
+	TYPE_CHAR,
+	TYPE_STRING,
+	TYPE_INT,
+	TYPE_FLOAT,
+	TYPE_DOUBLE,
+	TYPE_BOOL,
+	TYPE_PTR,
+	TYPE_ANY_PTR,
 	TYPE_ARRAY,
 
 	TYPE_CLASS,
 	
-	TYPE_VOID, // void, for functions
-
-	TYPE_NULL, // null,
+	TYPE_VOID,
 
 	TYPE_MODULE,
 	
@@ -96,8 +94,8 @@ typedef enum
 	TOKEN_KEYWORD_STATIC, // static
 	TOKEN_KEYWORD_CLASS, // class
 	TOKEN_KEYWORD_THIS, // this
-	TOKEN_KEYWORD_PUB, // pub
-	TOKEN_KEYWORD_PRIV, // priv
+	TOKEN_KEYWORD_PUB, // public
+	TOKEN_KEYWORD_PRIV, // private
 	TOKEN_KEYWORD_NEW, // new
 	TOKEN_KEYWORD_OVERRIDE, // override
 	TOKEN_KEYWORD_VIRTUAL, // virtual
@@ -124,9 +122,10 @@ typedef struct
 
 	int negative;
 
-	union // for types
+	VarType var_type;
+
+	union
 	{
-		VarType var_type;
 		int bool_value;
 		char* str_value;
 		char ch_value;
