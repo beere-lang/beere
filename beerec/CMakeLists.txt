@@ -3,9 +3,14 @@ project(beerec C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_compile_options(-fstack-usage)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,8388608")
+
+set(LLVM_DIR "C:/LLVM/src")
+include_directories("${LLVM_DIR}/include")
+link_directories("${LLVM_DIR}/lib")
+
+include_directories("C:/LLVM/src/include")
+link_directories("C:/LLVM/src/lib")
 
 add_executable(beerec
         src/init/main.c
@@ -19,3 +24,5 @@ add_executable(beerec
         src/frontend/modules/modules.c
         src/frontend/modules/handler/module-handler.c
 )
+
+target_link_libraries(beerec LLVMCore LLVMExecutionEngine LLVMSupport)
