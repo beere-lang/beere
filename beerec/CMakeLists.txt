@@ -6,8 +6,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 set(LLVM_DIR "C:/LLVM/src")
-include_directories("${LLVM_DIR}/include")
-link_directories("${LLVM_DIR}/lib")
+include_directories("C:/LLVM/include")
+link_directories("C:/LLVM/lib")
 
 include_directories("C:/LLVM/src/include")
 link_directories("C:/LLVM/src/lib")

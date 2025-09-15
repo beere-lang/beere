@@ -119,11 +119,11 @@ Module* setup_module(char* path, ModuleStack* stack)
 
 	module->global_scope = NULL;
 
-	module->nodes = malloc(sizeof(Node*) * 4);
+	module->nodes = malloc(sizeof(ASTNode*) * 4);
 	module->nodes_count = 0;
 	module->nodes_capacity = 4;
 
-	module->imported_modules = malloc(sizeof(Node*) * 4);
+	module->imported_modules = malloc(sizeof(ASTNode*) * 4);
 	module->modules_count = 0;
 	module->modules_capacity = 4;
 
@@ -153,7 +153,7 @@ Module* compile_module(ModuleHandler* handler, ModuleStack* stack, char* file_pa
 
 	Token* tokens = tokenize_code(content, 0);
 
-	Node** node_list = parse_tokens(tokens);
+	ASTNode** node_list = parse_tokens(tokens);
 
 	if (!push_stack_module(stack, module))
 	{
@@ -208,19 +208,19 @@ ModuleHandler* interpret_module_file(char* path)
 	return handler;
 }
 
-static void free_module_node(ModuleNode* node)
+static void free_module_node(ModuleNode* ASTNode)
 {
-	if (node == NULL)
+	if (ASTNode == NULL)
 	{
 		return;
 	}
 	
-	switch (node->type)
+	switch (ASTNode->type)
 	{
 		case MODULE_NODE_DECLARATION:
 		{
-			free(node->module_node_declaration->identifier);
-			free(node->module_node_declaration->value);
+			free(ASTNode->module_node_declaration->identifier);
+			free(ASTNode->module_node_declaration->value);
 
 			break;
 		}
@@ -231,8 +231,8 @@ static void free_module_node(ModuleNode* node)
 		}
 	}
 
-	free(node);
-	node = NULL;
+	free(ASTNode);
+	ASTNode = NULL;
 }
 
 static void free_module_nodes(ModuleNode** node_list)

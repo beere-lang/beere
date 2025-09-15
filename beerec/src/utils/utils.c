@@ -3,15 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./logger/logger.h"
-
 char* strndup(const char* src, const size_t len)
 {
 	char* dest = malloc(len + 1);
 
 	if (dest == NULL) 
 	{
-		parser_error("Failed to allocate memory for string duplication");
 		exit(1);
 	}
 

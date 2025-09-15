@@ -3,29 +3,28 @@
 #include <string.h>
 
 #include "../frontend/semantic/analyzer/analyzer.h"
-#include "../backend/codegen/codegen.h"
 #include "../frontend/modules/modules.h"
 #include "../frontend/structure/parser/parser.h"
 #include "../frontend/lexer/lexer.h"
 #include "../utils/utils.h"
 
-void free_nodes(Node** node_list)
+void free_nodes(ASTNode** node_list)
 {
-	Node* node;
+	ASTNode* ASTNode;
 
 	int k = 0;
 
 	while (1)
 	{
-		node = node_list[k];
+		ASTNode = node_list[k];
 
-		if (node == NULL)
+		if (ASTNode == NULL)
 		{
 			break;
 		}
 
-		free_node(node);
-		node = NULL;
+		free_node(ASTNode);
+		ASTNode = NULL;
 
 		k++;
 	}
@@ -34,24 +33,24 @@ void free_nodes(Node** node_list)
 	node_list = NULL;
 }
 
-void analyze_nodes(Module* module, Node** node_list)
+void analyze_nodes(Module* module, ASTNode** node_list)
 {
 	analyzer_init(module, node_list);
 
-	Node* node;
+	ASTNode* ASTNode;
 
 	int l = 0;
 
 	while (1)
 	{
-		node = node_list[l];
+		ASTNode = node_list[l];
 
-		if (node == NULL)
+		if (ASTNode == NULL)
 		{
 			break;
 		}
 
-		analyzer_global_analyze(module, node);
+		analyzer_global_analyze(module, ASTNode);
 		
 		l++;
 	}
@@ -59,7 +58,7 @@ void analyze_nodes(Module* module, Node** node_list)
 	printf("\n[Analyzer] [Debug] Module has a valid semantic: \"%s\"...\n", module->module_path);
 }
 
-Node** parse_tokens(Token* tokens)
+ASTNode** parse_tokens(Token* tokens)
 {
 	Parser parser;
 
@@ -68,20 +67,20 @@ Node** parse_tokens(Token* tokens)
 
 	parser.inside_class = 0;
 
-	Node** node_list = malloc(sizeof(Node) * 200);
+	ASTNode** node_list = malloc(sizeof(ASTNode) * 200);
 
 	int j = 0;
 
 	while (parser.current->token_type != TOKEN_END_SRC)
 	{
-		Node* node = parse_stmt(&parser);
+		ASTNode* ASTNode = parse_stmt(&parser);
 
-		if (node == NULL)
+		if (ASTNode == NULL)
 		{
 			exit(1);
 		}
 
-		node_list[j] = node;
+		node_list[j] = ASTNode;
 		j++;
 	}
 
@@ -156,25 +155,9 @@ static void free_content(char* content)
 	content = NULL;
 }
 
-static void generate_assembly(Node** nodes, Module* module)
+static void generate_assembly(ASTNode** nodes, Module* module)
 {
-	CodeGen* codegen = malloc(sizeof(CodeGen));
-	setup_codegen(module, codegen);
-
-	Node* node = nodes[0];
-
-	int i = 0;
-
-	while (node != NULL)
-	{
-		generate_node(codegen, node, text_section);
-		
-		i++;
-
-		node = nodes[i];
-	}
-
-	print_code_generated(codegen);
+	// em breve
 }
 
 Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)
@@ -208,7 +191,7 @@ Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)
 
 	Token* tokens = tokenize_code(content, lexer_debug);
 
-	Node** node_list = parse_tokens(tokens);
+	ASTNode** node_list = parse_tokens(tokens);
 
 	free_tokens(tokens);
 	free_content(content);

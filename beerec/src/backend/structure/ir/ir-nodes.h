@@ -80,7 +80,11 @@ struct IRNodeFunc
 	Type* type;
 	
 	char* name;
+
 	IRNode* block;
+	
+	IRNode** args;
+	unsigned int args_size;
 };
 
 struct IRNodeCall

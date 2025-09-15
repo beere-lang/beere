@@ -24,7 +24,7 @@ struct Module
 
 	char* module_path;
 
-	Node** nodes;
+	ASTNode** nodes;
 	int nodes_count;
 	int nodes_capacity;
 

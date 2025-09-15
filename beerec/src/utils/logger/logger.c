@@ -1,17 +1,17 @@
 #include "logger.h"
+
+#include <stdarg.h>
 #include <stdio.h>
 
-void parser_error(const char* message)
+void println(const char* str, ...)
 {
-	printf("[Parser] [Error] %s\n", message);
-}
+	va_list args;
+	va_start(args, str);
 
-void parser_alert(const char* message)
-{
-	printf("[Parser] [Alert] %s\n", message);
-}
+	char buff[1024];
+	sprintf(buff, "%s%c", str, '\n');
 
-void parser_info(const char* message)
-{
-	printf("[Parser] [Debug] %s\n", message);
+	printf(buff, args);
+
+	va_end(args);
 }

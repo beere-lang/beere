@@ -10,37 +10,26 @@
 #include "../../../utils/utils.h"
 
 int prototype_flag = -1;
-char* param_registers[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
-
 int class_function_index = -1;
 
 Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 Type* analyzer_return_type_of_expression(Module* module, ASTNode* expression, SymbolTable* scope, ASTNodeList* args, int member_access, int* direct);
-static Symbol* analyzer_add_symbol_to_scope(Module* module, ASTNode* node, SymbolTable* scope, int* offset, int prototype);
+static Symbol* analyzer_add_symbol_to_scope(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset, int prototype);
 static ASTNode* analyzer_implictly_cast_all(Module* module, Type* preffered, ASTNode* expression, SymbolTable* scope);
 static void analyzer_check_arguments(Module* module, ASTNode* params_head, ASTNode* args_head, SymbolTable* scope);
-static void analyzer_analyze_node(Module* module, ASTNode* node, SymbolTable* scope, int* offset);
+static void analyzer_analyze_node(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset);
 static int check_module_has_symbol(Module* module, char* identifier, SymbolType type);
 static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scope);
 static ASTNode* analyzer_get_function_from_class(Symbol* class, char* func_name);
 static ASTNode* analyzer_get_member_from_class(Symbol* class, char* member_name);
 static int analyzer_is_class_assignable(Symbol* from, Symbol* to);
-static ASTNode* _analyzer_create_cast(ASTNode** node, Type* preferred);
-static void analyzer_create_cast(ASTNode** node, Type* preferred);
+static ASTNode* _analyzer_create_cast(ASTNode** ASTNode, Type* preferred);
+static void analyzer_create_cast(ASTNode** ASTNode, Type* preferred);
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_is_inside_method(SymbolTable* scope);
 int analyzer_get_list_size(ASTNode* list_head);
 
 int class_count;
-
-// +--------------------------------------------------------------------------------------------------------------+
-// | Prototype methods são metodos que vem "imbutidos" na linguagem porém que você acessa por alguma variavel	  |
-// | 												       							                              |
-// | Exemplo:																		                              |
-// |  let arr: int[] = new int[] { 10, 20, 30 }									  								  |
-// |  let size: int = arr.size() // metodo prototype retorna 3 (quantidade de elementos que a array contém)       |
-// |  arr.push(20) // metodo prototype adiciona um elemento a array (20)                                          |
-// +--------------------------------------------------------------------------------------------------------------+
 
 typedef struct
 {
@@ -59,17 +48,17 @@ int prototype_method_size = 0;
 
 PrototypeMethod* protype_methods[100]; // tamanho pra 100 metodos prototype, trocar caso necessario.
 
-static NodeList* chain_nodes_to_list(Node** nodes)
+static ASTNodeList* chain_nodes_to_list(ASTNode** nodes)
 {
-	NodeList* node_list = malloc(sizeof(NodeList));
+	ASTNodeList* node_list = malloc(sizeof(ASTNodeList));
 	node_list->head = NULL;
 
-	if (nodes == NULL) 
+	if (nodes == NULL)
 	{
 		return node_list;
 	}
 
-	Node** current = &node_list->head;
+	ASTNode** current = &node_list->head;
 	int i = 0;
 
 	while (nodes[i] != NULL)
@@ -84,33 +73,33 @@ static NodeList* chain_nodes_to_list(Node** nodes)
 	return node_list;
 }
 
-static Node* analyzer_create_prototype_method_node(char* method_name, Node** params, Type* return_type)
+static ASTNode* analyzer_create_prototype_method_node(char* method_name, ASTNode** params, Type* return_type)
 {
-	Node* node = malloc(sizeof(Node));
+	ASTNode* node = malloc(sizeof(ASTNode));
 
 	if (node == NULL)
 	{
-		printf("[Analyzer] [Debug] Failed to alloc memory for prototype method node...\n");
+		printf("[Analyzer] [Debug] Failed to alloc memory for prototype method ASTNode...\n");
 		exit(1);
 	}
 
-	node->type = NODE_FUNCTION;
+	node->type = NODE_FUNC;
 
-	node->function_node.function.params = params == NULL ? NULL : chain_nodes_to_list(params);
+	node->function.params = params == NULL ? NULL : chain_nodes_to_list(params);
 
-	node->function_node.function.identifier = method_name;
-	node->function_node.function.return_type = return_type;
-	node->function_node.function.is_prototype = 1;
-	node->function_node.function.is_constructor = 0;
-	node->function_node.function.only_declaration = 0;
-	node->function_node.function.is_static = 0;
+	node->function.identifier = method_name;
+	node->function.return_type = return_type;
+	node->function.is_prototype = 1;
+	node->function.is_constructor = 0;
+	node->function.only_declaration = 0;
+	node->function.is_static = 0;
 
-	node->function_node.function.visibility = VISIBILITY_PUBLIC;
+	node->function.visibility = VISIBILITY_PUBLIC;
 	
 	return node;
 }
 
-static PrototypeMethod* analyzer_create_prototype_method(const char* method_name, Type* access_type, int type_acurracy, Node* method_ref, Type* return_type, NodeList* params)
+static PrototypeMethod* analyzer_create_prototype_method(const char* method_name, Type* access_type, int type_acurracy, ASTNode* method_ref, Type* return_type, ASTNodeList* params)
 {
 	PrototypeMethod* prototype_method = malloc(sizeof(PrototypeMethod));
 
@@ -202,7 +191,7 @@ static int check_module_has_symbol(Module* module, char* identifier, SymbolType 
 static void analyzer_setup_prototype_methods(Module* module)
 {
 	{
-		Node* size_method = analyzer_create_prototype_method_node("size", NULL, create_type(TYPE_INT, NULL));
+		ASTNode* size_method = analyzer_create_prototype_method_node("size", NULL, create_type(TYPE_INT, NULL));
 		
 		Type* type = create_type(TYPE_ARRAY, NULL);
 		Type* return_type = create_type(TYPE_INT, NULL);
@@ -213,7 +202,7 @@ static void analyzer_setup_prototype_methods(Module* module)
 		analyzer_add_symbol_to_scope(module, size_method, module->global_scope, NULL, 1);
 	}
 	{
-		Node* pop_method = analyzer_create_prototype_method_node("pop", NULL, create_type(TYPE_INT, NULL));
+		ASTNode* pop_method = analyzer_create_prototype_method_node("pop", NULL, create_type(TYPE_INT, NULL));
 		
 		Type* type = create_type(TYPE_ARRAY, NULL);
 		Type* return_type = create_type(TYPE_INT, NULL);
@@ -322,7 +311,7 @@ static SymbolTable* analyzer_setup_scope(SymbolType scope_kind, SymbolTable* par
 	return scope;
 }
 
-void analyzer_init(Module* module, Node** node_list)
+void analyzer_init(Module* module, ASTNode** node_list)
 {
 	SymbolTable* scope = analyzer_setup_scope(GLOBAL_SCOPE, NULL, NULL);
 
@@ -332,9 +321,9 @@ void analyzer_init(Module* module, Node** node_list)
 	analyzer_setup_prototype_methods(module);
 }
 
-void analyzer_global_analyze(Module* module, Node* node)
+void analyzer_global_analyze(Module* module, ASTNode* ASTNode)
 {
-	analyzer_analyze_node(module, node, module->global_scope, NULL);
+	analyzer_analyze_node(module, ASTNode, module->global_scope, NULL);
 }
 
 static int is_importing(Module* module, char* path)
@@ -425,14 +414,14 @@ static int analyzer_get_class_size(Type* type, SymbolTable* scope)
 	{
 		for (int i = 0; i < curr->symbol_class->field_count; i++)
 		{
-			Node* field = curr->symbol_class->fields[i];
+			ASTNode* field = curr->symbol_class->fields[i];
 
-			if (field->declare_node.declare.is_static)
+			if (field->declare.is_static)
 			{
 				continue;
 			}
 			
-			total_size += analyzer_get_type_size(field->declare_node.declare.var_type, scope);
+			total_size += analyzer_get_type_size(field->declare.var_type, scope);
 		}
 
 		curr = curr->symbol_class->super;
@@ -483,11 +472,6 @@ int analyzer_get_type_size(Type* type, SymbolTable* scope)
 		case TYPE_CHAR:
 		{
 			return 1;
-		}
-
-		case TYPE_NULL:
-		{
-			return 8;
 		}
 
 		case TYPE_ARRAY:
@@ -569,7 +553,7 @@ static void _analyzer_add_symbol_to_scope(Symbol* symbol, SymbolTable* scope)
 	scope->symbols[scope->count] = NULL;
 }
 
-static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, SymbolTable* scope, int* offset)
+static Symbol* analyzer_create_variable_symbol(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset)
 {
 	Symbol* symbol = malloc(sizeof(Symbol));
 
@@ -591,13 +575,13 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 
 	symbol->symbol_variable->is_global = (scope->scope_kind == GLOBAL_SCOPE);
 
-	symbol->symbol_variable->type = node->declare_node.declare.var_type;
-	symbol->symbol_variable->identifier = node->declare_node.declare.identifier;
-	symbol->symbol_variable->is_const = node->declare_node.declare.is_const;
-	symbol->symbol_variable->is_static = node->declare_node.declare.is_static;
+	symbol->symbol_variable->type = ASTNode->declare.var_type;
+	symbol->symbol_variable->identifier = ASTNode->declare.identifier;
+	symbol->symbol_variable->is_const = ASTNode->declare.is_const;
+	symbol->symbol_variable->is_static = ASTNode->declare.is_static;
 	symbol->symbol_variable->is_class_global = 0;
 	
-	symbol->is_export = node->declare_node.declare.is_export;
+	symbol->is_export = ASTNode->declare.is_export;
 
 	if (symbol->is_export)
 	{
@@ -627,7 +611,7 @@ static Symbol* analyzer_create_variable_symbol(Module* module, Node* node, Symbo
 	return symbol;
 }
 
-static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, int* offset)
+static Symbol* analyzer_create_parameter_symbol(ASTNode* ASTNode, SymbolTable* scope, int* offset)
 {
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_VARIABLE;
@@ -646,8 +630,8 @@ static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, 
 		exit(1);
 	}
 
-	symbol->symbol_variable->type = node->param_node.param.argument_type;
-	symbol->symbol_variable->identifier = node->param_node.param.identifier;
+	symbol->symbol_variable->type = ASTNode->param.argument_type;
+	symbol->symbol_variable->identifier = ASTNode->param.identifier;
 	
 	symbol->symbol_variable->is_const = 0;
 
@@ -674,7 +658,7 @@ static Symbol* analyzer_create_parameter_symbol(Node* node, SymbolTable* scope, 
 	return symbol;
 }
 
-static Symbol* analyzer_create_function_symbol(Module* module, Node* node, SymbolTable* scope, int is_prototype)
+static Symbol* analyzer_create_function_symbol(Module* module, ASTNode* ASTNode, SymbolTable* scope, int is_prototype)
 {
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_FUNCTION;
@@ -693,13 +677,13 @@ static Symbol* analyzer_create_function_symbol(Module* module, Node* node, Symbo
 		exit(1);
 	}
 
-	symbol->symbol_function->return_type = node->function_node.function.return_type;
-	symbol->symbol_function->identifier = node->function_node.function.identifier;
-	symbol->symbol_function->is_virtual = node->function_node.function.is_virtual;
-	symbol->symbol_function->is_override = node->function_node.function.is_override;
-	symbol->symbol_function->is_static = node->function_node.function.is_static;
+	symbol->symbol_function->return_type = ASTNode->function.return_type;
+	symbol->symbol_function->identifier = ASTNode->function.identifier;
+	symbol->symbol_function->is_virtual = ASTNode->function.is_virtual;
+	symbol->symbol_function->is_override = ASTNode->function.is_override;
+	symbol->symbol_function->is_static = ASTNode->function.is_static;
 
-	symbol->is_export = node->function_node.function.is_export;
+	symbol->is_export = ASTNode->function.is_export;
 
 	if (symbol->is_export)
 	{
@@ -708,9 +692,9 @@ static Symbol* analyzer_create_function_symbol(Module* module, Node* node, Symbo
 
 	symbol->is_prototype = is_prototype;
 
-	if (node->function_node.function.params != NULL)
+	if (ASTNode->function.params != NULL)
 	{
-		symbol->symbol_function->params_head = node->function_node.function.params->head;
+		symbol->symbol_function->params_head = ASTNode->function.params->head;
 	}
 	else
 	{
@@ -722,7 +706,7 @@ static Symbol* analyzer_create_function_symbol(Module* module, Node* node, Symbo
 	return symbol;
 }
 
-static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTable* scope)
+static Symbol* analyzer_create_class_symbol(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_CLASS;
@@ -743,21 +727,21 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 
 	symbol->symbol_class->class_scope = NULL;
 
-	symbol->symbol_class->identifier = node->class_node.class_node.identifer;
+	symbol->symbol_class->identifier = ASTNode->class_node.identifer;
 
-	symbol->symbol_class->functions = node->class_node.class_node.func_declare_list;
-	symbol->symbol_class->fields = node->class_node.class_node.var_declare_list;
+	symbol->symbol_class->functions = ASTNode->class_node.funcs;
+	symbol->symbol_class->fields = ASTNode->class_node.fields;
 
-	symbol->symbol_class->func_count = node->class_node.class_node.func_count;
-	symbol->symbol_class->field_count = node->class_node.class_node.var_count;
+	symbol->symbol_class->func_count = ASTNode->class_node.funcs_count;
+	symbol->symbol_class->field_count = ASTNode->class_node.fields_count;
 
-	symbol->symbol_class->constructor_node = node->class_node.class_node.constructor;
+	symbol->symbol_class->constructor_node = ASTNode->class_node.constructor;
 	
 	int init_size = 0;
 
-	if (node->class_node.class_node.super_identifer != NULL)
+	if (ASTNode->class_node.super_identifer != NULL)
 	{
-		Type* type = create_type(TYPE_CLASS, node->class_node.class_node.super_identifer);
+		Type* type = create_type(TYPE_CLASS, ASTNode->class_node.super_identifer);
 		init_size += analyzer_get_type_size(type, scope);
 	}
 
@@ -768,7 +752,7 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 
 	class_count++;
 
-	symbol->is_export = node->class_node.class_node.is_export;
+	symbol->is_export = ASTNode->class_node.is_export;
 
 	if (symbol->is_export)
 	{
@@ -782,7 +766,7 @@ static Symbol* analyzer_create_class_symbol(Module* module, Node* node, SymbolTa
 	return symbol;
 }
 
-static Symbol* analyzer_create_module_symbol(Module* module, Node* node, SymbolTable* scope)
+static Symbol* analyzer_create_module_symbol(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
 	Symbol* symbol = malloc(sizeof(Symbol));
 	symbol->type = SYMBOL_MODULE;
@@ -801,7 +785,7 @@ static Symbol* analyzer_create_module_symbol(Module* module, Node* node, SymbolT
 		exit(1);
 	}
 
-	symbol->symbol_module->identifier = node->class_node.class_node.identifer;
+	symbol->symbol_module->identifier = ASTNode->class_node.identifer;
 
 	symbol->symbol_module->module = NULL;
 		
@@ -810,63 +794,63 @@ static Symbol* analyzer_create_module_symbol(Module* module, Node* node, SymbolT
 	return symbol;
 }
 
-static Symbol* analyzer_create_symbol(Module* module, SymbolType type, Node* node, SymbolTable* scope, int is_param, int* offset, int is_prototype)
+static Symbol* analyzer_create_symbol(Module* module, SymbolType type, ASTNode* ASTNode, SymbolTable* scope, int is_param, int* offset, int is_prototype)
 {
 	if (type == SYMBOL_VARIABLE && !is_param)
 	{
-		return analyzer_create_variable_symbol(module, node, scope, offset);
+		return analyzer_create_variable_symbol(module, ASTNode, scope, offset);
 	}
 
 	if (type == SYMBOL_VARIABLE && is_param)
 	{
-		return analyzer_create_parameter_symbol(node, scope, offset);
+		return analyzer_create_parameter_symbol(ASTNode, scope, offset);
 	}
 
 	if (type == SYMBOL_FUNCTION)
 	{
-		return analyzer_create_function_symbol(module, node, scope, is_prototype);
+		return analyzer_create_function_symbol(module, ASTNode, scope, is_prototype);
 	}
 
 	if (type == SYMBOL_CLASS)
 	{
-		return analyzer_create_class_symbol(module, node, scope);
+		return analyzer_create_class_symbol(module, ASTNode, scope);
 	}
 
 	if (type == SYMBOL_MODULE)
 	{
-		return analyzer_create_module_symbol(module, node, scope);
+		return analyzer_create_module_symbol(module, ASTNode, scope);
 	}
 
 	return NULL;
 }
 
-static Symbol* analyzer_add_symbol_to_scope(Module* module, Node* node, SymbolTable* scope, int* offset, int prototype)
+static Symbol* analyzer_add_symbol_to_scope(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset, int prototype)
 {
-	switch (node->type) 
+	switch (ASTNode->type) 
 	{
-		case NODE_DECLARATION:
+		case NODE_FIELD:
 		{
-			return analyzer_create_symbol(module, SYMBOL_VARIABLE, node, scope, 0, offset, prototype);
+			return analyzer_create_symbol(module, SYMBOL_VARIABLE, ASTNode, scope, 0, offset, prototype);
 		}
 
-		case NODE_FUNCTION:
+		case NODE_FUNC:
 		{
-			return analyzer_create_symbol(module, SYMBOL_FUNCTION, node, scope, 0, offset, prototype);
+			return analyzer_create_symbol(module, SYMBOL_FUNCTION, ASTNode, scope, 0, offset, prototype);
 		}
 
-		case NODE_PARAMETER:
+		case NODE_PARAM:
 		{
-			return analyzer_create_symbol(module, SYMBOL_VARIABLE, node, scope, 1, offset, prototype);
+			return analyzer_create_symbol(module, SYMBOL_VARIABLE, ASTNode, scope, 1, offset, prototype);
 		}
 
 		case NODE_IMPORT:
 		{
-			return analyzer_create_symbol(module, SYMBOL_MODULE, node, scope, 0, offset, prototype);
+			return analyzer_create_symbol(module, SYMBOL_MODULE, ASTNode, scope, 0, offset, prototype);
 		}
 
 		default:
 		{
-			printf("[Analyzer] [Debug] Node type not valid for a symbol...\n");
+			printf("[Analyzer] [Debug] ASTNode type not valid for a symbol...\n");
 			exit(1);
 		}
 	}
@@ -1198,31 +1182,31 @@ static int is_class_object(Type* type, int ptr_access)
 	return 1;
 }
 
-static void analyzer_check_directly(int direct, Node* member, NodeType type)
+static void analyzer_check_directly(int direct, ASTNode* member, ASTNodeType type)
 {
-	if (type == NODE_DECLARATION)
+	if (type == NODE_FIELD)
 	{
-		if (direct && !member->declare_node.declare.is_static)
+		if (direct && !member->declare.is_static)
 		{
-			printf("[Analyzer] [Debug] Can't access a non static field directly: %s...\n", member->declare_node.declare.identifier);
+			printf("[Analyzer] [Debug] Can't access a non static field directly: %s...\n", member->declare.identifier);
 			exit(1);
 		}
 
-		if (!direct && member->declare_node.declare.is_static)
+		if (!direct && member->declare.is_static)
 		{
-			printf("[Analyzer] [Debug] Can't access a static field from a instance: %s...\n", member->declare_node.declare.identifier);
+			printf("[Analyzer] [Debug] Can't access a static field from a instance: %s...\n", member->declare.identifier);
 			exit(1);
 		}
 	}
-	else if (type == NODE_FUNCTION)
+	else if (type == NODE_FUNC)
 	{
-		if (direct && !member->function_node.function.is_static)
+		if (direct && !member->function.is_static)
 		{
 			printf("[Analyzer] [Debug] Can't access a non static function directly...\n");
 			exit(1);
 		}
 
-		if (!direct && member->function_node.function.is_static)
+		if (!direct && member->function.is_static)
 		{
 			printf("[Analyzer] [Debug] Can't access a static function from a instance...\n");
 			exit(1);
@@ -1230,18 +1214,18 @@ static void analyzer_check_directly(int direct, Node* member, NodeType type)
 	}
 }
 
-static Type* handle_function(Symbol* class_symbol, char* field_name, Node* node, Module* module, SymbolTable* scope, int directly, NodeList* args)
+static Type* handle_function(Symbol* class_symbol, char* field_name, ASTNode* node, Module* module, SymbolTable* scope, int directly, ASTNodeList* args)
 {
-	Node* member = analyzer_get_function_from_class(class_symbol, field_name);
+	ASTNode* member = analyzer_get_function_from_class(class_symbol, field_name);
 		
 	if (member == NULL)
 	{
 		return NULL;
 	}
 
-	if (member->type == NODE_FUNCTION)
+	if (member->type == NODE_FUNC)
 	{
-		if (member->function_node.function.visibility != VISIBILITY_PUBLIC)
+		if (member->function.visibility != VISIBILITY_PUBLIC)
 		{
 			printf("[Analyzer] [Debug] Trying to access a private function: \"%s\"...\n", field_name);
 			return NULL;
@@ -1249,19 +1233,20 @@ static Type* handle_function(Symbol* class_symbol, char* field_name, Node* node,
 
 		if (directly)
 		{
-			Node* direct_node = malloc(sizeof(Node));
-			direct_node->type = NODE_DIRECT_CLASS;
-			direct_node->direct_class_access_node.direct_class_access.class_symbol = class_symbol;
+			ASTNode* direct_node = malloc(sizeof(ASTNode));
+			
+			direct_node->type = NODE_STATIC_ACCESS;
+			direct_node->static_member_access.class_symbol = class_symbol;
 
-			node->member_access_node.member_access.object = direct_node;
+			node->member_access.object = direct_node;
 		}
 
-		analyzer_check_directly(directly, member, NODE_FUNCTION);
+		analyzer_check_directly(directly, member, NODE_FUNC);
 	
 		Type* field_type = analyzer_return_type_of_expression(module, member, class_symbol->symbol_class->class_scope, args, 1, NULL);
 
-		Node* params_head = member->function_node.function.params == NULL ? NULL : member->function_node.function.params->head;
-		Node* args_head = (args == NULL) ? NULL : args->head;
+		ASTNode* params_head = member->function.params == NULL ? NULL : member->function.params->head;
+		ASTNode* args_head = (args == NULL) ? NULL : args->head;
 			
 		analyzer_check_arguments(module, params_head, args_head, scope);
 
@@ -1284,7 +1269,7 @@ static int get_prototype_id(const char* name)
 	return -1;
 }
 
-static Type* handle_prototype_method(Node** node, Type* type, char* field_name, Module* module, SymbolTable* scope, NodeList* args)
+static Type* handle_prototype_method(ASTNode** node, Type* type, char* field_name, Module* module, SymbolTable* scope, ASTNodeList* args)
 {
 	printf("[Analyzer] [Debug] Maybe found a prototype function call...\n");
 
@@ -1292,8 +1277,8 @@ static Type* handle_prototype_method(Node** node, Type* type, char* field_name, 
 
 	Type* function_type = analyzer_handle_prototype(type, field_name, &ref);
 
-	Node* params_head = ref->params == NULL ? NULL : ref->params->head;
-	Node* args_head = (args == NULL) ? NULL : args->head;
+	ASTNode* params_head = ref->params == NULL ? NULL : ref->params->head;
+	ASTNode* args_head = (args == NULL) ? NULL : args->head;
 		
 	analyzer_check_arguments(module, params_head, args_head, scope);
 
@@ -1375,14 +1360,14 @@ static Type* handle_module_method_access(Module* module, SymbolTable* scope, con
 	return field_symbol->symbol_function->return_type;
 }
 
-Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* scope, NodeList* args)
+Type* analyzer_get_member_access_type(Module* module, ASTNode* node, SymbolTable* scope, ASTNodeList* args)
 {
 	int directly = 0;
 	
-	Type* type = analyzer_return_type_of_expression(module, node->member_access_node.member_access.object, scope, args, 1, &directly);
-	char* field_name = node->member_access_node.member_access.member_name;
+	Type* type = analyzer_return_type_of_expression(module, node->member_access.object, scope, args, 1, &directly);
+	char* field_name = node->member_access.member_name;
 
-	int is_ptr = node->member_access_node.member_access.ptr_acess;
+	int is_ptr = node->member_access.ptr_acess;
 	
 	int is_module = (type->type == TYPE_MODULE);
 
@@ -1416,24 +1401,24 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		return NULL;
 	}
 
-	if (node->member_access_node.member_access.ptr_acess)
+	if (node->member_access.ptr_acess)
 	{
 		class_name = type->base->class_name;
 	}
 
-	if (node->member_access_node.member_access.object->type == NODE_THIS)
+	if (node->member_access.object->type == NODE_THIS)
 	{
 		printf("[Analyzer [Debug] Using 'this' pointer...\n");
 	}
 
-	if (node->member_access_node.member_access.object->type == NODE_SUPER)
+	if (node->member_access.object->type == NODE_SUPER)
 	{
 		printf("[Analyzer [Debug] Using 'super'...\n");
 	}
 
 	if (is_module)
 	{
-		if (node->member_access_node.member_access.is_function)
+		if (node->member_access.is_function)
 		{
 			return handle_module_method_access(module, scope, class_name, field_name);
 		}
@@ -1448,7 +1433,7 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		return NULL;
 	}
 
-	if (node->member_access_node.member_access.is_function && !is_class)
+	if (node->member_access.is_function && !is_class)
 	{
 		return handle_prototype_method(&node, type, field_name, module, scope, args);
 	}
@@ -1471,37 +1456,37 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 		return NULL;
 	}
 
-	if (node->member_access_node.member_access.object->type == NODE_DIRECT_CLASS)
+	if (node->member_access.object->type == NODE_STATIC_ACCESS)
 	{
 		directly = 1;
 	}
 
-	if (node->member_access_node.member_access.is_function)
+	if (node->member_access.is_function)
 	{
 		return handle_function(class_symbol, field_name, node, module, scope, directly, args);
 	}
 
-	Node* member = analyzer_get_member_from_class(class_symbol, field_name);
+	ASTNode* member = analyzer_get_member_from_class(class_symbol, field_name);
 	
 	if (member == NULL)
 	{
 		return NULL;
 	}
 
-	if (member->type == NODE_DECLARATION)
+	if (member->type == NODE_FIELD)
 	{
-		analyzer_check_directly(directly, member, NODE_DECLARATION);
+		analyzer_check_directly(directly, member, NODE_FIELD);
 
 		if (directly)
 		{
-			Node* direct_node = malloc(sizeof(Node));
-			direct_node->type = NODE_DIRECT_CLASS;
-			direct_node->direct_class_access_node.direct_class_access.class_symbol = class_symbol;
+			ASTNode* direct_node = malloc(sizeof(ASTNode));
+			direct_node->type = NODE_STATIC_ACCESS;
+			direct_node->static_member_access.class_symbol = class_symbol;
 
-			node->member_access_node.member_access.object = direct_node;
+			node->member_access.object = direct_node;
 		}
 		
-		if (member->declare_node.declare.visibility != VISIBILITY_PUBLIC)
+		if (member->declare.visibility != VISIBILITY_PUBLIC)
 		{
 			printf("[Analyzer] [Debug] Trying to access a private field: \"%s\"...\n", field_name);
 			
@@ -1519,12 +1504,12 @@ Type* analyzer_get_member_access_type(Module* module, Node* node, SymbolTable* s
 	return field_type;
 }
 
-static Type* analyzer_get_operation_type(Module* module, Node* node, SymbolTable* scope)
+static Type* analyzer_get_operation_type(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
-	Type* left = analyzer_return_type_of_expression(module, node->operation_node.operation.left, scope, NULL, 0, NULL);
-	Type* right = analyzer_return_type_of_expression(module, node->operation_node.operation.right, scope, NULL, 0, NULL);
+	Type* left = analyzer_return_type_of_expression(module, ASTNode->operation.left, scope, NULL, 0, NULL);
+	Type* right = analyzer_return_type_of_expression(module, ASTNode->operation.right, scope, NULL, 0, NULL);
 
-	switch (node->operation_node.operation.op)
+	switch (ASTNode->operation.op)
 	{
 		case TOKEN_OPERATOR_OR: // ||
 		case TOKEN_OPERATOR_AND: // &&
@@ -1610,7 +1595,7 @@ static Symbol* analyzer_is_inside_class_alt(SymbolTable* scope)
 }
 
 // Chamada do constructor da super class
-static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* callee, NodeList* args)
+static Type* handle_super_flat_call(Module* module, SymbolTable* scope, ASTNode* callee, ASTNodeList* args)
 {
 	Symbol* class = analyzer_is_inside_class_alt(scope);
 	
@@ -1631,7 +1616,7 @@ static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* ca
 		exit(1);
 	}
 	
-	Node* params_head = super->symbol_class->constructor->symbol_function->params_head;
+	ASTNode* params_head = super->symbol_class->constructor->symbol_function->params_head;
 
 	if (params_head == NULL && args != NULL)
 	{
@@ -1646,7 +1631,7 @@ static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* ca
 			exit(1);
 		}
 
-		Node* args_head = args->head;
+		ASTNode* args_head = args->head;
 	
 		analyzer_check_arguments(module, params_head, args_head, scope);
 	}
@@ -1654,14 +1639,14 @@ static Type* handle_super_flat_call(Module* module, SymbolTable* scope, Node* ca
 	return create_type(TYPE_VOID, NULL);
 }
 
-static Type* handle_flat_method(Module* module, SymbolTable* scope, Node* callee, NodeList* args)
+static Type* handle_flat_method(Module* module, SymbolTable* scope, ASTNode* callee, ASTNodeList* args)
 {
 	if (callee->type == NODE_SUPER)
 	{
 		return handle_super_flat_call(module, scope, callee, args);
 	}
 	
-	Symbol* symbol = analyzer_find_symbol_from_scope(callee->variable_node.variable.identifier, scope, 0, 1, 0, 0);
+	Symbol* symbol = analyzer_find_symbol_from_scope(callee->variable.identifier, scope, 0, 1, 0, 0);
 		
 	if (symbol == NULL)
 	{
@@ -1679,15 +1664,15 @@ static Type* handle_flat_method(Module* module, SymbolTable* scope, Node* callee
 		}
 	}
 
-	Node* params_head = symbol->symbol_function->params_head;
-	Node* args_head = (args == NULL) ? NULL : args->head;
+	ASTNode* params_head = symbol->symbol_function->params_head;
+	ASTNode* args_head = (args == NULL) ? NULL : args->head;
 
 	analyzer_check_arguments(module, params_head, args_head, scope);
 
 	return symbol->symbol_function->return_type;
 }
 
-static void check_built_in_args(Module* module, SymbolTable* scope, int method_id, NodeList* args)
+static void check_built_in_args(Module* module, SymbolTable* scope, int method_id, ASTNodeList* args)
 {
 	switch (method_id)
 	{
@@ -1712,16 +1697,16 @@ static void check_built_in_args(Module* module, SymbolTable* scope, int method_i
 	}
 }
 
-static Type* handle_built_in_methods(Module* module, SymbolTable* scope, Node* node, NodeList* args)
+static Type* handle_built_in_methods(Module* module, SymbolTable* scope, ASTNode* node, ASTNodeList* args)
 {
-	Node* callee = node->function_call_node.function_call.callee;
+	ASTNode* callee = node->function_call.callee;
 	
-	if (strcmp(callee->variable_node.variable.identifier, "print") == 0)
+	if (strcmp(callee->variable.identifier, "print") == 0)
 	{
 		check_built_in_args(module, scope, 0, args);
 
-		node->function_call_node.function_call.built_in_id = 0;
-		node->function_call_node.function_call.is_built_in = 1;
+		node->function_call.built_in_id = 0;
+		node->function_call.is_built_in = 1;
 
 		return create_type(TYPE_VOID, NULL);
 	}
@@ -1729,15 +1714,15 @@ static Type* handle_built_in_methods(Module* module, SymbolTable* scope, Node* n
 	return NULL;
 }
 
-static Type* analyzer_get_function_call_type(Module* module, Node* node, SymbolTable* scope, NodeList* args)
+static Type* analyzer_get_function_call_type(Module* module, ASTNode* node, SymbolTable* scope, ASTNodeList* args)
 {
-	args = node->function_call_node.function_call.arguments;
-	Node* callee = node->function_call_node.function_call.callee;
+	args = node->function_call.arguments;
+	ASTNode* callee = node->function_call.callee;
 
-	node->function_call_node.function_call.built_in_id = -1;
-	node->function_call_node.function_call.is_built_in = 0;
+	node->function_call.built_in_id = -1;
+	node->function_call.is_built_in = 0;
 
-	if (callee->type == NODE_IDENTIFIER || callee->type == NODE_SUPER)
+	if (callee->type == NODE_IDENT || callee->type == NODE_SUPER)
 	{
 		if (callee->type != NODE_SUPER)
 		{
@@ -1761,27 +1746,27 @@ static Type* analyzer_get_function_call_type(Module* module, Node* node, SymbolT
 
 	if (prototype_flag != -1)
 	{
-		node->function_call_node.function_call.is_prototype = 1;
-		node->function_call_node.function_call.prototype_id = prototype_flag;
+		node->function_call.is_prototype = 1;
+		node->function_call.prototype_id = prototype_flag;
 		prototype_flag = -1;
 	}
 	
 	return type;
 }
 
-static Type* analyzer_get_dereference_type(Module* module, Node* node, SymbolTable* scope)
+static Type* analyzer_get_dereference_type(Module* module, ASTNode* node, SymbolTable* scope)
 {
 	Type* type = NULL;
 
-	Node* ref = node;
-	Node* _ref = node;
+	ASTNode* ref = node;
+	ASTNode* _ref = node;
 			
 	while (_ref->type == NODE_DEREFERENCE)
 	{
-		_ref = _ref->dereference_node.dereference.ptr;
+		_ref = _ref->dereference.expr;
 	}
 			
-	if (_ref->type == NODE_IDENTIFIER)
+	if (_ref->type == NODE_IDENT)
 	{
 		type = analyzer_return_type_of_expression(module, _ref, scope, NULL, 0, NULL);
 	}
@@ -1790,7 +1775,7 @@ static Type* analyzer_get_dereference_type(Module* module, Node* node, SymbolTab
 			
 	while (ref->type == NODE_DEREFERENCE)
 	{
-		ref = ref->dereference_node.dereference.ptr;
+		ref = ref->dereference.expr;
 		depth++;
 	}
 			
@@ -1808,11 +1793,11 @@ static Type* analyzer_get_dereference_type(Module* module, Node* node, SymbolTab
 	return type;
 }
 
-static Type* analyzer_get_array_access_type(Module* module, Node* node, SymbolTable* scope)
+static Type* analyzer_get_array_access_type(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	Node* index = node->acess_array_node.acess_array.index_expr;
+	ASTNode* index = node->acess_array.index_expr;
 
-	Type* type = analyzer_return_type_of_expression(module, node->acess_array_node.acess_array.array, scope, NULL, 0, NULL);
+	Type* type = analyzer_return_type_of_expression(module, node->acess_array.array, scope, NULL, 0, NULL);
 
 	if (type == NULL)
 	{
@@ -1848,9 +1833,9 @@ static Type* analyzer_get_array_access_type(Module* module, Node* node, SymbolTa
 	return type->base;
 }
 
-static Type* analyzer_get_this_type(Module* module, Node* node, SymbolTable* scope)
+static Type* analyzer_get_this_type(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
-	analyzer_analyze_node(module, node, scope, NULL);
+	analyzer_analyze_node(module, ASTNode, scope, NULL);
 			
 	// cast fudido (só pra não dar warning)
 	char* identifier = (char*) (analyzer_get_class_scope(scope)->owner_statement->symbol_class->identifier);
@@ -1859,9 +1844,9 @@ static Type* analyzer_get_this_type(Module* module, Node* node, SymbolTable* sco
 	return type;
 }
 
-static Type* analyzer_super_type(Module* module, Node* node, SymbolTable* scope)
+static Type* analyzer_super_type(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
-	analyzer_analyze_node(module, node, scope, NULL);
+	analyzer_analyze_node(module, ASTNode, scope, NULL);
 			
 	// cast fudido (só pra não dar warning)
 	char* identifier = (char*) (analyzer_get_class_scope(scope)->owner_statement->symbol_class->super->symbol_class->identifier);
@@ -1870,16 +1855,16 @@ static Type* analyzer_super_type(Module* module, Node* node, SymbolTable* scope)
 	return type;
 }
 
-static Type* analyzer_get_create_instance_type(Node* node, SymbolTable* scope)
+static Type* analyzer_get_create_instance_type(ASTNode* node, SymbolTable* scope)
 {
-	Type* type = create_type(TYPE_CLASS, node->create_instance_node.create_instance.class_name);
+	Type* type = create_type(TYPE_CLASS, node->create_instance.class_name);
 
 	return type;
 }
 
-static Type* analyzer_get_adress_of_type(Module* module, Node* node, SymbolTable* scope)
+static Type* analyzer_get_adress_of_type(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	Type* inner = analyzer_return_type_of_expression(module, node->adress_of_node.adress_of.expression, scope, NULL, 0, NULL);
+	Type* inner = analyzer_return_type_of_expression(module, node->adress_of.expr, scope, NULL, 0, NULL);
 	
 	Type* ptr = create_type(TYPE_PTR, NULL);
 	ptr->base = inner;
@@ -1902,9 +1887,9 @@ static Symbol* get_class_owner(SymbolTable* scope)
 	return get_class_owner(scope->parent);
 }
 
-static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int member_access, int* direct)
+static Type* analyzer_get_identifier_type(ASTNode* node, SymbolTable* scope, int member_access, int* direct)
 {
-	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 1, 1);
+	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable.identifier, scope, 1, 0, 1, 1);
 
 	SymbolTable* curr_scope = scope;
 	
@@ -1922,7 +1907,7 @@ static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int me
 			break;
 		}
 		
-		symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, class_owner->symbol_class->class_scope, 1, 0, 0, 0);
+		symbol = analyzer_find_symbol_from_scope(node->variable.identifier, class_owner->symbol_class->class_scope, 1, 0, 0, 0);
 
 		if (class_owner->symbol_class->super == NULL)
 		{
@@ -1934,13 +1919,13 @@ static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int me
 	
 	if (symbol == NULL)
 	{
-		printf("[Analyzer] [Debug] Variable not declared: %s...\n", node->variable_node.variable.identifier);
+		printf("[Analyzer] [Debug] Variable not declared: %s...\n", node->variable.identifier);
 		exit(1);
 	}
 	
 	if (symbol->type == SYMBOL_CLASS)
 	{	
-		printf("[Analyzer] [Debug] Accessing directly: \"%s\"...\n", node->variable_node.variable.identifier);
+		printf("[Analyzer] [Debug] Accessing directly: \"%s\"...\n", node->variable.identifier);
 
 		*direct = 1;
 
@@ -1949,7 +1934,7 @@ static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int me
 
 	if (symbol->type == SYMBOL_MODULE)
 	{
-		printf("[Analyzer] [Debug] Accessing a module: \"%s\"...\n", node->variable_node.variable.identifier);
+		printf("[Analyzer] [Debug] Accessing a module: \"%s\"...\n", node->variable.identifier);
 		
 		Type* module_type = create_type(TYPE_MODULE, symbol->symbol_module->identifier);
 
@@ -1973,14 +1958,14 @@ static Type* analyzer_get_identifier_type(Node* node, SymbolTable* scope, int me
 	return symbol->symbol_variable->type;
 }
 
-static Type* analyzer_get_argument_type(Module* module, Node* node, SymbolTable* scope)
+static Type* analyzer_get_argument_type(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	return analyzer_return_type_of_expression(module, node->argument_node.argument.value, scope, NULL, 0, NULL);
+	return analyzer_return_type_of_expression(module, node->argument.value, scope, NULL, 0, NULL);
 }
 
-static Type* analyzer_get_parameter_type(Node* node, SymbolTable* scope)
+static Type* analyzer_get_parameter_type(ASTNode* node, SymbolTable* scope)
 {
-	return node->param_node.param.argument_type;
+	return node->param.argument_type;
 }
 
 static int analyzer_is_inside_method(SymbolTable* scope)
@@ -1998,7 +1983,7 @@ static int analyzer_is_inside_method(SymbolTable* scope)
 	return analyzer_is_inside_method(scope);
 }
 
-static Type* analyzer_get_super_type(Node* node, SymbolTable* scope)
+static Type* analyzer_get_super_type(ASTNode* ASTNode, SymbolTable* scope)
 {
 	Symbol* class = analyzer_is_inside_class_alt(scope);
 
@@ -2023,7 +2008,7 @@ static Type* analyzer_get_super_type(Node* node, SymbolTable* scope)
 	return create_type(TYPE_CLASS, (char*) super->symbol_class->identifier);
 }
 
-Type* analyzer_return_type_of_expression(Module* module, Node* expression, SymbolTable* scope, NodeList* args, int member_access, int* direct)
+Type* analyzer_return_type_of_expression(Module* module, ASTNode* expression, SymbolTable* scope, ASTNodeList* args, int member_access, int* direct)
 {
 	if (expression == NULL)
 	{
@@ -2033,9 +2018,9 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 
 	switch (expression->type) 
 	{
-		case NODE_DIRECT_CLASS:
+		case NODE_STATIC_ACCESS:
 		{
-			return create_type(TYPE_CLASS, (char*) expression->direct_class_access_node.direct_class_access.class_symbol->symbol_class->identifier);
+			return create_type(TYPE_CLASS, (char*) expression->static_member_access.class_symbol->symbol_class->identifier);
 		}
 		
 		case NODE_OPERATION:
@@ -2045,20 +2030,20 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 
 		case NODE_LITERAL:
 		{
-			return expression->literal_node.literal.literal_type;
+			return expression->literal.literal_type;
 		}
 
-		case NODE_IDENTIFIER:
+		case NODE_IDENT:
 		{
 			return analyzer_get_identifier_type(expression, scope, member_access, direct);
 		}
 
 		case NODE_CAST:
 		{
-			return expression->cast_statement_node.cast_node.cast_type;
+			return expression->cast_node.cast_type;
 		}
 		
-		case NODE_ADRESS_OF:
+		case NODE_REFERENCE:
 		{
 			return analyzer_get_adress_of_type(module, expression, scope);
 		}
@@ -2068,12 +2053,12 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 			return analyzer_get_dereference_type(module, expression, scope);
 		}
 		
-		case NODE_DECLARATION:
+		case NODE_FIELD:
 		{
-			return expression->declare_node.declare.var_type;
+			return expression->declare.var_type;
 		}
 		
-		case NODE_CREATE_INSTANCE:
+		case NODE_CREATE_INST:
 		{
 			return analyzer_get_create_instance_type(expression, scope);
 		}
@@ -2083,12 +2068,12 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 			return analyzer_get_this_type(module, expression, scope);
 		}
 
-		case NODE_FUNCTION:
+		case NODE_FUNC:
 		{
-			return expression->function_node.function.return_type;
+			return expression->function.return_type;
 		}
 		
-		case NODE_FUNCTION_CALL:
+		case NODE_CALL:
 		{
 			return analyzer_get_function_call_type(module, expression, scope, args);
 		}
@@ -2098,7 +2083,7 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 			return analyzer_get_member_access_type(module, expression, scope, args);
 		}
 
-		case NODE_ARRAY_ACCESS:
+		case NODE_ARR_ACCESS:
 		{
 			return analyzer_get_array_access_type(module, expression, scope);
 		}
@@ -2108,7 +2093,7 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 			return analyzer_get_argument_type(module, expression, scope);
 		}
 
-		case NODE_PARAMETER:
+		case NODE_PARAM:
 		{
 			return analyzer_get_parameter_type(expression, scope);
 		}
@@ -2118,9 +2103,9 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 			return analyzer_get_super_type(expression, scope);
 		}
 
-		case NODE_ARRAY_LITERAL:
+		case NODE_ARR_LITERAL:
 		{
-			return expression->array_literal_node.array_literal.array_type;
+			return expression->array_literal.array_type;
 		}
 		
 		default:
@@ -2133,9 +2118,9 @@ Type* analyzer_return_type_of_expression(Module* module, Node* expression, Symbo
 	return NULL;
 }
 
-static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTable* scope)
+static int analyzer_is_operation_compatible(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	OperationNode* operation = &node->operation_node.operation;
+	ASTNodeOperation* operation = &node->operation;
 
 	Type* left = analyzer_return_type_of_expression(module, operation->left, scope, NULL, 0, NULL);
 	Type* right = analyzer_return_type_of_expression(module, operation->right, scope, NULL, 0, NULL);
@@ -2195,7 +2180,7 @@ static int analyzer_is_operation_compatible(Module* module, Node* node, SymbolTa
 	return 0;
 }
 
-static Node* analyzer_implictly_cast_all(Module* module, Type* preffered, Node* expression, SymbolTable* scope)
+static ASTNode* analyzer_implictly_cast_all(Module* module, Type* preffered, ASTNode* expression, SymbolTable* scope)
 {
 	Type* type = analyzer_return_type_of_expression(module, expression, scope, NULL, 0, NULL);
 
@@ -2252,25 +2237,25 @@ static void analyzer_analyze_type(Type* type, SymbolTable* scope)
 	analyzer_analyze_type(type->base, scope);
 }
 
-static void analyzer_handle_variable_declaration(Module* module, Node* node, SymbolTable* scope, int* offset)
+static void analyzer_handle_variable_declaration(Module* module, ASTNode* node, SymbolTable* scope, int* offset)
 { 
-	if (analyzer_find_symbol_only_from_scope(node->declare_node.declare.identifier, scope, 0, 0, 1) != NULL)
+	if (analyzer_find_symbol_only_from_scope(node->declare.identifier, scope, 0, 0, 1) != NULL)
 	{
 		printf("[Analyzer] [Debug] Statement with identifier already declared in scope...\n");
 		exit(1);
 	}
 
-	analyzer_analyze_type(node->declare_node.declare.var_type, scope);
+	analyzer_analyze_type(node->declare.var_type, scope);
 
 	Symbol* owner_function = analyzer_get_owner_function(scope);
 
 	Symbol* symbol = analyzer_add_symbol_to_scope(module, node, scope, offset, 0);
 
-	if (!node->declare_node.declare.is_static && owner_function != NULL)
+	if (!node->declare.is_static && owner_function != NULL)
 	{
-		printf("[Analyzer] [Debug] Local variable \"%s\", adding offset...\n", node->declare_node.declare.identifier);
+		printf("[Analyzer] [Debug] Local variable \"%s\", adding offset...\n", node->declare.identifier);
 
-		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
+		int size = analyzer_get_type_size(node->declare.var_type, scope);
 		size = align_offset(size);
 
 		symbol->symbol_variable->offset = *offset;
@@ -2278,9 +2263,9 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 		*offset -= size;
 	}
 	
-	if (!node->declare_node.declare.is_static && scope->scope_kind == SYMBOL_CLASS)
+	if (!node->declare.is_static && scope->scope_kind == SYMBOL_CLASS)
 	{
-		int size = analyzer_get_type_size(node->declare_node.declare.var_type, scope);
+		int size = analyzer_get_type_size(node->declare.var_type, scope);
 		
 		if (size % 8 != 0)
 		{
@@ -2295,29 +2280,29 @@ static void analyzer_handle_variable_declaration(Module* module, Node* node, Sym
 		class_symbol->symbol_class->offset += size;
 	}
 	
-	Node* expression = node->declare_node.declare.default_value;
+	ASTNode* expression = node->declare.default_value;
 
 	if (expression != NULL)
 	{
 		analyzer_analyze_node(module, expression, scope, NULL);
 
-		node->declare_node.declare.default_value = analyzer_implictly_cast_all(module, node->declare_node.declare.var_type, expression, scope);
+		node->declare.default_value = analyzer_implictly_cast_all(module, node->declare.var_type, expression, scope);
 	}
 }
 
-static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* scope, int* offset)
+static void analyzer_handle_parameters(Module* module, ASTNode* head, SymbolTable* scope, int* offset)
 {
-	Node* next = head;
+	ASTNode* next = head;
 
 	int count = 0;
 
 	while (next != NULL)
 	{
-		int size = analyzer_get_type_size(next->param_node.param.argument_type, scope);
+		int size = analyzer_get_type_size(next->param.argument_type, scope);
 		
-		if (analyzer_find_symbol_only_from_scope(next->param_node.param.identifier, scope, 0, 0, 0) != NULL)
+		if (analyzer_find_symbol_only_from_scope(next->param.identifier, scope, 0, 0, 0) != NULL)
 		{
-			printf("[Analyzer] [Debug] Parameter with name: \"%s\" already declared...\n", next->param_node.param.identifier);
+			printf("[Analyzer] [Debug] Parameter with name: \"%s\" already declared...\n", next->param.identifier);
 			exit(1);
 		}
 
@@ -2330,7 +2315,7 @@ static void analyzer_handle_parameters(Module* module, Node* head, SymbolTable* 
 	}
 }
 
-int analyzer_check_parameters(Node* params_head, Node* _params_head)
+int analyzer_check_parameters(ASTNode* params_head, ASTNode* _params_head)
 {
 	int function_size = (params_head == NULL) ? 0 : analyzer_get_list_size(params_head);
 	int _function_size = (_params_head == NULL) ? 0 : analyzer_get_list_size(_params_head);
@@ -2342,8 +2327,8 @@ int analyzer_check_parameters(Node* params_head, Node* _params_head)
 
 	int i = 0;
 
-	Node* parameter = params_head;
-	Node* _parameter = _params_head;
+	ASTNode* parameter = params_head;
+	ASTNode* _parameter = _params_head;
 	
 	while (i < function_size)
 	{
@@ -2352,12 +2337,12 @@ int analyzer_check_parameters(Node* params_head, Node* _params_head)
 			return 0;
 		}
 
-		if (strcmp(parameter->param_node.param.identifier, _parameter->param_node.param.identifier) != 0)
+		if (strcmp(parameter->param.identifier, _parameter->param.identifier) != 0)
 		{
 			return 0;
 		}
 
-		if (!analyzer_is_the_same(parameter->param_node.param.argument_type, _parameter->param_node.param.argument_type))
+		if (!analyzer_is_the_same(parameter->param.argument_type, _parameter->param.argument_type))
 		{
 			return 0;
 		}
@@ -2384,7 +2369,7 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 		return;
 	}
 
-	Node* member = analyzer_get_function_from_class(super_class, (char*) symbol->symbol_function->identifier);
+	ASTNode* member = analyzer_get_function_from_class(super_class, (char*) symbol->symbol_function->identifier);
 
 	if (member == NULL)
 	{
@@ -2397,8 +2382,8 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 		return;
 	}
 
-	int flag = analyzer_is_the_same(symbol->symbol_function->return_type, member->function_node.function.return_type);
-	int _flag = analyzer_check_parameters(symbol->symbol_function->params_head, (member->function_node.function.params == NULL) ? NULL : member->function_node.function.params->head);
+	int flag = analyzer_is_the_same(symbol->symbol_function->return_type, member->function.return_type);
+	int _flag = analyzer_check_parameters(symbol->symbol_function->params_head, (member->function.params == NULL) ? NULL : member->function.params->head);
 	
 	if (!flag || !_flag)
 	{
@@ -2406,7 +2391,7 @@ static void analyzer_check_function(Symbol* symbol, Symbol* super_class)
 		exit(1);
 	}
 	
-	if (member->function_node.function.is_virtual)
+	if (member->function.is_virtual)
 	{
 		if (!symbol->symbol_function->is_override)
 		{
@@ -2462,11 +2447,11 @@ static void analyzer_find_and_replace_method_to_table(MethodEntry* entry, ClassV
 	}
 }
 
-static MethodEntry* analyzer_create_method_entry(Node* method, Symbol* class, int index)
+static MethodEntry* analyzer_create_method_entry(ASTNode* method, Symbol* class, int index)
 {
 	MethodEntry* entry = malloc(sizeof(MethodEntry));
 
-	entry->method_name = strdup(method->function_node.function.identifier);
+	entry->method_name = strdup(method->function.identifier);
 	entry->class_name = strdup(class->symbol_class->identifier);
 
 	entry->method_index = index;
@@ -2510,16 +2495,16 @@ static void analyzer_handle_class_methods(Symbol* class)
 {
 	for (int i = 0; i < class->symbol_class->func_count; i++)
 	{
-		Node* curr = class->symbol_class->functions[i];
+		ASTNode* curr = class->symbol_class->functions[i];
 
-		if (curr->function_node.function.is_virtual)
+		if (curr->function.is_virtual)
 		{
 			int index = class->symbol_class->class_v_table->entries_count;
 
 			MethodEntry* entry = analyzer_create_method_entry(curr, class, index);
 			analyzer_add_method_to_table(entry, class->symbol_class->class_v_table);
 		}
-		else if (curr->function_node.function.is_override)
+		else if (curr->function.is_override)
 		{
 			MethodEntry* entry = analyzer_create_method_entry(curr, class, -1);
 			analyzer_find_and_replace_method_to_table(entry, class->symbol_class->class_v_table);
@@ -2527,9 +2512,9 @@ static void analyzer_handle_class_methods(Symbol* class)
 	}
 }
 
-static void analyzer_handle_function_declaration(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_function_declaration(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
-	const FunctionNode* function_node = &node->function_node.function;
+	const ASTNodeFunc* function_node = &ASTNode->function;
 	
 	if (analyzer_find_symbol_from_scope(function_node->identifier, scope, 0, 1, 0, 0) != NULL)
 	{
@@ -2562,9 +2547,9 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 
 	int param_offset = 8;
 
-	analyzer_analyze_type(node->function_node.function.return_type, scope);
+	analyzer_analyze_type(ASTNode->function.return_type, scope);
 
-	Symbol* func_symbol = analyzer_add_symbol_to_scope(module, node, scope, NULL, 0);
+	Symbol* func_symbol = analyzer_add_symbol_to_scope(module, ASTNode, scope, NULL, 0);
 
 	func_symbol->is_prototype = 0;
 	
@@ -2584,27 +2569,27 @@ static void analyzer_handle_function_declaration(Module* module, Node* node, Sym
 		analyzer_handle_parameters(module, function_node->params->head, block_scope, &param_offset);
 	}
 
-	analyzer_analyze_node(module, function_node->block_node, block_scope, &local_offset);
+	analyzer_analyze_node(module, function_node->block, block_scope, &local_offset);
 
 	func_symbol->symbol_function->total_offset = local_offset;
 	func_symbol->symbol_function->total_param_offset = param_offset - 8;
 }
 
-static void analyzer_create_cast(Node** node, Type* preferred)
+static void analyzer_create_cast(ASTNode** node, Type* preferred)
 {
-	printf("[Analyzer] [Debug] Creating a cast node, casting type: %d\n", preferred->type);
+	printf("[Analyzer] [Debug] Creating a cast ASTNode, casting type: %d\n", preferred->type);
 	
-	Node* cast = malloc(sizeof(Node));
+	ASTNode* cast = malloc(sizeof(ASTNode));
 
 	if (cast == NULL)
 	{
-		printf("[Analyzer] [Debug] Failed to alllocate memory for cast node...\n");
+		printf("[Analyzer] [Debug] Failed to alllocate memory for cast ASTNode...\n");
 		exit(1);
 	}
 
 	cast->type = NODE_CAST;
-	cast->cast_statement_node.cast_node.cast_type = preferred;
-	cast->cast_statement_node.cast_node.expression = *node;
+	cast->cast_node.cast_type = preferred;
+	cast->cast_node.expr = *node;
 
 	*node = cast;
 }
@@ -2629,30 +2614,30 @@ static Type* cpy_type(Type* type)
 	return ret;
 }
 
-static Node* _analyzer_create_cast(Node** node, Type* preferred)
+static ASTNode* _analyzer_create_cast(ASTNode** node, Type* preferred)
 {
-	printf("[Analyzer] [Debug] Creating a cast node, casting type: %d\n", preferred->type);
+	printf("[Analyzer] [Debug] Creating a cast ASTNode, casting type: %d\n", preferred->type);
 	
-	Node* cast = malloc(sizeof(Node));
+	ASTNode* cast = malloc(sizeof(ASTNode));
 
 	if (cast == NULL)
 	{
-		printf("[Analyzer] [Debug] Failed to alllocate memory for cast node...\n");
+		printf("[Analyzer] [Debug] Failed to alllocate memory for cast ASTNode...\n");
 		exit(1);
 	}
 
 	cast->type = NODE_CAST;
-	cast->cast_statement_node.cast_node.cast_type = cpy_type(preferred);
-	cast->cast_statement_node.cast_node.expression = *node;
+	cast->cast_node.cast_type = cpy_type(preferred);
+	cast->cast_node.expr = *node;
 
 	*node = cast;
 
 	return cast;
 }
 
-static void analyzer_implictly_cast_operation(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_implictly_cast_operation(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	OperationNode* operation = &node->operation_node.operation;
+	ASTNodeOperation* operation = &node->operation;
 
 	Type* left = analyzer_return_type_of_expression(module, operation->left, scope, NULL, 0, NULL);
 	Type* right = analyzer_return_type_of_expression(module, operation->right, scope, NULL, 0, NULL);
@@ -2670,9 +2655,9 @@ static void analyzer_implictly_cast_operation(Module* module, Node* node, Symbol
 	}
 }
 
-static void analyzer_handle_operation(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_operation(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	OperationNode* operation = &node->operation_node.operation;
+	ASTNodeOperation* operation = &node->operation;
 	
 	analyzer_analyze_node(module, operation->left, scope, NULL);
 	analyzer_analyze_node(module, operation->right, scope, NULL);
@@ -2686,12 +2671,12 @@ static void analyzer_handle_operation(Module* module, Node* node, SymbolTable* s
 	analyzer_implictly_cast_operation(module, node, scope);
 }
 
-static void analyzer_check_global_scope(Node* node, SymbolTable* scope)
+static void analyzer_check_global_scope(ASTNode* ASTNode, SymbolTable* scope)
 {
-	const NodeType type = node->type;
+	const ASTNodeType type = ASTNode->type;
 	const SymbolType kind = scope->scope_kind;
 	
-	if (type == NODE_FUNCTION && kind != GLOBAL_SCOPE && kind != SYMBOL_CLASS)
+	if (type == NODE_FUNC && kind != GLOBAL_SCOPE && kind != SYMBOL_CLASS)
 	{
 		printf("[Analyzer] [Debug] Function declaration statement isn't on global scope...\n");
 		exit(1);
@@ -2703,20 +2688,20 @@ static void analyzer_check_global_scope(Node* node, SymbolTable* scope)
 		exit(1);
 	}
 
-	if (type != NODE_FUNCTION && type != NODE_LITERAL && type != NODE_CLASS && type != NODE_DECLARATION && type != NODE_IMPORT && kind == GLOBAL_SCOPE)
+	if (type != NODE_FUNC && type != NODE_LITERAL && type != NODE_CLASS && type != NODE_FIELD && type != NODE_IMPORT && kind == GLOBAL_SCOPE)
 	{
 		printf("[Analyzer] [Debug] Statement can't be in a global scope: %d...\n", type);
 		exit(1);
 	}
 }
 
-static void analyzer_handle_block(Module* module, Node* node, SymbolTable* scope, int* local_offset)
+static void analyzer_handle_block(Module* module, ASTNode* node, SymbolTable* scope, int* local_offset)
 {
-	Node* next = node->block_node.block.statements->head;
+	ASTNode* next = node->block.statements->head;
 	
 	while (next != NULL)
 	{
-		if (next->type == NODE_DECLARATION || next->type == NODE_IF || next->type == NODE_WHILE_LOOP || next->type == NODE_FOR_LOOP || next->type == NODE_SWITCH_STATEMENT)
+		if (next->type == NODE_FIELD || next->type == NODE_IF || next->type == NODE_WHILE_LOOP || next->type == NODE_FOR_LOOP || next->type == NODE_SWITCH)
 		{
 			analyzer_analyze_node(module, next, scope, local_offset);
 		}
@@ -2746,9 +2731,9 @@ static Type* analyzer_get_function_return_type(SymbolTable* scope)
 	return NULL;
 }
 
-static void analyzer_handle_return(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_return(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	Node* return_value = node->return_statement_node.return_statement.return_value;
+	ASTNode* return_value = node->return_statement.return_value;
 	
 	if (return_value == NULL)
 	{
@@ -2780,9 +2765,9 @@ static void analyzer_handle_return(Module* module, Node* node, SymbolTable* scop
 	}
 }
 
-int analyzer_get_list_size(Node* list_head)
+int analyzer_get_list_size(ASTNode* list_head)
 {
-	Node* next = list_head;
+	ASTNode* next = list_head;
 
 	int count = 0;
 
@@ -2795,7 +2780,7 @@ int analyzer_get_list_size(Node* list_head)
 	return count;
 }
 
-static void analyzer_check_arguments(Module* module, Node* params_head, Node* args_head, SymbolTable* scope)
+static void analyzer_check_arguments(Module* module, ASTNode* params_head, ASTNode* args_head, SymbolTable* scope)
 {
 	int arguments_size = (args_head == NULL) ? 0 : analyzer_get_list_size(args_head);
 	int params_size = (params_head == NULL) ? 0 : analyzer_get_list_size(params_head);
@@ -2807,13 +2792,13 @@ static void analyzer_check_arguments(Module* module, Node* params_head, Node* ar
 		exit(1);
 	}
 
-	Node* current = args_head;
-	Node* current_ = params_head;
+	ASTNode* current = args_head;
+	ASTNode* current_ = params_head;
 
 	while (current != NULL)
 	{
-		Type* type = analyzer_return_type_of_expression(module, current->argument_node.argument.value, scope, NULL, 0, NULL);
-		Type* type_ = current_->param_node.param.argument_type;
+		Type* type = analyzer_return_type_of_expression(module, current->argument.value, scope, NULL, 0, NULL);
+		Type* type_ = current_->param.argument_type;
 
 		if (!analyzer_is_type_identic(type, type_, scope))
 		{
@@ -2825,22 +2810,22 @@ static void analyzer_check_arguments(Module* module, Node* params_head, Node* ar
 	}
 }
 
-static char* get_function_call_name(Node* callee)
+static char* get_function_call_name(ASTNode* callee)
 {
 	if (callee->type == NODE_MEMBER_ACCESS)
 	{
-		return callee->member_access_node.member_access.member_name;
+		return callee->member_access.member_name;
 	}
 
-	if (callee->type == NODE_IDENTIFIER)
+	if (callee->type == NODE_IDENT)
 	{
-		return callee->variable_node.variable.identifier;
+		return callee->variable.identifier;
 	}
 
 	return "";
 }
 
-static void analyzer_handle_function_call(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_function_call(Module* module, ASTNode* node, SymbolTable* scope)
 {
 	printf("[Analyzer] [Debug] Trying to call a function...\n");
 	
@@ -2848,46 +2833,46 @@ static void analyzer_handle_function_call(Module* module, Node* node, SymbolTabl
 
 	if (type == NULL)
 	{
-		printf("[Analyzer] [Debug] Function not found: \"%s\"...\n", get_function_call_name(node->function_call_node.function_call.callee));
+		printf("[Analyzer] [Debug] Function not found: \"%s\"...\n", get_function_call_name(node->function_call.callee));
 		exit(1);
 	}
 }
 
-static void analyzer_handle_if(Module* module, Node* node, SymbolTable* scope, int* offset)
+static void analyzer_handle_if(Module* module, ASTNode* node, SymbolTable* scope, int* offset)
 {
-	analyzer_analyze_node(module, node->if_statement_node.if_statement.condition_top, scope, NULL);
+	analyzer_analyze_node(module, node->if_statement.condition_top, scope, NULL);
 
-	if (analyzer_return_type_of_expression(module, node->if_statement_node.if_statement.condition_top, scope, NULL, 0, NULL)->type != TYPE_BOOL)
+	if (analyzer_return_type_of_expression(module, node->if_statement.condition_top, scope, NULL, 0, NULL)->type != TYPE_BOOL)
 	{
 		printf("[Analyzer] [Debug] Invalid if condition, expression return type needs to be 'boolean'...\n");
 		exit(1);
 	}
 
 	SymbolTable* then_scope = analyzer_create_scope(SYMBOL_IF, scope, NULL);
-	node->if_statement_node.if_statement.then_scope = then_scope; // pro codegen
+	node->if_statement.then_scope = then_scope; // pro codegen
 	
-	analyzer_analyze_node(module, node->if_statement_node.if_statement.then_branch, then_scope, offset);
+	analyzer_analyze_node(module, node->if_statement.then_branch, then_scope, offset);
 
-	if (node->if_statement_node.if_statement.else_branch != NULL)
+	if (node->if_statement.else_branch != NULL)
 	{
 		SymbolTable* else_scope = analyzer_create_scope(SYMBOL_ELSE, scope, NULL);
-		analyzer_analyze_node(module, node->if_statement_node.if_statement.else_branch, else_scope, offset);
+		analyzer_analyze_node(module, node->if_statement.else_branch, else_scope, offset);
 
-		node->if_statement_node.if_statement.else_scope = else_scope; // pro codegen
+		node->if_statement.else_scope = else_scope; // pro codegen
 	}
 }
 
-static void analyzer_handle_adress_of(Node* node, SymbolTable* scope)
+static void analyzer_handle_adress_of(ASTNode* ASTNode, SymbolTable* scope)
 {
-	const AdressOfNode* adress_of = &node->adress_of_node.adress_of;
+	const ASTNodeReference* adress_of = &ASTNode->adress_of;
 	
-	if (adress_of->expression->type != NODE_IDENTIFIER)
+	if (adress_of->expr->type != NODE_IDENT)
 	{
 		printf("[Analyzer] [Debug] Adressing requires a pointer variable...\n");
 		exit(1);
 	}
 	
-	Symbol* var = analyzer_find_symbol_from_scope(adress_of->expression->variable_node.variable.identifier, scope, 1, 0, 0, 0);
+	Symbol* var = analyzer_find_symbol_from_scope(adress_of->expr->variable.identifier, scope, 1, 0, 0, 0);
 	
 	if (var == NULL)
 	{
@@ -2896,22 +2881,22 @@ static void analyzer_handle_adress_of(Node* node, SymbolTable* scope)
 	}
 }
 
-static void analyzer_handle_dereference(Node* node, SymbolTable* scope)
+static void analyzer_handle_dereference(ASTNode* node, SymbolTable* scope)
 {
-	Node* ref = node;
+	ASTNode* ref = node;
 
 	while (ref->type == NODE_DEREFERENCE)
 	{
-		ref = ref->dereference_node.dereference.ptr;
+		ref = ref->dereference.expr;
 	}
 
-	if (ref->type != NODE_IDENTIFIER)
+	if (ref->type != NODE_IDENT)
 	{
 		printf("[Analyzer] [Debug] Dereferencing requires a pointer variable...\n");
 		exit(1);
 	}
 	
-	Symbol* field = analyzer_find_symbol_from_scope(ref->variable_node.variable.identifier, scope, 1, 0, 0, 0);
+	Symbol* field = analyzer_find_symbol_from_scope(ref->variable.identifier, scope, 1, 0, 0, 0);
 	
 	if (field == NULL)
 	{
@@ -2920,41 +2905,41 @@ static void analyzer_handle_dereference(Node* node, SymbolTable* scope)
 	}
 }
 
-static void analyzer_handle_while_loop(Module* module, Node* node, SymbolTable* scope, int* offset)
+static void analyzer_handle_while_loop(Module* module, ASTNode* node, SymbolTable* scope, int* offset)
 {
-	analyzer_analyze_node(module, node->while_loop_node.while_loop.condition, scope, NULL);
+	analyzer_analyze_node(module, node->while_loop.condition, scope, NULL);
 
-	if (analyzer_return_type_of_expression(module, node->while_loop_node.while_loop.condition, scope, NULL, 0, NULL)->type != TYPE_BOOL)
+	if (analyzer_return_type_of_expression(module, node->while_loop.condition, scope, NULL, 0, NULL)->type != TYPE_BOOL)
 	{
 		printf("[Analyzer] [Debug] Invalid while condition, expression return type needs to be 'boolean'...\n");
 		exit(1);
 	}
 
 	SymbolTable* block_scope = analyzer_create_scope(SYMBOL_WHILE, scope, NULL);
-	node->while_loop_node.while_loop.then_scope = block_scope;
+	node->while_loop.then_scope = block_scope;
 	block_scope->owner_statement = malloc(sizeof(Symbol));
 	block_scope->owner_statement->type = SYMBOL_WHILE;
 
-	analyzer_analyze_node(module, node->while_loop_node.while_loop.then_block, block_scope, offset);
+	analyzer_analyze_node(module, node->while_loop.then_block, block_scope, offset);
 }
 
-static void analyzer_handle_for_loop(Module* module, Node* node, SymbolTable* scope, int* offset)
+static void analyzer_handle_for_loop(Module* module, ASTNode* node, SymbolTable* scope, int* offset)
 {
 	SymbolTable* block_scope = analyzer_create_scope(SYMBOL_FOR, scope, NULL);
-	node->for_loop_node.for_loop.then_scope = block_scope;
+	node->for_loop.then_scope = block_scope;
 	
-	analyzer_analyze_node(module, node->for_loop_node.for_loop.init, scope, offset);
+	analyzer_analyze_node(module, node->for_loop.init, scope, offset);
 
-	analyzer_analyze_node(module, node->for_loop_node.for_loop.condition, scope, offset);
-	analyzer_analyze_node(module, node->for_loop_node.for_loop.then_statement, scope, offset);
+	analyzer_analyze_node(module, node->for_loop.condition, scope, offset);
+	analyzer_analyze_node(module, node->for_loop.then_statement, scope, offset);
 
-	if (analyzer_return_type_of_expression(module, node->for_loop_node.for_loop.condition, scope, NULL, 0, NULL)->type != TYPE_BOOL)
+	if (analyzer_return_type_of_expression(module, node->for_loop.condition, scope, NULL, 0, NULL)->type != TYPE_BOOL)
 	{
 		printf("[Analyzer] [Debug] Invalid for condition, expression return type needs to be 'boolean'...\n");
 		exit(1);
 	}
 
-	analyzer_analyze_node(module, node->for_loop_node.for_loop.then_block, block_scope, offset);
+	analyzer_analyze_node(module, node->for_loop.then_block, block_scope, offset);
 }
 
 static int analyzer_is_inside(SymbolTable* scope, SymbolType type)
@@ -2972,7 +2957,7 @@ static int analyzer_is_inside(SymbolTable* scope, SymbolType type)
 	return analyzer_is_inside(scope->parent, type);
 }
 
-static void analyzer_handle_break(Node* node, SymbolTable* scope)
+static void analyzer_handle_break(ASTNode* ASTNode, SymbolTable* scope)
 {
 	if (!analyzer_is_inside(scope, SYMBOL_FOR) && !analyzer_is_inside(scope, SYMBOL_WHILE) && !analyzer_is_inside(scope, SYMBOL_SWITCH))
 	{
@@ -2981,10 +2966,10 @@ static void analyzer_handle_break(Node* node, SymbolTable* scope)
 	}
 }
 
-static void analyzer_handle_var_assign(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_var_assign(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	Node* expression = node->variable_assign_node.variable_assign.assign_value;
-	Node* left = node->variable_assign_node.variable_assign.left;
+	ASTNode* expression = node->variable_assign.expr;
+	ASTNode* left = node->variable_assign.left;
 	
 	Type* type = analyzer_return_type_of_expression(module, left, scope, NULL, 0, NULL);
 
@@ -3005,7 +2990,7 @@ static void analyzer_handle_var_assign(Module* module, Node* node, SymbolTable* 
 	analyzer_implictly_cast_all(module, type, expression, scope);
 }
 
-static Node* analyzer_get_function_from_class(Symbol* class, char* func_name)
+static ASTNode* analyzer_get_function_from_class(Symbol* class, char* func_name)
 {
 	if (class == NULL)
 	{
@@ -3014,9 +2999,9 @@ static Node* analyzer_get_function_from_class(Symbol* class, char* func_name)
 	
 	for (int i = 0; i < class->symbol_class->func_count; i++)
 	{
-		Node* member = class->symbol_class->functions[i];
+		ASTNode* member = class->symbol_class->functions[i];
 	
-		if (strcmp(member->function_node.function.identifier, func_name) == 0)
+		if (strcmp(member->function.identifier, func_name) == 0)
 		{
 			return member;
 		}
@@ -3050,7 +3035,7 @@ static int analyzer_is_class_assignable(Symbol* from, Symbol* to)
 	return analyzer_class_extends(from, (char*) to->symbol_class->identifier);
 }
 
-static Node* analyzer_get_member_from_class(Symbol* class, char* member_name)
+static ASTNode* analyzer_get_member_from_class(Symbol* class, char* member_name)
 {
 	if (class == NULL)
 	{
@@ -3059,9 +3044,9 @@ static Node* analyzer_get_member_from_class(Symbol* class, char* member_name)
 	
 	for (int i = 0; i < class->symbol_class->field_count; i++)
 	{
-		Node* member = class->symbol_class->fields[i];
+		ASTNode* member = class->symbol_class->fields[i];
 
-		if (strcmp(member->declare_node.declare.identifier, member_name) == 0)
+		if (strcmp(member->declare.identifier, member_name) == 0)
 		{
 			return member;
 		}
@@ -3070,29 +3055,29 @@ static Node* analyzer_get_member_from_class(Symbol* class, char* member_name)
 	return analyzer_get_member_from_class(class->symbol_class->super, member_name);
 }
 
-static void analyzer_handle_class_funcs(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_class_funcs(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
-	const ClassNode* class_node = &node->class_node.class_node;
+	const ASTNodeClass* class_node = &ASTNode->class_node;
 	
-	for (int i = 0; i < class_node->func_count; i++)
+	for (int i = 0; i < class_node->funcs_count; i++)
 	{
-		analyzer_analyze_node(module, class_node->func_declare_list[i], scope, NULL);
+		analyzer_analyze_node(module, class_node->funcs[i], scope, NULL);
 	}
 }
 
-static void analyzer_handle_class_vars(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_class_vars(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
-	const ClassNode* class_node = &node->class_node.class_node;
+	const ASTNodeClass* class_node = &ASTNode->class_node;
 	
-	for (int i = 0; i < class_node->var_count; i++)
+	for (int i = 0; i < class_node->fields_count; i++)
 	{
-		analyzer_analyze_node(module, class_node->var_declare_list[i], scope, NULL);
+		analyzer_analyze_node(module, class_node->fields[i], scope, NULL);
 	}
 }
 
 static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_implictly)
 {
-	Node* constructor = class->symbol_class->constructor_node;
+	ASTNode* constructor = class->symbol_class->constructor_node;
 
 	if (constructor == NULL)
 	{
@@ -3100,19 +3085,19 @@ static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_
 	}
 
 	int super_constructor_call = 0;
-	Node** head = &constructor->function_node.function.block_node->block_node.block.statements->head;
-	Node* next = *head;
+	ASTNode** head = &(constructor->function.block->block.statements->head);
+	ASTNode* next = *head;
 
 	while (next != NULL)
 	{
-		if (next->type != NODE_FUNCTION_CALL)
+		if (next->type != NODE_CALL)
 		{
 			next = next->next;
 
 			continue;
 		}
 
-		if (next->function_call_node.function_call.callee->type != NODE_SUPER)
+		if (next->function_call.callee->type != NODE_SUPER)
 		{
 			next = next->next;
 
@@ -3126,15 +3111,15 @@ static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_
 
 	if (!super_constructor_call && add_call_implictly) // só usar caso o constructor da super não tenha parametros
 	{
-		Node* node = malloc(sizeof(Node));
-		node->type = NODE_FUNCTION_CALL;
+		ASTNode* node = malloc(sizeof(ASTNode));
+		node->type = NODE_CALL;
 
 		if (node == NULL)
 		{
 			exit(1);
 		}
 		
-		Node* super_node = malloc(sizeof(Node));
+		ASTNode* super_node = malloc(sizeof(ASTNode));
 
 		if (super_node == NULL)
 		{
@@ -3143,8 +3128,8 @@ static int analyzer_check_if_call_super_constructor(Symbol* class, int add_call_
 
 		super_node->type = NODE_SUPER;
 
-		node->function_call_node.function_call.callee = super_node;
-		node->function_call_node.function_call.arguments = NULL;
+		node->function_call.callee = super_node;
+		node->function_call.arguments = NULL;
 
 		node->next = *head;
 
@@ -3178,9 +3163,9 @@ static void analyzer_check_super_constructor(Module* module, Symbol* symbol, Sym
 	}
 }
 
-static void analyzer_handle_class_declaration(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_class_declaration(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	const ClassNode* class_node = &node->class_node.class_node;
+	const ASTNodeClass* class_node = &node->class_node;
 	
 	if (analyzer_find_symbol_from_scope(class_node->identifer, scope, 0, 0, 1, 0) != NULL)
 	{
@@ -3226,15 +3211,15 @@ static void analyzer_handle_class_declaration(Module* module, Node* node, Symbol
 	if (class_node->constructor != NULL)
 	{
 		analyzer_analyze_node(module, class_node->constructor, class_scope, NULL);
-		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function_node.function.identifier, class_scope, 0, 1, 0, 0);
+		class_symbol->symbol_class->constructor = analyzer_find_symbol_from_scope(class_node->constructor->function.identifier, class_scope, 0, 1, 0, 0);
 	}
 
 	analyzer_check_super_constructor(module, class_symbol, class_scope);
 }
 
-static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_create_instance(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	const CreateInstanceNode* instance_node = &node->create_instance_node.create_instance;
+	const ASTNodeCreateInst* instance_node = &node->create_instance;
 	
 	Symbol* class = analyzer_find_symbol_from_scope(instance_node->class_name, scope, 0, 0, 1, 0);
 	
@@ -3246,8 +3231,8 @@ static void analyzer_handle_create_instance(Module* module, Node* node, SymbolTa
 	
 	if (class->symbol_class->constructor != NULL)
 	{
-		Node* params_head = class->symbol_class->constructor->symbol_function->params_head;
-		Node* args_head = (instance_node->constructor_args == NULL) ? NULL : instance_node->constructor_args->head;
+		ASTNode* params_head = class->symbol_class->constructor->symbol_function->params_head;
+		ASTNode* args_head = (instance_node->constructor_args == NULL) ? NULL : instance_node->constructor_args->head;
 
 		analyzer_check_arguments(module, params_head, args_head, scope);
 	}
@@ -3283,7 +3268,7 @@ static int analyzer_is_able_to_super(SymbolTable* scope)
 	return analyzer_is_able_to_this(scope->parent);
 }
 
-static void analyzer_handle_this(Node* node, SymbolTable* scope)
+static void analyzer_handle_this(ASTNode* ASTNode, SymbolTable* scope)
 {
 	if (!analyzer_is_able_to_this(scope))
 	{
@@ -3291,7 +3276,7 @@ static void analyzer_handle_this(Node* node, SymbolTable* scope)
 	}
 }
 
-static void analyzer_handle_super(Node* node, SymbolTable* scope)
+static void analyzer_handle_super(ASTNode* ASTNode, SymbolTable* scope)
 {
 	if (!analyzer_is_able_to_super(scope))
 	{
@@ -3299,11 +3284,11 @@ static void analyzer_handle_super(Node* node, SymbolTable* scope)
 	}
 }
 
-static void analyzer_handle_member_access(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_member_access(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
 	printf("[Analyzer] [Debug] Trying to acess a member from class object...\n");
 	
-	Type* type = analyzer_return_type_of_expression(module, node, scope, NULL, 0, NULL);
+	Type* type = analyzer_return_type_of_expression(module, ASTNode, scope, NULL, 0, NULL);
 
 	if (type == NULL)
 	{
@@ -3312,9 +3297,9 @@ static void analyzer_handle_member_access(Module* module, Node* node, SymbolTabl
 	}
 }
 
-static void analyzer_handle_array_access(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_array_access(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
-	Type* type = analyzer_return_type_of_expression(module, node, scope, NULL, 0, NULL);
+	Type* type = analyzer_return_type_of_expression(module, ASTNode, scope, NULL, 0, NULL);
 
 	if (type == NULL)
 	{
@@ -3324,39 +3309,39 @@ static void analyzer_handle_array_access(Module* module, Node* node, SymbolTable
 	}
 }
 
-static void analyzer_handle_cast(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_cast(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	printf("[Analyzer] [Debug] Found a cast node...\n");
+	printf("[Analyzer] [Debug] Found a cast ASTNode...\n");
 	
-	Type* expression_type = analyzer_return_type_of_expression(module, node->cast_statement_node.cast_node.expression, scope, NULL, 0, NULL);
+	Type* expression_type = analyzer_return_type_of_expression(module, node->cast_node.expr, scope, NULL, 0, NULL);
 
 	if (expression_type == NULL)
 	{
-		printf("[Analyzer] [Debug] Invalid expression in cast node...\n");
+		printf("[Analyzer] [Debug] Invalid expression in cast ASTNode...\n");
 		exit(1);
 	}
 
-	if (!analyzer_is_compatible(node->cast_statement_node.cast_node.cast_type, expression_type, scope))
+	if (!analyzer_is_compatible(node->cast_node.cast_type, expression_type, scope))
 	{
 		printf("[Analyzer] [Debug] Incompatible cast types...\n");
 		exit(1);
 	}
 }
 
-static void analyzer_handle_identifier(Node* node, SymbolTable* scope)
+static void analyzer_handle_identifier(ASTNode* node, SymbolTable* scope)
 {
-	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable_node.variable.identifier, scope, 1, 0, 0, 0);
+	Symbol* symbol = analyzer_find_symbol_from_scope(node->variable.identifier, scope, 1, 0, 0, 0);
 
 	if (symbol == NULL)
 	{
-		printf("[Analyzer] [Debug] Field with name: \"%s\" not found...\n", node->variable_node.variable.identifier);
+		printf("[Analyzer] [Debug] Field with name: \"%s\" not found...\n", node->variable.identifier);
 		exit(1);
 	}
 }
 
-static void analyzer_check_array_literal_values(Module* module, Node* head, Type* type, SymbolTable* scope)
+static void analyzer_check_array_literal_values(Module* module, ASTNode* head, Type* type, SymbolTable* scope)
 {
-	Node* current = head;
+	ASTNode* current = head;
 	
 	// pula o primeiro tipo (array), ja que a array precisa de elementos daquele tipo.
 	Type* required = type->base;
@@ -3381,10 +3366,10 @@ static void analyzer_check_array_literal_values(Module* module, Node* head, Type
 	}
 }
 
-static void analyzer_handle_array_literal(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_array_literal(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	NodeList* values = node->array_literal_node.array_literal.values;
-	Type* type = node->array_literal_node.array_literal.array_type;
+	ASTNodeList* values = node->array_literal.values;
+	Type* type = node->array_literal.array_type;
 	
 	analyzer_analyze_type(type, scope);
 
@@ -3394,10 +3379,10 @@ static void analyzer_handle_array_literal(Module* module, Node* node, SymbolTabl
 	}
 }
 
-static void analyzer_handle_switch_case(Module* module, Node* node, SymbolTable* scope, Type* required_type, int* offset)
+static void analyzer_handle_switch_case(Module* module, ASTNode* node, SymbolTable* scope, Type* required_type, int* offset)
 {
-	Node* condition = node->switch_case_block_node.switch_case_block.condition;
-	Node* block = node->switch_case_block_node.switch_case_block.block;
+	ASTNode* condition = node->switch_case_block.condition;
+	ASTNode* block = node->switch_case_block.block;
 
 	Type* expr_type = analyzer_return_type_of_expression(module, condition, scope, NULL, 0, NULL);
 
@@ -3410,15 +3395,15 @@ static void analyzer_handle_switch_case(Module* module, Node* node, SymbolTable*
 	analyzer_analyze_node(module, block, scope, offset);
 }
 
-static void analyzer_handle_switch_statement(Module* module, Node* node, SymbolTable* scope, int* offset)
+static void analyzer_handle_switch_statement(Module* module, ASTNode* node, SymbolTable* scope, int* offset)
 {
-	NodeList* case_list = node->switch_statement_node.switch_statement.case_list;
+	ASTNodeList* case_list = node->switch_statement.case_list;
 	
-	analyzer_analyze_node(module, node->switch_statement_node.switch_statement.value, scope, offset);
+	analyzer_analyze_node(module, node->switch_statement.value, scope, offset);
 
-	Node* next = case_list->head;
+	ASTNode* next = case_list->head;
 
-	Type* required_type = analyzer_return_type_of_expression(module, node->switch_statement_node.switch_statement.value, scope, NULL, 0, NULL);
+	Type* required_type = analyzer_return_type_of_expression(module, node->switch_statement.value, scope, NULL, 0, NULL);
 
 	SymbolTable* switch_scope = analyzer_create_scope(SYMBOL_SWITCH, scope, NULL);
 
@@ -3426,14 +3411,14 @@ static void analyzer_handle_switch_statement(Module* module, Node* node, SymbolT
 	{
 		SymbolTable* case_scope = NULL;
 
-		if (next->switch_case_block_node.switch_case_block.new_scope)
+		if (next->switch_case_block.new_scope)
 		{
 			case_scope = analyzer_create_scope(SYMBOL_SWITCH_CASE, switch_scope, NULL);
-			next->switch_case_block_node.switch_case_block.scope = case_scope;
+			next->switch_case_block.scope = case_scope;
 		}
 		else
 		{
-			next->switch_case_block_node.switch_case_block.scope = NULL;
+			next->switch_case_block.scope = NULL;
 		}
 
 		analyzer_handle_switch_case(module, next, case_scope != NULL ? case_scope : switch_scope, required_type, offset);
@@ -3447,7 +3432,7 @@ static char* handle_relative_path(char* abs_path, char* relative)
 	return resolve_path(abs_path, relative);
 }
 
-static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_local_import(Module* module, ASTNode* node, SymbolTable* scope)
 {
 	ModuleStack* stack = module->stack;
 
@@ -3456,9 +3441,9 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 		stack = setup_module_stack();
 	}
 	
-	char* path = handle_relative_path(module->handler->root_path, node->import_statement_node.import_node.import_path);
+	char* path = handle_relative_path(module->handler->root_path, node->import_node.import_path);
 
-	printf("\n%s: ---------------------------------------------------------------+\n\n", node->import_statement_node.import_node.import_path);
+	printf("\n%s: ---------------------------------------------------------------+\n\n", node->import_node.import_path);
 
 	Module* import_module = compile_module(module->handler, stack, path);
 
@@ -3473,15 +3458,15 @@ static void analyzer_handle_local_import(Module* module, Node* node, SymbolTable
 	free(path);
 }
 
-static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scope)
+static void analyzer_handle_import(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	if (analyzer_find_symbol_from_scope(node->import_statement_node.import_node.identifier, scope, 1, 1, 1, 1) != NULL)
+	if (analyzer_find_symbol_from_scope(node->import_node.identifier, scope, 1, 1, 1, 1) != NULL)
 	{
-		printf("[Analyzer] [Debug] Statement with identifier: \"%s\" already declared...\n", node->import_statement_node.import_node.identifier);
+		printf("[Analyzer] [Debug] Statement with identifier: \"%s\" already declared...\n", node->import_node.identifier);
 		exit(1);
 	}
 	
-	if (node->import_statement_node.import_node.is_local)
+	if (node->import_node.is_local)
 	{
 		analyzer_handle_local_import(module, node, scope);
 	}
@@ -3493,29 +3478,29 @@ static void analyzer_handle_import(Module* module, Node* node, SymbolTable* scop
 	}
 }
 
-static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope, int* offset)
+static void analyzer_analyze_node(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset)
 {
-	analyzer_check_global_scope(node, scope);
+	analyzer_check_global_scope(ASTNode, scope);
 	
-	switch (node->type) 
+	switch (ASTNode->type) 
 	{
-		case NODE_DECLARATION:
+		case NODE_FIELD:
 		{
-			analyzer_handle_variable_declaration(module, node, scope, offset);
+			analyzer_handle_variable_declaration(module, ASTNode, scope, offset);
 			
 			return;
 		}
 		
-		case NODE_FUNCTION:
+		case NODE_FUNC:
 		{
-			analyzer_handle_function_declaration(module, node, scope);
+			analyzer_handle_function_declaration(module, ASTNode, scope);
 			
 			return;
 		}
 
 		case NODE_IMPORT:
 		{
-			analyzer_handle_import(module, node, scope);
+			analyzer_handle_import(module, ASTNode, scope);
 			
 			return;
 		}
@@ -3525,156 +3510,156 @@ static void analyzer_analyze_node(Module* module, Node* node, SymbolTable* scope
 			return;
 		}
 		
-		case NODE_IDENTIFIER:
+		case NODE_IDENT:
 		{
-			analyzer_handle_identifier(node, scope);
+			analyzer_handle_identifier(ASTNode, scope);
 
 			return;
 		}
 
 		case NODE_IF:
 		{
-			analyzer_handle_if(module, node, scope, offset);
+			analyzer_handle_if(module, ASTNode, scope, offset);
 
 			return;
 		}
 
 		case NODE_WHILE_LOOP:
 		{
-			analyzer_handle_while_loop(module, node, scope, offset);
+			analyzer_handle_while_loop(module, ASTNode, scope, offset);
 			
 			return;
 		}
 		
 		case NODE_FOR_LOOP:
 		{
-			analyzer_handle_for_loop(module, node, scope, offset);
+			analyzer_handle_for_loop(module, ASTNode, scope, offset);
 			
 			return;
 		}
 
-		case NODE_SWITCH_STATEMENT:
+		case NODE_SWITCH:
 		{
-			analyzer_handle_switch_statement(module, node, scope, offset);
+			analyzer_handle_switch_statement(module, ASTNode, scope, offset);
 
 			return;
 		}
 		
 		case NODE_OPERATION:
 		{
-			analyzer_handle_operation(module, node, scope);
+			analyzer_handle_operation(module, ASTNode, scope);
 			
 			return;
 		}
 		
 		case NODE_BLOCK:
 		{
-			analyzer_handle_block(module, node, scope, offset);
+			analyzer_handle_block(module, ASTNode, scope, offset);
 			
 			return;
 		}
 		
-		case NODE_RETURN:
+		case NODE_RET:
 		{
-			analyzer_handle_return(module, node, scope);
+			analyzer_handle_return(module, ASTNode, scope);
 			
 			return;
 		}
 		
 		case NODE_BREAK:
 		{
-			analyzer_handle_break(node, scope);
+			analyzer_handle_break(ASTNode, scope);
 			
 			return;
 		}
 		
-		case NODE_ADRESS_OF:
+		case NODE_REFERENCE:
 		{
-			analyzer_handle_adress_of(node, scope);
+			analyzer_handle_adress_of(ASTNode, scope);
 			
 			return;
 		}
 		
 		case NODE_DEREFERENCE:
 		{
-			analyzer_handle_dereference(node, scope);
+			analyzer_handle_dereference(ASTNode, scope);
 			
 			return;
 		}
 		
-		case NODE_VARIABLE_ASSIGN:
+		case NODE_ASSIGN:
 		{
-			analyzer_handle_var_assign(module, node, scope);
+			analyzer_handle_var_assign(module, ASTNode, scope);
 			
 			return;
 		}
 		
 		case NODE_MEMBER_ACCESS:
 		{
-			analyzer_handle_member_access(module, node, scope);
+			analyzer_handle_member_access(module, ASTNode, scope);
 			
 			return;
 		}
 
-		case NODE_FUNCTION_CALL:
+		case NODE_CALL:
 		{
-			analyzer_handle_function_call(module, node, scope);
+			analyzer_handle_function_call(module, ASTNode, scope);
 			
 			return;
 		}
 		
 		case NODE_CLASS:
 		{
-			analyzer_handle_class_declaration(module, node, scope);
+			analyzer_handle_class_declaration(module, ASTNode, scope);
 
 			return;
 		}
 
-		case NODE_CREATE_INSTANCE:
+		case NODE_CREATE_INST:
 		{
-			analyzer_handle_create_instance(module, node, scope);
+			analyzer_handle_create_instance(module, ASTNode, scope);
 
 			return;
 		}
 
 		case NODE_THIS:
 		{
-			analyzer_handle_this(node, scope);
+			analyzer_handle_this(ASTNode, scope);
 
 			return;
 		}
 
-		case NODE_ARRAY_ACCESS:
+		case NODE_ARR_ACCESS:
 		{
-			analyzer_handle_array_access(module, node, scope);
+			analyzer_handle_array_access(module, ASTNode, scope);
 
 			return;
 		}
 
 		case NODE_CAST:
 		{
-			analyzer_handle_cast(module, node, scope);
+			analyzer_handle_cast(module, ASTNode, scope);
 
 			return;
 		}
 
-		case NODE_ARRAY_LITERAL:
+		case NODE_ARR_LITERAL:
 		{
-			analyzer_handle_array_literal(module, node, scope);
+			analyzer_handle_array_literal(module, ASTNode, scope);
 
 			return;
 		}
 
 		case NODE_SUPER:
 		{
-			analyzer_handle_super(node, scope);
+			analyzer_handle_super(ASTNode, scope);
 
 			return;
 		}
 
 		default:
 		{
-			printf("[Analyzer] [Debug] Node type not implemented in analyzer: \"%d\"...", node->type);
+			printf("[Analyzer] [Debug] ASTNode type not implemented in analyzer: \"%d\"...", ASTNode->type);
 			exit(1);
 		}
 	}

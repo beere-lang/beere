@@ -3,7 +3,6 @@
 
 #include "ir-gen.h"
 
-
 static IROperationType convert_op_type(TokenType token)
 {
 	switch (token)
