@@ -1110,7 +1110,6 @@ static int analyzer_is_the_same(Type* first, Type* second)
 }
 
 /**
- * - Usado em casts implicitos.
  * Pega o tipo de maior precedencia numa expressão.
  */
 static Type* analyzer_get_higher(Type* first, Type* second)
@@ -1182,6 +1181,9 @@ static int is_class_object(Type* type, int ptr_access)
 	return 1;
 }
 
+/**
+ * Checa se é possivel acessar um membro static de uma class.
+ */
 static void analyzer_check_directly(int direct, ASTNode* member, ASTNodeType type)
 {
 	if (type == NODE_FIELD)
@@ -1303,7 +1305,7 @@ static Type* handle_module_class_directly_access(Symbol* module_symbol, SymbolTa
 	}
 	
 	/**
-	 * TODO: Check if module is exporting field.
+	 * TODO: Checar se o modulo ta exportando a class.
 	 */
 
 	Type* type = create_type(TYPE_CLASS, (char*) class_symbol->symbol_class->identifier);
@@ -1330,7 +1332,7 @@ static Type* handle_module_field_access(Module* module, SymbolTable* scope, cons
 	}
 	
 	/**
-	 * TODO: Check if module is exporting field.
+	 * TODO: hecar se o modulo ta exportando a field.
 	 */
 
 	return field_symbol->symbol_variable->type;
@@ -1354,12 +1356,15 @@ static Type* handle_module_method_access(Module* module, SymbolTable* scope, con
 	}
 	
 	/**
-	 * TODO: Checar se o metodo ta sendo exportado...
+	 * TODO: Checar se o modulo ta exportando o metodo.
 	 */
 
 	return field_symbol->symbol_function->return_type;
 }
 
+/**
+ * Pega o tipo de retorno de um acesso de membro de uma class.
+ */
 Type* analyzer_get_member_access_type(Module* module, ASTNode* node, SymbolTable* scope, ASTNodeList* args)
 {
 	int directly = 0;
@@ -1504,12 +1509,15 @@ Type* analyzer_get_member_access_type(Module* module, ASTNode* node, SymbolTable
 	return field_type;
 }
 
-static Type* analyzer_get_operation_type(Module* module, ASTNode* ASTNode, SymbolTable* scope)
+/**
+ * Retorna o tipo retornado por uma operação
+ */
+static Type* analyzer_get_operation_type(Module* module, ASTNode* node, SymbolTable* scope)
 {
-	Type* left = analyzer_return_type_of_expression(module, ASTNode->operation.left, scope, NULL, 0, NULL);
-	Type* right = analyzer_return_type_of_expression(module, ASTNode->operation.right, scope, NULL, 0, NULL);
+	Type* left = analyzer_return_type_of_expression(module, node->operation.left, scope, NULL, 0, NULL);
+	Type* right = analyzer_return_type_of_expression(module, node->operation.right, scope, NULL, 0, NULL);
 
-	switch (ASTNode->operation.op)
+	switch (node->operation.op)
 	{
 		case TOKEN_OPERATOR_OR: // ||
 		case TOKEN_OPERATOR_AND: // &&
@@ -1549,6 +1557,9 @@ static Type* analyzer_get_operation_type(Module* module, ASTNode* ASTNode, Symbo
 	}
 }
 
+/**
+ * Retorna a função dona do escopo de função mais proximo do 'scope'.
+ */
 static Symbol* analyzer_get_owner_function(SymbolTable* scope)
 {
 	if (scope == NULL)
@@ -1564,6 +1575,9 @@ static Symbol* analyzer_get_owner_function(SymbolTable* scope)
 	return analyzer_get_owner_function(scope->parent);
 }
 
+/**
+ * Retorna se o 'scope' ta dentro do escopo de uma class.
+ */
 static int analyzer_is_inside_class(SymbolTable* scope)
 {
 	if (scope == NULL)
@@ -1579,6 +1593,9 @@ static int analyzer_is_inside_class(SymbolTable* scope)
 	return analyzer_is_inside_class(scope->parent);
 }
 
+/**
+ * Retorna o escopo da class que o scope ta dentro (NULL se não ta dentro do escopo de uma class).
+ */
 static Symbol* analyzer_is_inside_class_alt(SymbolTable* scope)
 {
 	if (scope == NULL)
@@ -1594,7 +1611,9 @@ static Symbol* analyzer_is_inside_class_alt(SymbolTable* scope)
 	return analyzer_is_inside_class_alt(scope->parent);
 }
 
-// Chamada do constructor da super class
+/**
+ * Lida com call do constructor da super class.
+ */
 static Type* handle_super_flat_call(Module* module, SymbolTable* scope, ASTNode* callee, ASTNodeList* args)
 {
 	Symbol* class = analyzer_is_inside_class_alt(scope);
@@ -1714,6 +1733,9 @@ static Type* handle_built_in_methods(Module* module, SymbolTable* scope, ASTNode
 	return NULL;
 }
 
+/**
+ * Pega o retorno da chamada de uma função.
+ */
 static Type* analyzer_get_function_call_type(Module* module, ASTNode* node, SymbolTable* scope, ASTNodeList* args)
 {
 	args = node->function_call.arguments;
@@ -1734,7 +1756,7 @@ static Type* analyzer_get_function_call_type(Module* module, ASTNode* node, Symb
 			}
 		}
 
-		return handle_flat_method(module, scope, callee, args);
+		return handle_flat_method(module, scope, callee, args); // flat method porque não é de class ou modulo, e sim uma função global normal.
 	}
 
 	Type* type = analyzer_return_type_of_expression(module, callee, scope, args, 0, NULL);
@@ -1793,6 +1815,9 @@ static Type* analyzer_get_dereference_type(Module* module, ASTNode* node, Symbol
 	return type;
 }
 
+/**
+ * Retorna o tipo de retorno do acesso de uma array.
+ */
 static Type* analyzer_get_array_access_type(Module* module, ASTNode* node, SymbolTable* scope)
 {
 	ASTNode* index = node->acess_array.index_expr;
@@ -1833,6 +1858,9 @@ static Type* analyzer_get_array_access_type(Module* module, ASTNode* node, Symbo
 	return type->base;
 }
 
+/**
+ * Retorna o tipo de retorno do ponteiro implicito 'this'.
+ */
 static Type* analyzer_get_this_type(Module* module, ASTNode* ASTNode, SymbolTable* scope)
 {
 	analyzer_analyze_node(module, ASTNode, scope, NULL);
