@@ -14,17 +14,17 @@ int class_function_index = -1;
 
 Symbol* analyzer_find_symbol_from_scope(const char* identifier, SymbolTable* scope, int is_variable, int is_function, int is_class, int is_module);
 Type* analyzer_return_type_of_expression(Module* module, ASTNode* expression, SymbolTable* scope, ASTNodeList* args, int member_access, int* direct);
-static Symbol* analyzer_add_symbol_to_scope(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset, int prototype);
+static Symbol* analyzer_add_symbol_to_scope(Module* module, ASTNode* node, SymbolTable* scope, int* offset, int prototype);
 static ASTNode* analyzer_implictly_cast_all(Module* module, Type* preffered, ASTNode* expression, SymbolTable* scope);
 static void analyzer_check_arguments(Module* module, ASTNode* params_head, ASTNode* args_head, SymbolTable* scope);
-static void analyzer_analyze_node(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset);
+static void analyzer_analyze_node(Module* module, ASTNode* node, SymbolTable* scope, int* offset);
 static int check_module_has_symbol(Module* module, char* identifier, SymbolType type);
 static int analyzer_is_type_identic(Type* first, Type* second, SymbolTable* scope);
 static ASTNode* analyzer_get_function_from_class(Symbol* class, char* func_name);
 static ASTNode* analyzer_get_member_from_class(Symbol* class, char* member_name);
 static int analyzer_is_class_assignable(Symbol* from, Symbol* to);
-static ASTNode* _analyzer_create_cast(ASTNode** ASTNode, Type* preferred);
-static void analyzer_create_cast(ASTNode** ASTNode, Type* preferred);
+static ASTNode* _analyzer_create_cast(ASTNode** node, Type* preferred);
+static void analyzer_create_cast(ASTNode** node, Type* preferred);
 int analyzer_get_type_size(Type* type, SymbolTable* scope);
 static int analyzer_is_inside_method(SymbolTable* scope);
 int analyzer_get_list_size(ASTNode* list_head);
@@ -3478,29 +3478,29 @@ static void analyzer_handle_import(Module* module, ASTNode* node, SymbolTable* s
 	}
 }
 
-static void analyzer_analyze_node(Module* module, ASTNode* ASTNode, SymbolTable* scope, int* offset)
+static void analyzer_analyze_node(Module* module, ASTNode* node, SymbolTable* scope, int* offset)
 {
-	analyzer_check_global_scope(ASTNode, scope);
+	analyzer_check_global_scope(node, scope);
 	
-	switch (ASTNode->type) 
+	switch (node->type) 
 	{
 		case NODE_FIELD:
 		{
-			analyzer_handle_variable_declaration(module, ASTNode, scope, offset);
+			analyzer_handle_variable_declaration(module, node, scope, offset);
 			
 			return;
 		}
 		
 		case NODE_FUNC:
 		{
-			analyzer_handle_function_declaration(module, ASTNode, scope);
+			analyzer_handle_function_declaration(module, node, scope);
 			
 			return;
 		}
 
 		case NODE_IMPORT:
 		{
-			analyzer_handle_import(module, ASTNode, scope);
+			analyzer_handle_import(module, node, scope);
 			
 			return;
 		}
@@ -3512,154 +3512,154 @@ static void analyzer_analyze_node(Module* module, ASTNode* ASTNode, SymbolTable*
 		
 		case NODE_IDENT:
 		{
-			analyzer_handle_identifier(ASTNode, scope);
+			analyzer_handle_identifier(node, scope);
 
 			return;
 		}
 
 		case NODE_IF:
 		{
-			analyzer_handle_if(module, ASTNode, scope, offset);
+			analyzer_handle_if(module, node, scope, offset);
 
 			return;
 		}
 
 		case NODE_WHILE_LOOP:
 		{
-			analyzer_handle_while_loop(module, ASTNode, scope, offset);
+			analyzer_handle_while_loop(module, node, scope, offset);
 			
 			return;
 		}
 		
 		case NODE_FOR_LOOP:
 		{
-			analyzer_handle_for_loop(module, ASTNode, scope, offset);
+			analyzer_handle_for_loop(module, node, scope, offset);
 			
 			return;
 		}
 
 		case NODE_SWITCH:
 		{
-			analyzer_handle_switch_statement(module, ASTNode, scope, offset);
+			analyzer_handle_switch_statement(module, node, scope, offset);
 
 			return;
 		}
 		
 		case NODE_OPERATION:
 		{
-			analyzer_handle_operation(module, ASTNode, scope);
+			analyzer_handle_operation(module, node, scope);
 			
 			return;
 		}
 		
 		case NODE_BLOCK:
 		{
-			analyzer_handle_block(module, ASTNode, scope, offset);
+			analyzer_handle_block(module, node, scope, offset);
 			
 			return;
 		}
 		
 		case NODE_RET:
 		{
-			analyzer_handle_return(module, ASTNode, scope);
+			analyzer_handle_return(module, node, scope);
 			
 			return;
 		}
 		
 		case NODE_BREAK:
 		{
-			analyzer_handle_break(ASTNode, scope);
+			analyzer_handle_break(node, scope);
 			
 			return;
 		}
 		
 		case NODE_REFERENCE:
 		{
-			analyzer_handle_adress_of(ASTNode, scope);
+			analyzer_handle_adress_of(node, scope);
 			
 			return;
 		}
 		
 		case NODE_DEREFERENCE:
 		{
-			analyzer_handle_dereference(ASTNode, scope);
+			analyzer_handle_dereference(node, scope);
 			
 			return;
 		}
 		
 		case NODE_ASSIGN:
 		{
-			analyzer_handle_var_assign(module, ASTNode, scope);
+			analyzer_handle_var_assign(module, node, scope);
 			
 			return;
 		}
 		
 		case NODE_MEMBER_ACCESS:
 		{
-			analyzer_handle_member_access(module, ASTNode, scope);
+			analyzer_handle_member_access(module, node, scope);
 			
 			return;
 		}
 
 		case NODE_CALL:
 		{
-			analyzer_handle_function_call(module, ASTNode, scope);
+			analyzer_handle_function_call(module, node, scope);
 			
 			return;
 		}
 		
 		case NODE_CLASS:
 		{
-			analyzer_handle_class_declaration(module, ASTNode, scope);
+			analyzer_handle_class_declaration(module, node, scope);
 
 			return;
 		}
 
 		case NODE_CREATE_INST:
 		{
-			analyzer_handle_create_instance(module, ASTNode, scope);
+			analyzer_handle_create_instance(module, node, scope);
 
 			return;
 		}
 
 		case NODE_THIS:
 		{
-			analyzer_handle_this(ASTNode, scope);
+			analyzer_handle_this(node, scope);
 
 			return;
 		}
 
 		case NODE_ARR_ACCESS:
 		{
-			analyzer_handle_array_access(module, ASTNode, scope);
+			analyzer_handle_array_access(module, node, scope);
 
 			return;
 		}
 
 		case NODE_CAST:
 		{
-			analyzer_handle_cast(module, ASTNode, scope);
+			analyzer_handle_cast(module, node, scope);
 
 			return;
 		}
 
 		case NODE_ARR_LITERAL:
 		{
-			analyzer_handle_array_literal(module, ASTNode, scope);
+			analyzer_handle_array_literal(module, node, scope);
 
 			return;
 		}
 
 		case NODE_SUPER:
 		{
-			analyzer_handle_super(ASTNode, scope);
+			analyzer_handle_super(node, scope);
 
 			return;
 		}
 
 		default:
 		{
-			printf("[Analyzer] [Debug] ASTNode type not implemented in analyzer: \"%d\"...", ASTNode->type);
+			printf("[Analyzer] [Debug] ASTNode type not implemented in analyzer: \"%d\"...", node->type);
 			exit(1);
 		}
 	}
