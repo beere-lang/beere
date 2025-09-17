@@ -11,7 +11,7 @@ void println(const char* str, ...)
 	char buff[1024];
 	sprintf(buff, "%s%c", str, '\n');
 
-	printf(buff, args);
+	vprintf(buff, args);
 
 	va_end(args);
 }
