@@ -15,6 +15,7 @@ typedef struct IRNodeIf IRNodeIf;
 typedef struct IRNodeFunc IRNodeFunc;
 typedef struct IRNodeField IRNodeField;
 typedef struct IRNodeDereference IRNodeDereference;
+typedef struct IRNodeFieldLiteral IRNodeFieldLiteral;
 typedef struct IRNodeReference IRNodeReference;
 typedef struct IRType IRType;
 
@@ -30,7 +31,8 @@ typedef enum
 	IR_NODE_FIELD,
 	IR_NODE_FUNC,
 	IR_NODE_DEREFERENCE,
-	IR_NODE_REFERENCE
+	IR_NODE_REFERENCE,
+	IR_NODE_FIELD_LITERAL
 }
 IRNodeType;
 
@@ -111,7 +113,6 @@ struct IRNodeLiteral
 		char char_val;
 		int bool_val;
 	};
-	
 };
 
 struct IRNodeIf
@@ -140,6 +141,11 @@ struct IRNodeReference
 	IRNode* expr;
 };
 
+struct IRNodeFieldLiteral
+{
+	char* name;
+};
+
 struct IRNode
 {
 	IRNodeType type;
@@ -155,6 +161,7 @@ struct IRNode
 	IRNodeReference reference;
 	IRNodeFunc func;
 	IRNodeField field;
+	IRNodeFieldLiteral field_literal;
 };
 
 IRNode* create_ir_node(IRNodeType type);
