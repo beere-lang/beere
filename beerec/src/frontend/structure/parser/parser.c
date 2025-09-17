@@ -146,7 +146,7 @@ static double convert_number_double(const char* nbr)
 
 	if (nbr == end_ptr || errno == ERANGE) 
 	{
-		parser_error("Malformed double number literal found...");
+		println("Malformed double number literal found...");
 		exit(1);
 	}
 
@@ -273,7 +273,7 @@ static ASTNode* parse_literal(Parser* parser)
 
 		if (literal_node == NULL) 
 		{ 
-			parser_error("Failed to allocate memory..."); exit(1); 
+			println("Failed to allocate memory..."); exit(1); 
 		}
 
 		literal_node->type = NODE_LITERAL;
@@ -342,7 +342,7 @@ static ASTNode* parse_literal(Parser* parser)
 
 			default:
 			{
-				parser_error("Invalid type found...");
+				println("Invalid type found...");
 				exit(1);
 			}
 		}
@@ -363,14 +363,14 @@ static ASTNode* parse_literal(Parser* parser)
 
 			if (callee == NULL) 
 			{ 
-				parser_error("Failed to allocate memory for callee..."); 
+				println("Failed to allocate memory for callee..."); 
 				exit(1); 
 			}
 
 			callee->type = NODE_IDENT;
 			callee->variable.identifier = identifier;
 
-			parser_info("Found a function in primary expression part...");
+			println("Found a function in primary expression part...");
 
 			advance_tkn(parser);
 
@@ -382,14 +382,14 @@ static ASTNode* parse_literal(Parser* parser)
 
 			if (callee == NULL) 
 			{ 
-				parser_error("Failed to allocate memory for callee..."); 
+				println("Failed to allocate memory for callee..."); 
 				exit(1); 
 			}
 
 			callee->type = NODE_IDENT;
 			callee->variable.identifier = identifier;
 
-			parser_info("Found a array access in primary expression part...");
+			println("Found a array access in primary expression part...");
 
 			expr = parse_array_access(parser, callee);
 		}
@@ -399,7 +399,7 @@ static ASTNode* parse_literal(Parser* parser)
 
 			if (var_node == NULL) 
 			{ 
-				parser_error("Failed to allocate memory for variable ASTNode..."); 
+				println("Failed to allocate memory for variable ASTNode..."); 
 				exit(1); 
 			}
 
@@ -417,7 +417,7 @@ static ASTNode* parse_literal(Parser* parser)
 
 		if (node == NULL)
 		{
-			parser_error("Failed to allocate memory for super ASTNode..."); 
+			println("Failed to allocate memory for super ASTNode..."); 
 			exit(1);
 		}
 
@@ -433,7 +433,7 @@ static ASTNode* parse_literal(Parser* parser)
 
 		if (this_node == NULL) 
 		{ 
-			parser_error("Failed to allocate memory for this ASTNode..."); 
+			println("Failed to allocate memory for this ASTNode..."); 
 			exit(1); 
 		}
 
@@ -449,7 +449,7 @@ static ASTNode* parse_literal(Parser* parser)
 		
 		if (peek_tkn(parser)->token_type != TOKEN_CHAR_CLOSE_PAREN) 
 		{
-			parser_error("Invalid syntax expected: ')'");
+			println("Invalid syntax expected: ')'");
 			exit(1);
 		}
 
@@ -487,7 +487,7 @@ static ASTNode* parse_primary(Parser* parser)
 
 			if (node == NULL) 
 			{ 
-				parser_error("Failed to allocate memory for member access ASTNode..."); 
+				println("Failed to allocate memory for member access ASTNode..."); 
 				exit(1); 
 			}
 
@@ -557,7 +557,7 @@ static ASTNode* parse_arithmetic(Parser* parser)
 
 		if (node == NULL)
 		{
-			parser_error("Failed to allocate memory...");
+			println("Failed to allocate memory...");
 			exit(1);
 		}
 
@@ -598,7 +598,7 @@ static ASTNode* parse_comparator(Parser* parser)
 
 		if (node == NULL)
 		{
-			parser_error("Failed to allocate memory...");
+			println("Failed to allocate memory...");
 			exit(1);
 		}
 
@@ -628,7 +628,7 @@ static ASTNode* parse_and(Parser* parser)
 
 		if (node == NULL) 
 		{
-			parser_error("Failed to allocate memory...");
+			println("Failed to allocate memory...");
 			exit(1);
 		}
 
@@ -657,7 +657,7 @@ static ASTNode* parse_or(Parser* parser)
 
 		if (node == NULL) 
 		{
-			parser_error("Failed to allocate memory...");
+			println("Failed to allocate memory...");
 			exit(1);
 		}
 
@@ -688,7 +688,7 @@ static ASTNode* parse_block(Parser* parser)
 
 	if (node_list == NULL) 
 	{
-		parser_error("Failed to allocate memory for ASTNode list..."); 
+		println("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
@@ -700,11 +700,11 @@ static ASTNode* parse_block(Parser* parser)
 	
 		if (statement == NULL) 
 		{
-			parser_error("Failed to parse statement...");
+			println("Failed to parse statement...");
 			exit(1);
 		}
 
-		parser_info("Parsed successfully...");
+		println("Parsed successfully...");
 		
 		*current = statement;
 		current = &statement->next;
@@ -718,7 +718,7 @@ static ASTNode* parse_block(Parser* parser)
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory for block ASTNode");
+		println("Failed to allocate memory for block ASTNode");
 		exit(1);
 	}
   
@@ -744,7 +744,7 @@ static ASTNode* parse_switch_label_content(Parser* parser, ASTNode* condition, i
 
 	if (statement_list == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for ASTNode list..."); 
+		println("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
@@ -778,7 +778,7 @@ static ASTNode* parse_switch_label_content(Parser* parser, ASTNode* condition, i
 
 	if (block_node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for block ASTNode..."); 
+		println("Failed to allocate memory for block ASTNode..."); 
 		exit(1); 
 	}
 
@@ -790,7 +790,7 @@ static ASTNode* parse_switch_label_content(Parser* parser, ASTNode* condition, i
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for switch case block ASTNode..."); 
+		println("Failed to allocate memory for switch case block ASTNode..."); 
 		exit(1); 
 	}
 	
@@ -809,7 +809,7 @@ static ASTNode* parse_var_assign(Parser* parser, ASTNode* left)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for variable assign ASTNode..."); 
+		println("Failed to allocate memory for variable assign ASTNode..."); 
 		exit(1); 
 	}
 
@@ -831,7 +831,7 @@ static ASTNode* parse_var_increment(Parser* parser, ASTNode* left)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation ASTNode..."); 
+		println("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -839,7 +839,7 @@ static ASTNode* parse_var_increment(Parser* parser, ASTNode* left)
 
 	if (node_literal == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for literal ASTNode..."); 
+		println("Failed to allocate memory for literal ASTNode..."); 
 		exit(1); 
 	}
 
@@ -869,7 +869,7 @@ static ASTNode* parse_var_decrement(Parser* parser, ASTNode* left)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation ASTNode..."); 
+		println("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -877,7 +877,7 @@ static ASTNode* parse_var_decrement(Parser* parser, ASTNode* left)
 
 	if (node_literal == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for literal ASTNode..."); 
+		println("Failed to allocate memory for literal ASTNode..."); 
 		exit(1); 
 	}
 
@@ -908,7 +908,7 @@ static ASTNode* parse_var_plus_equals(Parser* parser, ASTNode* left)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation ASTNode..."); 
+		println("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -931,7 +931,7 @@ static ASTNode* parse_var_minus_equals(Parser* parser, ASTNode* left)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation ASTNode..."); 
+		println("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -954,7 +954,7 @@ static ASTNode* parse_var_times_equals(Parser* parser, ASTNode* left)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation ASTNode..."); 
+		println("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -977,7 +977,7 @@ static ASTNode* parse_var_divided_equals(Parser* parser, ASTNode* left)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation ASTNode..."); 
+		println("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1043,7 +1043,7 @@ static ASTNode* parse_if(Parser* parser)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for if ASTNode..."); 
+		println("Failed to allocate memory for if ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1051,13 +1051,13 @@ static ASTNode* parse_if(Parser* parser)
 
 	if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_ELSE)
 	{
-		parser_info("Parsing else...");
+		println("Parsing else...");
 
 		ASTNode* else_statements = malloc(sizeof(ASTNode));
 
 		if (else_statements == NULL) 
 		{
-			parser_error("Failed to allocate memory for block ASTNode..."); 
+			println("Failed to allocate memory for block ASTNode..."); 
 			exit(1); 
 		}
 
@@ -1084,7 +1084,7 @@ static ASTNode* parse_if(Parser* parser)
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory...");
+		println("Failed to allocate memory...");
 		exit(1);
 	}
 
@@ -1109,7 +1109,7 @@ static ASTNode* parse_array_access(Parser* parser, ASTNode* array_access)
 
 	if (access_node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for array access ASTNode..."); 
+		println("Failed to allocate memory for array access ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1138,7 +1138,7 @@ static ASTNode* parse_func_call(Parser* parser, ASTNode* callee_expr)
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory for function call");
+		println("Failed to allocate memory for function call");
 		exit(1);
 	}
 
@@ -1159,7 +1159,7 @@ static ASTNode* parse_func(
 	int is_constructor
 ) 
 {
-	parser_info("Parsing function declaration...");
+	println("Parsing function declaration...");
 	
 	skip_end_lines(parser);
 
@@ -1201,17 +1201,17 @@ static ASTNode* parse_func(
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory for function ASTNode");
+		println("Failed to allocate memory for function ASTNode");
 		exit(1);
 	}
 
 	node->type = NODE_FUNC;
 	node->function = function_node;
-	node->function.block_node = statements;
+	node->function.block = statements;
 	node->function.is_constructor = is_constructor;
 	node->function.only_declaration = (statements == NULL);
 	
-	parser_info(statements ? "Normal function found..." : "Only declaration function found...");
+	println(statements ? "Normal function found..." : "Only declaration function found...");
 
 	return node;
 }
@@ -1225,7 +1225,7 @@ static ASTNode* parse_var(
 	int is_static
 )
 {
-	parser_info("Parsing variable declaration");
+	println("Parsing variable declaration");
 
 	ASTNodeField declare_node = { 0 };
 	
@@ -1249,7 +1249,7 @@ static ASTNode* parse_var(
 
 	if (node == NULL) 
 	{
-		parser_error("Failed to allocate memory for declaration ASTNode");
+		println("Failed to allocate memory for declaration ASTNode");
 		exit(1);
 	}
 
@@ -1263,7 +1263,7 @@ static ASTNode* parse_var(
 
 static ASTNode* parse_while_loop(Parser* parser)
 {
-	parser_info("Parsing a while loop statement...");
+	println("Parsing a while loop statement...");
 	
 	ASTNode* node = malloc(sizeof(ASTNode));
 	node->type = NODE_WHILE_LOOP;
@@ -1324,7 +1324,7 @@ static ASTNode* parse_for_loop(Parser* parser)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for for loop ASTNode..."); 
+		println("Failed to allocate memory for for loop ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1362,7 +1362,7 @@ static ASTNode* parse_switch(Parser* parser)
 
 	if (cases == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for ASTNode list..."); 
+		println("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
@@ -1411,7 +1411,7 @@ static ASTNode* parse_switch(Parser* parser)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for switch statement ASTNode..."); 
+		println("Failed to allocate memory for switch statement ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1428,7 +1428,7 @@ static ASTNode* parse_continue(Parser* parser)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for continue ASTNode..."); 
+		println("Failed to allocate memory for continue ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1443,7 +1443,7 @@ static ASTNode* parse_break(Parser* parser)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for operation ASTNode..."); 
+		println("Failed to allocate memory for operation ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1459,7 +1459,7 @@ static ASTNodeList* parse_params(Parser* parser)
 
 	if (params_list == NULL) 
 	{
-		parser_error("Failed to allocate memory for argument list");
+		println("Failed to allocate memory for argument list");
 		exit(1);
 	}
 
@@ -1492,7 +1492,7 @@ static ASTNodeList* parse_params(Parser* parser)
 
 		if (arg_node == NULL) 
 		{
-			parser_error("Failed to allocate memory for param ASTNode...");
+			println("Failed to allocate memory for param ASTNode...");
 			exit(1);
 		}
 
@@ -1506,7 +1506,7 @@ static ASTNodeList* parse_params(Parser* parser)
 
 		char offset_msg[50];
 		snprintf(offset_msg, sizeof(offset_msg), "New argument added, offset: %d", offset);
-		parser_info(offset_msg);
+		println(offset_msg);
 	}
 
 	return params_list;
@@ -1587,7 +1587,7 @@ static ASTNode* parse_import(Parser* parser)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for import ASTNode..."); 
+		println("Failed to allocate memory for import ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1620,7 +1620,7 @@ static ASTNode* parse_new_class_instance(Parser* parser, char* class_name)
 
 	if (instance == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for create instance ASTNode..."); 
+		println("Failed to allocate memory for create instance ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1638,7 +1638,7 @@ static ASTNodeList* parse_array_values(Parser* parser)
 
 	if (list == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for ASTNode list..."); 
+		println("Failed to allocate memory for ASTNode list..."); 
 		exit(1); 
 	}
 
@@ -1688,7 +1688,7 @@ static ASTNode* parse_new_array(Parser* parser, Type* array_type)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for array literal ASTNode..."); 
+		println("Failed to allocate memory for array literal ASTNode..."); 
 		exit(1); 
 	}
 
@@ -1730,7 +1730,7 @@ static ASTNode** parse_class_declarations(ASTNode* block, int* out_count, ASTNod
 
 	if (node_list == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for ASTNode array..."); 
+		println("Failed to allocate memory for ASTNode array..."); 
 		exit(1); 
 	}
 
@@ -1792,7 +1792,7 @@ static ASTNode** filter_declarations(ASTNode** list, int type_filter, int* out_c
 
 	if (result == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for ASTNode array..."); 
+		println("Failed to allocate memory for ASTNode array..."); 
 		exit(1); 
 	}
 
@@ -1876,7 +1876,7 @@ static ASTNode* parse_class(Parser* parser)
 
 	if (node == NULL) 
 	{ 
-		parser_error("Failed to allocate memory for class ASTNode..."); 
+		println("Failed to allocate memory for class ASTNode..."); 
 		exit(1); 
 	}
 
@@ -2158,7 +2158,7 @@ static ASTNode* parse_unary(Parser* parser)
 	
 			if (node == NULL)
 			{ 
-				parser_error("Failed to allocate memory for cast ASTNode..."); 
+				println("Failed to allocate memory for cast ASTNode..."); 
 				exit(1); 
 			}
 	
@@ -2181,7 +2181,7 @@ static ASTNode* parse_unary(Parser* parser)
 
 		if (node == NULL) 
 		{ 
-			parser_error("Failed to allocate memory for adress of ASTNode..."); 
+			println("Failed to allocate memory for adress of ASTNode..."); 
 			exit(1); 
 		}
 
@@ -2201,7 +2201,7 @@ static ASTNode* parse_unary(Parser* parser)
 
 		if (node == NULL) 
 		{ 
-			parser_error("Failed to allocate memory for dereference ASTNode..."); 
+			println("Failed to allocate memory for dereference ASTNode..."); 
 			exit(1); 
 		}
 
@@ -2304,9 +2304,9 @@ void free_node(ASTNode* node)
 				free_node_list(node->function.params);
 			}
 			
-			if (node->function.block_node != NULL)
+			if (node->function.block != NULL)
 			{
-				free_node(node->function.block_node);
+				free_node(node->function.block);
 			}
 
 			break;
