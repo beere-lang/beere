@@ -6,12 +6,11 @@ Beere is a simple, fast, and low-level programming language, designed for system
 
 ## Features (that beere will have in the **first** release)
 
-- Fast native compilation to Assembly x86_64 (Intel Syntax)
 - Manual memory management (Optional GC soon)
 - Simple and clean syntax
 - Optional object-oriented features
 - C interoperability
-- Optimizations (inspired in LLVM)
+- Optimizations (LLVM)
 - Module system
 - Full package manager system
 
