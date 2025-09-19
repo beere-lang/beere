@@ -17,6 +17,8 @@ typedef struct IRNodeField IRNodeField;
 typedef struct IRNodeDereference IRNodeDereference;
 typedef struct IRNodeFieldLiteral IRNodeFieldLiteral;
 typedef struct IRNodeReference IRNodeReference;
+typedef struct IRNodeBranch IRNodeBranch;
+typedef struct IRNodeGoto IRNodeGoto;
 typedef struct IRType IRType;
 
 typedef enum
@@ -27,7 +29,8 @@ typedef enum
 	IR_NODE_OPERATION,
 	IR_NODE_RET,
 	IR_NODE_CALL,
-	IR_NODE_IF,
+	IR_NODE_BRANCH,
+	IR_NODE_GOTO,
 	IR_NODE_FIELD,
 	IR_NODE_FUNC,
 	IR_NODE_DEREFERENCE,
@@ -61,6 +64,7 @@ struct IRNodeList
 
 struct IRNodeBlock
 {
+	char* label;
 	IRNodeList* nodes;
 };
 
@@ -83,7 +87,7 @@ struct IRNodeFunc
 	
 	char* name;
 
-	IRNode* block;
+	IRNodeList* blocks;
 	
 	IRNode** args;
 	unsigned int args_size;
@@ -100,6 +104,19 @@ struct IRNodeStore
 	IRNode* expr;
 };
 
+struct IRNodeGoto
+{
+	IRNode* block;	
+};
+
+struct IRNodeBranch
+{
+	IRNode* condition;
+
+	IRNode* then_block;
+	IRNode* else_block;
+};
+
 struct IRNodeLiteral
 {
 	Type* type;
@@ -113,14 +130,6 @@ struct IRNodeLiteral
 		char char_val;
 		int bool_val;
 	};
-};
-
-struct IRNodeIf
-{
-	IRNode* cond;
-
-	IRNode* then_block;
-	IRNode* else_block;
 };
 
 struct IRNodeField
@@ -156,12 +165,13 @@ struct IRNode
 	IRNodeCall call;
 	IRNodeStore store;
 	IRNodeLiteral literal;
-	IRNodeIf if_statement;
 	IRNodeDereference dereference;
 	IRNodeReference reference;
 	IRNodeFunc func;
 	IRNodeField field;
 	IRNodeFieldLiteral field_literal;
+	IRNodeGoto go_to;
+	IRNodeBranch branch;
 };
 
 IRNode* create_ir_node(IRNodeType type);

@@ -355,7 +355,7 @@ static LLVMValueRef generate_operation(const LLVMModuleRef module, const LLVMBui
 
 static LLVMValueRef generate_field_literal(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
-	LLVMValueRef field = get_field_from_table(node->field_literal.name);
+	const LLVMValueRef field = get_field_from_table(node->field_literal.name);
 	Type* type = get_field_type_from_table(node->field_literal.name);
 	
 	if (field == NULL || type == NULL)
@@ -366,7 +366,7 @@ static LLVMValueRef generate_field_literal(const LLVMModuleRef module, const LLV
 	const char* fload_name = generate_field_load_label(1);
 	const LLVMTypeRef ftype = get_type(type);
 	
-	LLVMValueRef value = LLVMBuildLoad2(llvm, ftype, field, fload_name);
+	const LLVMValueRef value = LLVMBuildLoad2(llvm, ftype, field, fload_name);
 
 	return value;
 }
