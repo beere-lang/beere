@@ -127,12 +127,12 @@ static void generate_dominator_child(DTBlock* parent, CFBlock* block, CFPathBloc
 			continue;
 		}
 
-		add_element_to_dt_block_list(parent->dominators, dblock);
+		add_element_to_dt_block_list(dt_block->dominators, dblock);
 	}
 	
 	if (self == NULL)
 	{
-		add_element_to_dt_block_list(parent->dominators, dt_block);
+		add_element_to_dt_block_list(dt_block->dominators, dt_block);
 		
 		self = setup_path_block(block);
 	}
