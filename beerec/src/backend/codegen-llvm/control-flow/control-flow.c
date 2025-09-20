@@ -2,37 +2,15 @@
 
 #include "control-flow.h"
 #include "../../../utils/logger/logger.h"
+#include "../../../utils/list/list.h"
 
 static const int CF_BLOCK_LIST_DEFAULT_START_CAPACITY = 4;
 
-CFBlockList* cf_blocks = NULL;
-
-CFBlockList* setup_list()
-{
-	CFBlockList* list = malloc(sizeof(CFBlockList));
-
-	list->capacity = CF_BLOCK_LIST_DEFAULT_START_CAPACITY;
-	list->length = 0;
-
-	list->elements = malloc(sizeof(CFBlock*) * CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
-
-	return list;
-}
-
-void add_element_to_list(CFBlockList* list, CFBlock* block)
-{
-	if (list->length >= list->capacity)
-	{
-		list->capacity *= 2;
-		list->elements = realloc(list->elements, sizeof(CFBlock*) * list->capacity);
-	}
-
-	list->elements[list->length++] = block;
-}
+DList* cf_blocks = NULL;
 
 void setup_cf_blocks()
 {
-	cf_blocks = setup_list();
+	cf_blocks = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
 }
 
 CFBlock* find_cf_block(IRNode* block)
@@ -136,8 +114,8 @@ CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* 
 	{
 		cf_block = malloc(sizeof(CFBlock));
 
-		cf_block->predecessors = setup_list();
-		cf_block->successors = setup_list();
+		cf_block->predecessors = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
+		cf_block->successors = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
 		cf_block->block = block;
 
 		add_element_to_list(cf_blocks, cf_block);
