@@ -135,6 +135,7 @@ static void generate_dominator_child(DTBlock* parent, CFBlock* block, CFPathBloc
 		add_element_to_dt_block_list(dt_block->dominators, dt_block);
 		
 		self = setup_path_block(block);
+		add_element_to_path_block_list(list, self);
 	}
 	
 	self->paths++;
