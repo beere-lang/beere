@@ -1,3 +1,8 @@
+/**
+ * TODO: iterar por todas as CFPathBlock e ver se o numero de repetiçoes de cada dominator é igual ao numero de paths possiveis,
+ * caso seja igual, mantém o dominator (ignorar o proprio Block)
+ */
+
 #include <stdlib.h>
 
 #include "dominator-tree.h"
@@ -125,10 +130,10 @@ static void generate_dominator_child(DTBlock* parent, CFBlock* block, CFPathBloc
 		add_element_to_dt_block_list(parent->dominators, dblock);
 	}
 	
-	add_element_to_dt_block_list(parent->dominators, dt_block);
-
 	if (self == NULL)
 	{
+		add_element_to_dt_block_list(parent->dominators, dt_block);
+		
 		self = setup_path_block(block);
 	}
 	
