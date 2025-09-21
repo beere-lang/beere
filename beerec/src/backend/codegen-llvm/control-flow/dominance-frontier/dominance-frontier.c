@@ -20,11 +20,11 @@ int get_block_number(CFBlock** blocks, const int length, CFBlock* block)
 	return -1;
 }
 
-CFBlock** generate_dominance_frontier(CFBlock** lblocks, const int length, int* idom)
+CFBlock** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int* idominators)
 {
-	CFBlock** frontier = malloc(sizeof(CFBlock*) * length);
+	CFBlock** frontier = malloc(sizeof(CFBlock*) * tlength);
 
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < tlength; i++)
 	{
 		CFBlock* block = lblocks[i];
 
@@ -33,9 +33,9 @@ CFBlock** generate_dominance_frontier(CFBlock** lblocks, const int length, int* 
 		for (int j = 0; j < slength; j++)
 		{
 			CFBlock* succ = block->successors->elements[j];
-			const int index = get_block_number(lblocks, length, succ);
+			const int index = get_block_number(lblocks, tlength, succ);
 
-			if (idom[index] == i)
+			if (idominators[index] == i)
 			{
 				continue;
 			}
