@@ -1,7 +1,8 @@
-#ifndef IR_NODES_H 
+#ifndef IR_NODES_H
 #define IR_NODES_H
 
 #include "../../../frontend/structure/ast/types/types.h"
+#include "../../../utils/list/list.h"
 
 typedef struct IRNode IRNode;
 typedef struct IRNodeBlock IRNodeBlock;
@@ -65,7 +66,7 @@ struct IRNodeList
 struct IRNodeBlock
 {
 	char* label;
-	IRNodeList* nodes;
+	DList* nodes;
 };
 
 struct IRNodeOperation
@@ -84,11 +85,11 @@ struct IRNodeRet
 struct IRNodeFunc
 {
 	Type* type;
-	
+
 	char* name;
 
-	IRNodeList* blocks;
-	
+	DList* blocks;
+
 	IRNode** args;
 	unsigned int args_size;
 };
@@ -106,7 +107,7 @@ struct IRNodeStore
 
 struct IRNodeGoto
 {
-	IRNode* block;	
+	IRNode* block;
 };
 
 struct IRNodeBranch
@@ -176,4 +177,4 @@ struct IRNode
 
 IRNode* create_ir_node(IRNodeType type);
 
-#endif 
+#endif
