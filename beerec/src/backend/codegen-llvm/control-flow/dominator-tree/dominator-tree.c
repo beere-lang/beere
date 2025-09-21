@@ -35,7 +35,8 @@ static DTBlock* create_dt_block(CFBlock* block)
 	DTBlock* dtb = malloc(sizeof(DTBlock));
 
 	dtb->block = block;
-	dtb->childs = create_list(DT_BLOCKS_LIST_DEFAULT_START_CAPACITY);
+	dtb->dominator = NULL;
+	dtb->dominateds = create_list(DT_BLOCKS_LIST_DEFAULT_START_CAPACITY);
 
 	return dtb;
 }
@@ -169,12 +170,33 @@ static void get_real_dominators()
 	}
 }
 
-static CFBlock* build_dominator_tree()
+static DTBlock* link_dominator(CFBlock* block, DTBlock* dominator)
 {
-	return NULL;
+	const int index = get_block_number(block);
+	DTBlock* dt = create_dt_block(block);
+
+	dt->dominator = dominator;
+
+	for (int i = 0; i < length; i++)
+	{
+		if (idom[i] != index)
+		{
+			continue;
+		}
+
+		add_element_to_list(dt->dominateds, blocks[i]);
+		link_dominator(blocks[i], dt);
+	}
+
+	return dt;
 }
 
-CFBlock* generate_dominator_tree(CFBlock* entry, int size)
+static DTBlock* build_dominator_tree()
+{
+	return link_dominator(blocks[0], NULL);
+}
+
+DTBlock* generate_dominator_tree(CFBlock* entry, int size)
 {
 	setup_data(size);
 
