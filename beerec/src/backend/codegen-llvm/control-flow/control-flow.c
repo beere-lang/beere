@@ -4,7 +4,7 @@
 #include "../../../utils/logger/logger.h"
 #include "../../../utils/list/list.h"
 
-static const int CF_BLOCK_LIST_DEFAULT_START_CAPACITY = 4;
+#define CF_BLOCK_LIST_DEFAULT_START_CAPACITY 4
 
 DList* cf_blocks = NULL;
 

@@ -3,6 +3,9 @@
 #include "dominator-tree.h"
 #include "../control-flow.h"
 
+#define STRICT 1
+#define DT_BLOCKS_LIST_DEFAULT_START_CAPACITY 4
+
 int length = 0;
 
 int* bindex = NULL;
@@ -14,8 +17,6 @@ int* label = NULL;
 
 CFBlock** bparents = NULL;
 CFBlock** blocks = NULL;
-
-#define STRICT 1
 
 static void setup_data(int size)
 {
@@ -33,7 +34,7 @@ static DTBlock* create_dt_block(CFBlock* block)
 	DTBlock* dtb = malloc(sizeof(DTBlock));
 
 	dtb->block = block;
-	dtb->childs = create_list(4);
+	dtb->childs = create_list(DT_BLOCKS_LIST_DEFAULT_START_CAPACITY);
 
 	return dtb;
 }

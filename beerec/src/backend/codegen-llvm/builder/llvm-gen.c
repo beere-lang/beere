@@ -6,8 +6,8 @@
 
 #include "../../../utils/logger/logger.h"
 
-static const char* ENTRY_NAME = ".entry";
-static const int FIELD_TABLE_DEFAULT_START_CAPACITY = 4;
+#define ENTRY_NAME ".entry"
+#define FIELD_TABLE_DEFAULT_START_CAPACITY 4
 
 static size_t expr_count = 0;
 static size_t fload_count = 0;
