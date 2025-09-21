@@ -89,6 +89,7 @@ static Type* get_field_type_from_table(const char* name)
 	for (int i = 0; i < field_table->length; i++)
 	{
 		const char* field_name = field_table->names[i];
+
 		LLVMValueRef field = field_table->fields[i];
 		Type* type = field_table->types[i];
 
@@ -444,11 +445,14 @@ static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilde
 	}
 }
 
-void generate_module_llvm(IRNode* init) // adicionar o sistema de modulos depois
+/**
+ * TODO: adicionar o sistema de modulos depois
+ */
+void generate_module_llvm(IRNode* init)
 {
 	setup_field_table();
 
-	const LLVMModuleRef module = LLVMModuleCreateWithName("test_module"); // implementar o bgl certo nisso
+	const LLVMModuleRef module = LLVMModuleCreateWithName("test_module"); /** TODO: implementar o negocio certo nisso */
 	const LLVMBuilderRef builder = LLVMCreateBuilder();
 
 	generate_llvm_from_node(module, builder, init);
