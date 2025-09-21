@@ -38,6 +38,23 @@ static DTBlock* create_dt_block(CFBlock* block)
 	return dtb;
 }
 
+static int get_block_number(CFBlock* block)
+{
+	for (int i = 0; i < length; i++)
+	{
+		CFBlock* curr = blocks[i];
+
+		if (block != curr)
+		{
+			continue;
+		}
+
+		return bindex[i];
+	}
+
+	return -1;
+}
+
 static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 {
 	if (block == NULL)
@@ -73,23 +90,6 @@ static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 
 		dfs_control_flow(curr, block);
 	}
-}
-
-static int get_block_number(CFBlock* block)
-{
-	for (int i = 0; i < length; i++)
-	{
-		CFBlock* curr = blocks[i];
-
-		if (block != curr)
-		{
-			continue;
-		}
-
-		return bindex[i];
-	}
-
-	return -1;
 }
 
 static void get_semi_dominators()

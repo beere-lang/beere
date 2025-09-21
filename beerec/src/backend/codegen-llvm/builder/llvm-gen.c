@@ -19,10 +19,10 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 static void setup_field_table()
 {
 	field_table = malloc(sizeof(LLVMFieldTable));
-	
+
 	field_table->length = 0;
 	field_table->capacity = FIELD_TABLE_DEFAULT_START_CAPACITY;
-	
+
 	field_table->fields = malloc(sizeof(LLVMValueRef) * FIELD_TABLE_DEFAULT_START_CAPACITY);
 	field_table->names = malloc(sizeof(char*) * FIELD_TABLE_DEFAULT_START_CAPACITY);
 	field_table->types = malloc(sizeof(char*) * FIELD_TABLE_DEFAULT_START_CAPACITY);
@@ -34,18 +34,18 @@ static void add_field_to_table(const LLVMValueRef field, const char* name, Type*
 	{
 		return;
 	}
-	
+
 	if (field_table->capacity <= field_table->length)
 	{
 		field_table->capacity *= 2;
-		
+
 		field_table->fields = realloc(field_table->fields, sizeof(LLVMValueRef) * field_table->capacity);
 		field_table->names = realloc(field_table->names, sizeof(char*) * field_table->capacity);
 		field_table->types = realloc(field_table->types, sizeof(Type*) * field_table->capacity);
 	}
 
 	field_table->fields[field_table->length] = field;
-	field_table->names[field_table->length] = strdup(name);
+	field_table->names[field_table->length] = _strdup(name);
 	field_table->types[field_table->length] = type;
 
 	field_table->length++;
@@ -115,7 +115,7 @@ static const char* generate_expr_label(int inc)
 
 	expr_count += inc;
 
-	return strdup(buff);
+	return _strdup(buff);
 }
 
 static const char* generate_field_load_label(int inc)
@@ -125,7 +125,7 @@ static const char* generate_field_load_label(int inc)
 
 	fload_count += inc;
 
-	return strdup(buff);
+	return _strdup(buff);
 }
 
 static LLVMTypeRef get_type(Type* type)
@@ -151,12 +151,12 @@ static LLVMTypeRef get_type(Type* type)
 		{
 			return LLVMPointerType(get_type(type->base), 0);
 		}
-		
+
 		case TYPE_INT:
 		{
 			return LLVMInt32Type();
 		}
-	
+
 		default:
 		{
 			return NULL;
@@ -169,7 +169,7 @@ static LLVMTypeRef* get_args_type(IRNode** args, unsigned int args_size)
 	LLVMTypeRef* args_type = malloc(sizeof(LLVMTypeRef) * args_size);
 
 	int j = 0;
-	
+
 	for (int i = 0; i < args_size; i++)
 	{
 		IRNode* arg = args[i];
@@ -192,7 +192,7 @@ static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int
 	{
 		IRNode* arg = args[i];
 		LLVMValueRef arg_ref = LLVMGetParam(*func, i);
-		
+
 		if (arg == NULL || arg_ref)
 		{
 			continue;
@@ -205,7 +205,7 @@ static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int
 static void generate_func(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
 	LLVMTypeRef return_type = get_type(node->func.type);
-	
+
 	unsigned int args_size = node->func.args_size;
 	LLVMTypeRef* args_type = get_args_type(node->func.args, args_size);
 
@@ -215,12 +215,16 @@ static void generate_func(const LLVMModuleRef module, const LLVMBuilderRef llvm,
 	setup_func_arg_names(&func, node->func.args, args_size);
 
 	LLVMBasicBlockRef entry = LLVMAppendBasicBlock(func, ENTRY_NAME);
-	
+
 	LLVMPositionBuilderAtEnd(llvm, entry);
 
-	int length = node->func.block->block.nodes->length;
-	IRNode** nodes = node->func.block->block.nodes->elements;
-	
+	/**
+	 * TODO: implementar os multiplos blocos em funções aqui
+	 */
+	/*
+	int length = node->func->block.nodes->length;
+	IRNode** nodes = node->func->block.nodes->elements;
+
 	for (int i = 0; i < length; i++)
 	{
 		IRNode* node = nodes[i];
@@ -232,28 +236,29 @@ static void generate_func(const LLVMModuleRef module, const LLVMBuilderRef llvm,
 
 		generate_llvm_from_node(module, llvm, node);
 	}
-	
+	*/
+
 	LLVMDumpModule(module);
 }
 
 static LLVMValueRef generate_literal_i32(const LLVMModuleRef module, const LLVMBuilderRef llvm, const int value)
 {
 	const LLVMValueRef result = LLVMConstInt(LLVMInt32Type(), value, 1); /** TODO: depois testar esse sign extend */
-	
+
 	return result;
 }
 
 static LLVMValueRef generate_literal_f32(const LLVMModuleRef module, const LLVMBuilderRef llvm, const float value)
 {
 	const LLVMValueRef result = LLVMConstReal(LLVMFloatType(), value);
-	
+
 	return result;
 }
 
 static LLVMValueRef generate_literal_d64(const LLVMModuleRef module, const LLVMBuilderRef llvm, const float value)
 {
 	const LLVMValueRef result = LLVMConstReal(LLVMDoubleType(), value);
-	
+
 	return result;
 }
 
@@ -275,11 +280,11 @@ static LLVMValueRef generate_literal(const LLVMModuleRef module, const LLVMBuild
 		{
 			return generate_literal_d64(module, llvm, node->literal.double_val);
 		}
-		
+
 		default:
 		{
 			println("Found literal node with type not implemented: %d", node->literal.type->type);
-			
+
 			break;
 		}
 	}
@@ -319,7 +324,7 @@ static LLVMValueRef generate_operation(const LLVMModuleRef module, const LLVMBui
 {
 	const LLVMValueRef left = generate_expr(module, llvm, node->operation.left);
 	const LLVMValueRef right = generate_expr(module, llvm, node->operation.right);
-	
+
 	switch (node->operation.type) /** TODO: implementar coisa pra floating numbers (float, double) */
 	{
 		case IR_OPERATION_ADD:
@@ -341,11 +346,11 @@ static LLVMValueRef generate_operation(const LLVMModuleRef module, const LLVMBui
 		{
 			return generate_idiv_operation(module, llvm, left, right);
 		}
-		
+
 		default:
 		{
 			println("Found operation node with type not implemented: %d", node->operation.type);
-			
+
 			break;
 		}
 	}
@@ -357,7 +362,7 @@ static LLVMValueRef generate_field_literal(const LLVMModuleRef module, const LLV
 {
 	const LLVMValueRef field = get_field_from_table(node->field_literal.name);
 	Type* type = get_field_type_from_table(node->field_literal.name);
-	
+
 	if (field == NULL || type == NULL)
 	{
 		return NULL;
@@ -365,7 +370,7 @@ static LLVMValueRef generate_field_literal(const LLVMModuleRef module, const LLV
 
 	const char* fload_name = generate_field_load_label(1);
 	const LLVMTypeRef ftype = get_type(type);
-	
+
 	const LLVMValueRef value = LLVMBuildLoad2(llvm, ftype, field, fload_name);
 
 	return value;
@@ -389,7 +394,7 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 		{
 			return generate_field_literal(module, llvm, node);
 		}
-	
+
 		default:
 		{
 			break;
@@ -403,9 +408,9 @@ static void generate_field(const LLVMModuleRef module, const LLVMBuilderRef llvm
 {
 	LLVMTypeRef type = get_type(node->field.type);
 	LLVMValueRef field = LLVMBuildAlloca(llvm, type, node->field.name);
-	
+
 	add_field_to_table(field, node->field.name, node->field.type);
-	
+
 	if (node->field.value == NULL)
 	{
 		return;
@@ -442,7 +447,7 @@ static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilde
 void generate_module_llvm(IRNode* init) // adicionar o sistema de modulos depois
 {
 	setup_field_table();
-	
+
 	const LLVMModuleRef module = LLVMModuleCreateWithName("test_module"); // implementar o bgl certo nisso
 	const LLVMBuilderRef builder = LLVMCreateBuilder();
 
