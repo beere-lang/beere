@@ -3,7 +3,7 @@
 #include "dominator-tree.h"
 #include "../control-flow.h"
 
-size_t length = 0;
+int length = 0;
 
 int* bindex = NULL;
 int* semi = NULL;
@@ -17,7 +17,7 @@ CFBlock** blocks = NULL;
 
 #define STRICT 1
 
-static void setup_data(size_t size)
+static void setup_data(int size)
 {
 	length = 0;
 
@@ -45,7 +45,7 @@ static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 		return;
 	}
 
-	size_t size = block->successors->length;
+	int size = block->successors->length;
 
 	block->visited = 1;
 
@@ -62,7 +62,7 @@ static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 
 	DTBlock* dtb = create_dt_block(block);
 
-	for (size_t i = 0; i < size; i++)
+	for (int i = 0; i < size; i++)
 	{
 		CFBlock* curr = block->successors->elements[i];
 
@@ -77,7 +77,7 @@ static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 
 static int get_block_number(CFBlock* block)
 {
-	for (size_t i = 0; i < length; i++)
+	for (int i = 0; i < length; i++)
 	{
 		CFBlock* curr = blocks[i];
 
@@ -99,7 +99,7 @@ static void get_semi_dominators()
 	for (int i = length - 1; i >= 2; i--)
 	{
 		CFBlock* block = blocks[i];
-		const size_t s = block->predecessors->length;
+		const int s = block->predecessors->length;
 
 		for (int j = 0; j < s; j++)
 		{
@@ -171,7 +171,7 @@ static void build_dominator_tree()
 
 }
 
-CFBlock* generate_dominator_tree(CFBlock* entry, size_t size)
+CFBlock* generate_dominator_tree(CFBlock* entry, int size)
 {
 	setup_data(size);
 

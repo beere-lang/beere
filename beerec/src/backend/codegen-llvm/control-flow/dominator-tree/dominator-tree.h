@@ -13,6 +13,6 @@ struct DTBlock
 	DList* childs;
 };
 
-CFBlock* generate_dominator_tree(CFBlock* entry, size_t size);
+CFBlock* generate_dominator_tree(CFBlock* entry, int size);
 
 #endif
