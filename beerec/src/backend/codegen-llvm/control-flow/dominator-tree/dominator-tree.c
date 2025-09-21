@@ -1,139 +1,135 @@
-/**
- * TODO: iterar por todas as CFPathBlock e ver se o numero de repetiçoes de cada dominator é igual ao numero de paths possiveis,
- * caso seja igual, mantém o dominator (ignorar o proprio Block)
- */
-
 #include <stdlib.h>
 
 #include "dominator-tree.h"
+#include "../control-flow.h"
 
-static const int DT_BLOCK_LIST_DEFAULT_START_CAPACITY = 4;
-static const int PATH_BLOCK_LIST_DEFAULT_START_CAPACITY = 4;
+size_t length = 0;
 
-static DList* paths_list = NULL;
+int* bindex = NULL;
+int* semi = NULL;
 
-static void generate_dominator_childs(DTBlock* parent);
+CFBlock** bparents = NULL;
+CFBlock** blocks = NULL;
 
-static CFPathBlock* setup_path_block(CFBlock* block)
+static void setup_data(size_t size)
 {
-	CFPathBlock* path_block = malloc(sizeof(CFPathBlock));
+	length = 0;
 
-	path_block->paths = 0;
-	path_block->block = block;
-
-	return path_block;
+	bindex = malloc(sizeof(int) * size);
+	bparents = malloc(sizeof(CFBlock*) * size);
+	blocks = malloc(sizeof(CFBlock*) * size);
+	semi = malloc(sizeof(CFBlock*) * size);
 }
 
-static void setup_global_list()
+static DTBlock* create_dt_block(CFBlock* block)
 {
-	paths_list = create_list(PATH_BLOCK_LIST_DEFAULT_START_CAPACITY);
+	DTBlock* dtb = malloc(sizeof(DTBlock));
+
+	dtb->block = block;
+	dtb->childs = create_list(4);
+
+	return dtb;
 }
 
-CFPathBlock* find_cf_path_block(DList* cf_list, CFBlock* block)
+static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 {
-	if (cf_list == NULL)
+	if (block == NULL)
 	{
-		return NULL;
+		return;
 	}
-	
-	int length = cf_list->length;
 
-	for (int i = 0; i < length; i++)
+	size_t size = block->successors->length;
+
+	block->visited = 1;
+
+	bparents[length] = parent;
+	blocks[length] = block;
+
+	const int index = (length == 0) ? 0 : bindex[length - 1] + 1;
+
+	bindex[length] = index;
+
+	semi[length] = index;
+
+	length++;
+
+	DTBlock* dtb = create_dt_block(block);
+
+	for (size_t i = 0; i < size; i++)
 	{
-		CFPathBlock* curr = cf_list->elements[i];
+		CFBlock* curr = block->successors->elements[i];
 
-		if (curr == NULL)
+		if (curr->visited)
 		{
 			continue;
 		}
 
-		if (curr->block != block)
+		dfs_control_flow(curr, block);
+	}
+}
+
+static int get_block_number(CFBlock* block)
+{
+	for (size_t i = 0; i < length; i++)
+	{
+		CFBlock* curr = blocks[i];
+
+		if (block != curr)
 		{
 			continue;
 		}
 
-		return curr;
+		return bindex[i];
 	}
 
-	return NULL;
+	return -1;
 }
 
-static DTBlock* setup_dt_block(CFBlock* block)
+static void get_semi_dominators()
 {
-	DTBlock* dt_block = malloc(sizeof(DTBlock));
-	
-	dt_block->block = block;
-	dt_block->dominators = create_list(DT_BLOCK_LIST_DEFAULT_START_CAPACITY);
-
-	return dt_block;
-}
-
-static void generate_dominator_child(DTBlock* parent, CFBlock* block, CFPathBlock* self)
-{
-	DTBlock* dt_block = setup_dt_block(block);
-
-	int length = parent->dominators->length;
-
-	for (int i = 0; i < length; i++)
+	for (int i = length - 1; i >= 2; i--)
 	{
-		DTBlock* dblock = parent->dominators->elements[i];
+		CFBlock* block = blocks[i];
+		const size_t s = block->predecessors->length;
 
-		if (dblock == NULL)
+		for (int j = 0; j < s; j++)
 		{
-			continue;
+			CFBlock* curr = block->predecessors->elements[j];
+
+			int index = get_block_number(curr);
+
+			if (index < i && index < semi[i])
+			{
+				semi[i] = index;
+			}
+			else if (index >= i && semi[index] < semi[i])
+			{
+				semi[i] = semi[index];
+			}
 		}
-
-		add_element_to_list(dt_block->dominators, dblock);
-	}
-	
-	if (self == NULL)
-	{
-		add_element_to_list(dt_block->dominators, dt_block);
-		
-		self = setup_path_block(block);
-		add_element_to_list(paths_list, self);
-	}
-	
-	self->paths++;
-	
-	generate_dominator_childs(dt_block);
-}
-
-static void generate_dominator_childs(DTBlock* parent)
-{
-	DList* childs = parent->block->successors;
-	int length = childs->length;
-
-	for (int i = 0; i < length; i++)
-	{
-		CFBlock* block = childs->elements[i];
-
-		if (block == NULL)
-		{
-			continue;
-		}
-
-		CFPathBlock* self = find_cf_path_block(paths_list, block);
-
-		generate_dominator_child(parent, block, self);
 	}
 }
 
-static void filter_dominators()
+static void get_real_dominators()
 {
 
 }
 
-DTBlock* setup_generate_dominator_tree(CFBlock* block)
+static void build_dominator_tree()
 {
-	setup_global_list();
-	
-	DTBlock* dt_block = setup_dt_block(block);
-	add_element_to_list(dt_block->dominators, dt_block);
 
-	generate_dominator_childs(dt_block);
+}
 
-	
+CFBlock* generate_dominator_tree(CFBlock* entry, size_t size)
+{
+	setup_data(size);
 
-	return dt_block;
+	dfs_control_flow(entry, NULL);
+
+	get_semi_dominators();
+	get_real_dominators();
+
+	build_dominator_tree();
+
+	return entry;
 }

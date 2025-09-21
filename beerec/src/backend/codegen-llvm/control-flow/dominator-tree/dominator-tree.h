@@ -4,20 +4,15 @@
 #include "../control-flow.h"
 
 typedef struct DTBlock DTBlock;
-typedef struct CFPathBlock CFPathBlock;
 
 struct DTBlock
 {
 	CFBlock* block;
-	DList* dominators;
+
+	CFBlock* parent;
+	DList* childs;
 };
 
-struct CFPathBlock
-{
-	int paths;
-	CFBlock* block;
-};
-
-DTBlock* setup_generate_dominator_tree(CFBlock* init);
+CFBlock* generate_dominator_tree(CFBlock* entry, size_t size);
 
 #endif

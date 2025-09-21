@@ -19,7 +19,7 @@ CFBlock* find_cf_block(IRNode* block)
 	{
 		return NULL;
 	}
-	
+
 	int length = cf_blocks->length;
 
 	for (int i = 0; i < length; i++)
@@ -64,7 +64,7 @@ IRNode* get_tail(IRNode* block)
 IRNode* find_next_block(IRNodeList* blocks, IRNode* block)
 {
 	int length = blocks->length;
-	
+
 	for (int i = 0; i < length; i++)
 	{
 		IRNode* curr = blocks->elements[i];
@@ -97,7 +97,7 @@ CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* 
 		println("Block is NULL...");
 		exit(1);
 	}
-	
+
 	IRNode* tail = get_tail(block);
 
 	if (tail == NULL)
@@ -109,7 +109,7 @@ CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* 
 	int already_analyzed = 0;
 
 	CFBlock* cf_block = find_cf_block(block);
-	
+
 	if (cf_block == NULL)
 	{
 		cf_block = malloc(sizeof(CFBlock));
@@ -144,7 +144,7 @@ CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* 
 	{
 		CFBlock* thenb = generate_control_flow(func_blocks, tail->branch.then_block, cf_block);
 		CFBlock* elseb = generate_control_flow(func_blocks, tail->branch.else_block, cf_block);
-		
+
 		add_element_to_list(cf_block->successors, thenb);
 		add_element_to_list(cf_block->successors, elseb);
 	}

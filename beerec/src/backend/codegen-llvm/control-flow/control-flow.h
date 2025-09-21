@@ -9,9 +9,11 @@ typedef struct CFBlock CFBlock;
 struct CFBlock
 {
 	IRNode* block;
-	
+
 	DList* predecessors;
 	DList* successors;
+
+	int visited;
 };
 
 CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* predecessor);
