@@ -44,7 +44,7 @@ CFBlock** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int*
 		}
 
 		/**
-		 * TODO: adicionar o segundo loop que vai checar
+		 * TODO: adicionar o segundo loop que vai checar fronteiras indiretas
 		 */
 	}
 
