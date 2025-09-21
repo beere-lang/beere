@@ -44,21 +44,7 @@ CFBlock* find_cf_block(IRNode* block)
 
 IRNode* get_tail(IRNode* block)
 {
-	int length =  block->block.nodes->length;
-
-	for (int i = 0; i < length; i++)
-	{
-		IRNode* it = block->block.nodes->elements[i];
-
-		if (it == NULL || i < length - 1)
-		{
-			continue;
-		}
-
-		return it;
-	}
-
-	return NULL;
+	return block->block.nodes->elements[block->block.nodes->length - 1];
 }
 
 IRNode* find_next_block(IRNodeList* blocks, IRNode* block)

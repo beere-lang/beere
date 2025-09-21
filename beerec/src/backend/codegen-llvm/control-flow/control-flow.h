@@ -14,6 +14,8 @@ struct CFBlock
 	DList* successors;
 
 	int visited;
+
+	int dt_index;
 };
 
 CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* predecessor);

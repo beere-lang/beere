@@ -41,23 +41,6 @@ static DTBlock* create_dt_block(CFBlock* block)
 	return dtb;
 }
 
-static int get_block_number(CFBlock* block)
-{
-	for (int i = 0; i < length; i++)
-	{
-		CFBlock* curr = blocks[i];
-
-		if (block != curr)
-		{
-			continue;
-		}
-
-		return i;
-	}
-
-	return -1;
-}
-
 static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 {
 	if (block == NULL)
@@ -65,12 +48,14 @@ static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 		return;
 	}
 
-	int size = block->successors->length;
+	const int size = block->successors->length;
 
 	block->visited = 1;
 
 	bparents[length] = parent;
 	blocks[length] = block;
+
+	block->dt_index = length;
 
 	semi[length] = length;
 
@@ -100,7 +85,7 @@ static void get_semi_dominators()
 		for (int j = 0; j < block->predecessors->length; j++)
 		{
 			CFBlock* pred = block->predecessors->elements[j];
-			int index = get_block_number(pred);
+			int index = pred->dt_index;
 
 			if (index < semi[i])
 			{
@@ -114,28 +99,20 @@ static CFBlock* nca_blocks(CFBlock* first, CFBlock* second)
 {
 	DList* visited = create_list(NCA_LIST_DEFAULT_START_CAPACITY);
 
-	while (first != NULL && second != NULL)
+	while (first != NULL)
 	{
+		add_element_to_list(visited, first);
+		first = bparents[first->dt_index];
+	}
 
-		if (first != NULL)
+	while (second != NULL)
+	{
+		if (contains_element(visited, second))
 		{
-			if (contains_element(visited, first))
-			{
-				return first;
-			}
-
-			first = bparents[get_block_number(first)];
+			return second;
 		}
 
-		if (second != NULL)
-		{
-			if (contains_element(visited, second))
-			{
-				return second;
-			}
-
-			second = bparents[get_block_number(second)];
-		}
+		second = bparents[second->dt_index];
 	}
 
 	return NULL;
@@ -158,7 +135,7 @@ static void get_real_dominators()
 				continue;
 			}
 
-			const int index = get_block_number(idm);
+			const int index = idm->dt_index;
 
 			if (idom[i] < index && idom[i] != semi[i])
 			{
@@ -172,7 +149,7 @@ static void get_real_dominators()
 
 static DTBlock* link_dominator(CFBlock* block, DTBlock* dominator)
 {
-	const int index = get_block_number(block);
+	const int index = block->dt_index;
 	DTBlock* dt = create_dt_block(block);
 
 	dt->dominator = dominator;
