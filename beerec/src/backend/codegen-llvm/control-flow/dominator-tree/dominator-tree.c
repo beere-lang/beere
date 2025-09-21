@@ -3,17 +3,13 @@
 #include "dominator-tree.h"
 #include "../control-flow.h"
 
-#define STRICT 1
 #define DT_BLOCKS_LIST_DEFAULT_START_CAPACITY 4
+#define NCA_LIST_DEFAULT_START_CAPACITY 4
 
 int length = 0;
 
-int* bindex = NULL;
 int* semi = NULL;
 int* idom = NULL;
-
-int* ancestor = NULL;
-int* label = NULL;
 
 CFBlock** bparents = NULL;
 CFBlock** blocks = NULL;
@@ -22,11 +18,16 @@ static void setup_data(int size)
 {
 	length = 0;
 
-	bindex = malloc(sizeof(int) * size);
 	bparents = malloc(sizeof(CFBlock*) * size);
 	blocks = malloc(sizeof(CFBlock*) * size);
-	semi = malloc(sizeof(CFBlock*) * size);
-	idom = malloc(sizeof(CFBlock*) * size);
+	semi = malloc(sizeof(int) * size);
+	idom = malloc(sizeof(int) * size);
+
+	for (int i = 0; i < size; i++)
+	{
+		idom[i] = 0;
+		semi[i] = i;
+	}
 }
 
 static DTBlock* create_dt_block(CFBlock* block)
@@ -50,7 +51,7 @@ static int get_block_number(CFBlock* block)
 			continue;
 		}
 
-		return bindex[i];
+		return i;
 	}
 
 	return -1;
@@ -70,11 +71,7 @@ static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 	bparents[length] = parent;
 	blocks[length] = block;
 
-	const int index = (length == 0) ? 0 : bindex[length - 1] + 1;
-
-	bindex[length] = index;
-
-	semi[length] = index;
+	semi[length] = length;
 
 	length++;
 
@@ -95,81 +92,86 @@ static void dfs_control_flow(CFBlock* block, CFBlock* parent)
 
 static void get_semi_dominators()
 {
-	semi[0] = 0;
-
-	for (int i = length - 1; i >= 2; i--)
+	for (int i = length - 1; i >= 1; i--)
 	{
 		CFBlock* block = blocks[i];
-		const int s = block->predecessors->length;
 
-		for (int j = 0; j < s; j++)
+		for (int j = 0; j < block->predecessors->length; j++)
 		{
-			CFBlock* curr = block->predecessors->elements[j];
+			CFBlock* pred = block->predecessors->elements[j];
+			int index = get_block_number(pred);
 
-			int index = get_block_number(curr);
-
-			if (index < i && index < semi[i])
+			if (index < semi[i])
 			{
 				semi[i] = index;
 			}
-			else if (index >= i && semi[index] < semi[i])
-			{
-				semi[i] = semi[index];
-			}
 		}
 	}
 }
 
-/**
- * TODO: terminar esta porrinha (obrigado algoritmos por fazer meu cerebro derreter)
- */
-static void eval(int number)
+static CFBlock* nca_blocks(CFBlock* first, CFBlock* second)
 {
+	DList* visited = create_list(NCA_LIST_DEFAULT_START_CAPACITY);
 
+	while (first != NULL && second != NULL)
+	{
+
+		if (first != NULL)
+		{
+			if (contains_element(visited, first))
+			{
+				return first;
+			}
+
+			first = bparents[get_block_number(first)];
+		}
+
+		if (second != NULL)
+		{
+			if (contains_element(visited, second))
+			{
+				return second;
+			}
+
+			second = bparents[get_block_number(second)];
+		}
+	}
+
+	return NULL;
 }
 
-/**
- * TODO: implementar o 'eval' nessa porra, pro strict funcionar direito
- */
-static void get_real_dominators(int strict)
+static void get_real_dominators()
 {
-	idom[0] = 0;
-
-	for (int i = 1; i < length; i++)
+	for (int i = length - 1; i >= 1; i--)
 	{
 		CFBlock* block = blocks[i];
-		int parent = get_block_number(bparents[i]);
+		idom[i] = semi[i];
 
-		if (semi[i] == semi[parent])
+		for (int j = 0; j < block->predecessors->length; j++)
 		{
-			idom[i] = get_block_number(bparents[i]);
-		}
-		else
-		{
-			idom[i] = idom[semi[i]];
-		}
-	}
+			CFBlock* pred = block->predecessors->elements[j];
+			CFBlock* idm = nca_blocks(block, pred);
 
-	if (!strict)
-	{
-		return;
-	}
+			if (idm == NULL)
+			{
+				continue;
+			}
 
-	for (int i = 1; i < length; i++)
-	{
-		while (idom[i] != idom[idom[i]])
-		{
-			idom[i] = idom[idom[i]];
+			const int index = get_block_number(idm);
+
+			if (idom[i] < index && idom[i] != semi[i])
+			{
+				continue;
+			}
+
+			idom[i] = index;
 		}
 	}
 }
 
-/**
- * TODO: depois de terminar os dominators, fazer isso e depois terminar esse projeto (:pray:)
- */
-static void build_dominator_tree()
+static CFBlock* build_dominator_tree()
 {
-
+	return NULL;
 }
 
 CFBlock* generate_dominator_tree(CFBlock* entry, int size)
@@ -179,9 +181,7 @@ CFBlock* generate_dominator_tree(CFBlock* entry, int size)
 	dfs_control_flow(entry, NULL);
 
 	get_semi_dominators();
-	get_real_dominators(STRICT);
+	get_real_dominators();
 
-	build_dominator_tree();
-
-	return entry;
+	return build_dominator_tree();
 }
