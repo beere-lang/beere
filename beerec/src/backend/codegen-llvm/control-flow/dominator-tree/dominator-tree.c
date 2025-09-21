@@ -149,7 +149,7 @@ static void get_real_dominators(int strict)
 		}
 	}
 
-	if (strict)
+	if (!strict)
 	{
 		return;
 	}
