@@ -1,4 +1,24 @@
-fn main(): void {
-    let a: float = 0.0F
-    a /= 10.0F
+import beere.lib.std as std
+
+public class Main {
+	private static count: int = 0
+
+	public static fn increment(updated: bool): void {
+		count++
+	}
+
+	public static fn get(): int {
+		return count
+	}
+
+	public static fn reset(): void {
+		count = 0
+	}
+}
+
+public fn main(): void {
+	std.println("Hello, World!")
+
+	let main: Main = new Main()
+	let x: int = main.increment()
 }
