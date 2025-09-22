@@ -5,6 +5,7 @@
 #include "../../utils/logger/logger.h"
 
 #define ENTRY_BLOCK_LABEL ".entry"
+#define BLOCK_START_INSTRUCTIONS_CAPACITY 16
 
 static IRNode* curr_func = NULL;
 static IRNode* curr_block = NULL;
@@ -92,6 +93,9 @@ static IRNode* generate_while(ASTNode* node)
 
 // ==---------------------------------- Core --------------------------------------== \\
 
+/**
+ * TODO: terminar de implementar todas as possiveis nodes.
+ */
 static IRNode* generate_ir_node(ASTNode* node)
 {
 	switch (node->type)
@@ -160,6 +164,9 @@ static IRNode* generate_operation(ASTNode* node)
 	return operation;
 }
 
+/**
+ * TODO: terminar de implementar todas as possiveis nodes.
+ */
 static IRNode* generate_expression(ASTNode* node)
 {
 	switch (node->type)
@@ -335,7 +342,7 @@ static IRNode* create_block(const char* label, const int add_to_func)
 {
 	IRNode* block = create_ir_node(IR_NODE_BLOCK);
 
-	block->block.nodes = create_list(8);
+	block->block.nodes = create_list(BLOCK_START_INSTRUCTIONS_CAPACITY);
 	block->block.label = _strdup(label);
 
 	if (add_to_func)
