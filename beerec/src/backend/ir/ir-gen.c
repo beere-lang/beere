@@ -73,7 +73,7 @@ static IRNode* generate_while(ASTNode* node)
 
 	curr_block = loopb;
 
-	generate_instructions_in_block(node->while_loop.then_block->block.statements->head, loopb);
+	generate_instructions_in_block(node->while_loop.then_block->block.statements->head, curr_block);
 
 	branch->branch.condition = generate_expression(node->while_loop.condition);
 	branch->branch.then_block = loopb;
