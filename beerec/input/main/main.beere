@@ -1,28 +1,26 @@
-import beere.lib.std as std
+import "../utils/logger/logger.beere" as logger
 
 public class Main {
 	private count: int = 0
 
 	public fn increment(): void {
-		count++
+		this.count++
 	}
 
 	public fn get(): int {
-		return count
+		return this.count
 	}
 
 	public fn reset(): void {
-		count = 0
+		this.count = 0
 	}
 }
 
-public fn main(): void {
-	std.println("Hello, World!")
-
+private fn main(): void {
 	let main: Main = new Main()
 	main.increment()
 
 	let x: int = main.get()
 
-	std.printlnf("Count: {}", x)
+	logger.info("Count: {}", x)
 }
