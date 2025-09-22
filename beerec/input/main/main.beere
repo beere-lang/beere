@@ -3,7 +3,7 @@ import beere.lib.std as std
 public class Main {
 	private static count: int = 0
 
-	public static fn increment(updated: bool): void {
+	public static fn increment(): void {
 		count++
 	}
 
