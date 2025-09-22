@@ -20,5 +20,9 @@ public fn main(): void {
 	std.println("Hello, World!")
 
 	let main: Main = new Main()
-	let x: int = main.increment()
+	main.increment()
+
+	let x: int = main.get()
+
+	std.printlnf("Count: {}", x)
 }
