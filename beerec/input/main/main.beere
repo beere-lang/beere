@@ -1,17 +1,17 @@
 import beere.lib.std as std
 
 public class Main {
-	private static count: int = 0
+	private count: int = 0
 
-	public static fn increment(): void {
+	public fn increment(): void {
 		count++
 	}
 
-	public static fn get(): int {
+	public fn get(): int {
 		return count
 	}
 
-	public static fn reset(): void {
+	public fn reset(): void {
 		count = 0
 	}
 }
