@@ -10,6 +10,9 @@
 static IRNode* curr_func = NULL;
 static IRNode* curr_block = NULL;
 
+static int whiles_count = 0;
+
+static Type* copy_type(Type* type);
 static int count_linked_list(ASTNode* head);
 static IRNode* generate_ir_node(ASTNode* node);
 static IRNode* generate_expression(ASTNode* node);
@@ -30,7 +33,7 @@ static IRNode* generate_func(ASTNode* node)
 
 	func->func.name = _strdup(buff);
 
-	func->func.type = node->function.return_type;
+	func->func.type = copy_type(node->function.return_type);
 
 	const int length = count_linked_list(node->function.params->head);
 
@@ -63,18 +66,24 @@ static IRNode* generate_ret(ASTNode* node)
  */
 static IRNode* generate_while(ASTNode* node)
 {
-	IRNode* loopb = create_block(NULL, 1);
+	char buff[64];
+	snprintf(buff, 64, ".while_body_%d", whiles_count);
+
+	IRNode* loopb = create_block(_strdup(buff), 1);
 
 	IRNode* go_to = create_ir_node(IR_NODE_GOTO);
 	go_to->go_to.block = loopb;
 
 	add_element_to_list(curr_block->block.nodes, go_to);
 
-	IRNode* postb = create_block(NULL, 0);
+	snprintf(buff, 64, ".while_post_%d", whiles_count);
+	IRNode* postb = create_block(_strdup(buff), 0);
 
 	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
 
 	curr_block = loopb;
+
+	whiles_count++;
 
 	generate_instructions_in_block(node->while_loop.then_block->block.statements->head, curr_block);
 
@@ -140,9 +149,17 @@ IRNode** generate_ir_nodes(ASTNode** nodes, const int length)
 static IRNode* generate_literal(ASTNode* node)
 {
 	IRNode* literal = create_ir_node(IR_NODE_LITERAL);
-	literal->literal.type = node->literal.literal_type;
+	literal->literal.type = copy_type(node->literal.literal_type);
 
-	literal->literal.string_val = node->literal.string_value;
+	if (literal->literal.string_val != NULL)
+	{
+		literal->literal.string_val = _strdup(node->literal.string_value);
+	}
+	else
+	{
+		literal->literal.string_val = NULL;
+	}
+
 	literal->literal.double_val = node->literal.double_value;
 	literal->literal.float_val  = node->literal.float_value;
 	literal->literal.char_val   = node->literal.char_value;
@@ -164,6 +181,18 @@ static IRNode* generate_operation(ASTNode* node)
 	return operation;
 }
 
+static IRNode* generate_field(ASTNode* node)
+{
+	IRNode* field = create_ir_node(IR_NODE_FIELD);
+
+	field->field.name = _strdup(node->declare.identifier);
+	field->field.type = copy_type(node->declare.var_type);
+
+	field->field.value = generate_expression(node->declare.default_value);
+
+	return field;
+}
+
 /**
  * TODO: terminar de implementar todas as possiveis nodes.
  */
@@ -181,6 +210,11 @@ static IRNode* generate_expression(ASTNode* node)
 			return generate_operation(node);
 		}
 
+		case NODE_FIELD:
+		{
+			return generate_field(node);
+		}
+
 		default:
 		{
 			println("Node with type id: %d, not implemented (expressions)...", node->type);
@@ -190,6 +224,21 @@ static IRNode* generate_expression(ASTNode* node)
 }
 
 // ==---------------------------------- Utils --------------------------------------== \\
+
+static Type* copy_type(Type* type)
+{
+	Type* copy = malloc(sizeof(Type));
+
+	copy->type = type->type;
+	copy->class_name = (type->class_name != NULL) ? _strdup(type->class_name) : NULL;
+
+	if (type->base != NULL)
+	{
+		copy->base = copy_type(type->base);
+	}
+
+	return copy;
+}
 
 static int count_linked_list(ASTNode* head)
 {
@@ -351,4 +400,166 @@ static IRNode* create_block(const char* label, const int add_to_func)
 	}
 
 	return block;
+}
+
+// ==---------------------------------- Memory Management --------------------------------------== \\
+
+static void free_type(Type* type)
+{
+	if (type->class_name != NULL)
+	{
+		free(type->class_name);
+	}
+
+	if (type->base == NULL)
+	{
+		free_type(type->base);
+		type->base = NULL;
+	}
+
+	free(type);
+}
+
+/**
+ * TODO: adicionar mais nodes conforme for adicionando.
+ */
+static void free_node(IRNode* node)
+{
+	switch (node->type)
+	{
+		case IR_NODE_FUNC:
+		{
+			free(node->func.name);
+			free(node->func.name);
+
+			free_type(node->func.type);
+
+			for (int i = 0; i < node->func.params_size; i++)
+			{
+				IRNode* param = node->func.params[i];
+
+				free_node(param);
+			}
+
+			const int length = node->func.blocks->length;
+
+			for (int i = 0; i < length; i++)
+			{
+				IRNode* block = node->func.blocks->elements[i];
+
+				if (block == NULL)
+				{
+					continue;
+				}
+
+				free_node(block);
+				node->func.blocks->elements[i] = NULL;
+			}
+
+			free(node->func.blocks->elements);
+			free(node->func.blocks);
+
+			break;
+		}
+
+		case IR_NODE_BLOCK:
+		{
+			if (node->block.label != NULL)
+			{
+				free(node->block.label);
+			}
+
+			const int length = node->block.nodes->length;
+
+			for (int i = 0; i < length; i++)
+			{
+				IRNode* block = node->block.nodes->elements[i];
+
+				if (block == NULL)
+				{
+					continue;
+				}
+
+				free_node(block);
+				node->block.nodes->elements[i] = NULL;
+			}
+
+			free(node->block.nodes->elements);
+			free(node->block.nodes);
+
+			break;
+		}
+
+		case IR_NODE_FIELD:
+		{
+			free(node->field.name);
+			free_type(node->field.type);
+
+			free_node(node->field.value);
+
+			break;
+		}
+
+		case IR_NODE_RET:
+		{
+			free_node(node->ret.value);
+
+			break;
+		}
+
+		case IR_NODE_BRANCH:
+		{
+			free_node(node->branch.condition);
+
+			//free_node(node->branch.then_block); ALERT: o bloco deve ser free na propria função.
+			//free_node(node->branch.else_block); ALERT: o bloco deve ser free na propria função.
+
+			break;
+		}
+
+		case IR_NODE_GOTO:
+		{
+			//free_node(node->go_to.block); ALERT: o bloco deve ser free na propria função.
+
+			break;
+		}
+
+		case IR_NODE_OPERATION:
+		{
+			free_node(node->operation.left);
+			free_node(node->operation.right);
+
+			break;
+		}
+
+		case IR_NODE_LITERAL:
+		{
+			free_type(node->literal.type);
+
+			if (node->literal.string_val != NULL)
+			{
+				free(node->literal.string_val);
+			}
+
+			break;
+		}
+
+		default:
+		{
+			println("Invalid node while freeing with type id: %d...", node->type);
+			exit(1);
+		}
+	}
+
+	free(node);
+}
+
+void free_nodes(IRNode** nodes, int length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		IRNode* node = nodes[i];
+
+		free_node(node);
+	}
 }

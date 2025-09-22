@@ -6,13 +6,13 @@
 DList* create_list(const size_t init_capacity)
 {
 	DList* list = malloc(sizeof(DList));
-	
+
 	if (list == NULL)
 	{
 		println("Failed to alloc memory for list...");
 		exit(1);
 	}
-	
+
 	list->capacity = init_capacity;
 	list->length = 0;
 
@@ -34,13 +34,13 @@ void add_element_to_list(DList* list, void* element)
 		println("List is NULL...");
 		exit(1);
 	}
-	
+
 	if (list->length >= list->capacity)
 	{
 		list->capacity *= 2;
 		list->elements = realloc(list->elements, 8 * list->capacity);
 	}
-	
+
 	list->elements[list->length++] = element;
 }
 
@@ -88,4 +88,22 @@ int contains_element(DList* list, void* element)
 	}
 
 	return 0;
+}
+
+void free_list(DList* list)
+{
+	for (int i = 0; i < list->length; i++)
+	{
+		void* element = list->elements[i];
+
+		if (element == NULL)
+		{
+			continue;
+		}
+
+		free(element);
+		list->elements[i] = NULL;
+	}
+
+	free(list);
 }
