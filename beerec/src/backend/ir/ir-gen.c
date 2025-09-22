@@ -14,6 +14,7 @@ static IRNode* generate_ir_node(ASTNode* node);
 static IRNode* generate_expression(ASTNode* node);
 static void generate_func_instructions(ASTNode* head);
 static IROperationType convert_op_type(const TokenType type);
+static IRNode* create_block(const char* label, const int add_to_func);
 static void generate_instructions_in_block(ASTNode* head, IRNode* block);
 static void setup_func_params(IRNode* func, ASTNode* head, const int length);
 
@@ -37,12 +38,10 @@ static IRNode* generate_func(ASTNode* node)
 
 	setup_func_params(func, node->function.params->head, length);
 
-	IRNode* entry = create_ir_node(IR_NODE_BLOCK);
-
-	entry->block.nodes = create_list(16);
-	entry->block.label = _strdup(ENTRY_BLOCK_LABEL);
-
 	curr_func = func;
+
+	IRNode* entry = create_block(ENTRY_BLOCK_LABEL, 1);
+
 	curr_block = entry;
 
 	generate_func_instructions(node->function.block->block.statements->head);
@@ -58,16 +57,19 @@ static IRNode* generate_ret(ASTNode* node)
 	return ret;
 }
 
+/**
+ * TODO: implementar labels nisso.
+ */
 static IRNode* generate_while(ASTNode* node)
 {
-	IRNode* loopb = create_ir_node(IR_NODE_BLOCK);
+	IRNode* loopb = create_block(NULL, 1);
 
 	IRNode* go_to = create_ir_node(IR_NODE_GOTO);
 	go_to->go_to.block = loopb;
 
 	add_element_to_list(curr_block->block.nodes, go_to);
 
-	IRNode* postb = create_ir_node(IR_NODE_BLOCK);
+	IRNode* postb = create_block(NULL, 0);
 
 	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
 
@@ -80,6 +82,8 @@ static IRNode* generate_while(ASTNode* node)
 	branch->branch.else_block = postb;
 
 	add_element_to_list(curr_block->block.nodes, branch);
+
+	add_element_to_list(curr_func->func.blocks, postb);
 
 	curr_block = postb;
 
@@ -325,4 +329,19 @@ static IROperationType convert_op_type(const TokenType type)
 			exit(1);
 		}
 	}
+}
+
+static IRNode* create_block(const char* label, const int add_to_func)
+{
+	IRNode* block = create_ir_node(IR_NODE_BLOCK);
+
+	block->block.nodes = create_list(8);
+	block->block.label = _strdup(label);
+
+	if (add_to_func)
+	{
+		add_element_to_list(curr_func->func.blocks, block);
+	}
+
+	return block;
 }
