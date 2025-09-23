@@ -5,9 +5,9 @@
 
 typedef struct
 {
-	char* buffer;
+	char*  buffer;
 	size_t memory_size;
-	int length;
+	int    length;
 }
 StringBuilder;
 
