@@ -42,12 +42,34 @@ CFBlock* find_cf_block(IRNode* block)
 	return NULL;
 }
 
-IRNode* get_tail(IRNode* block)
+void* get_flow_cases(IRNode* block)
 {
-	return block->block.nodes->elements[block->block.nodes->length - 1];
+	IRNode** list = malloc(sizeof(IRNode*) * block->block.nodes->length);
+
+	const int length = block->block.nodes->length;
+	int count = 0;
+
+	for (int i = 0; i < length; i++)
+	{
+		IRNode* curr = block->block.nodes->elements[i];
+
+		if (curr->type != IR_NODE_GOTO || curr->type != IR_NODE_BRANCH || IR_NODE_RET)
+		{
+			continue;
+		}
+
+		list[count++] = curr;
+	}
+
+	void* strct = malloc(sizeof(int) + sizeof(IRNode**));
+
+	((int*) strct)[0] = count;
+	*((IRNode***) (strct + 8)) = list;
+
+	return strct;
 }
 
-IRNode* find_next_block(IRNodeList* blocks, IRNode* block)
+IRNode* find_next_block(DList* blocks, IRNode* block)
 {
 	int length = blocks->length;
 
@@ -76,19 +98,11 @@ IRNode* find_next_block(IRNodeList* blocks, IRNode* block)
 	return NULL;
 }
 
-CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* predecessor)
+CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* predecessor)
 {
 	if (block == NULL)
 	{
 		println("Block is NULL...");
-		exit(1);
-	}
-
-	IRNode* tail = get_tail(block);
-
-	if (tail == NULL)
-	{
-		println("Failed to find block tail...");
 		exit(1);
 	}
 
@@ -121,20 +135,55 @@ CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* 
 		return cf_block;
 	}
 
-	if (tail->type == IR_NODE_GOTO)
-	{
-		CFBlock* successor = generate_control_flow(func_blocks, tail->go_to.block, cf_block);
-		add_element_to_list(cf_block->successors, successor);
-	}
-	else if (tail->type == IR_NODE_BRANCH)
-	{
-		CFBlock* thenb = generate_control_flow(func_blocks, tail->branch.then_block, cf_block);
-		CFBlock* elseb = generate_control_flow(func_blocks, tail->branch.else_block, cf_block);
+	void* flow_cases =  get_flow_cases(block);
 
-		add_element_to_list(cf_block->successors, thenb);
-		add_element_to_list(cf_block->successors, elseb);
+	IRNode** jmps = flow_cases + sizeof(int);
+	const int length = ((int*) flow_cases)[0];
+
+	int next_block = 1;
+
+	for (int i = 0; i < length; i++)
+	{
+		IRNode* jmp = jmps[i];
+
+		switch (jmp->type)
+		{
+			case IR_NODE_GOTO:
+			{
+				CFBlock* successor = generate_control_flow(func_blocks, jmp->go_to.block, cf_block);
+				add_element_to_list(cf_block->successors, successor);
+
+				next_block = 0;
+
+				break;
+			}
+
+			case IR_NODE_BRANCH:
+			{
+				CFBlock* thenb = generate_control_flow(func_blocks, jmp->branch.then_block, cf_block);
+				CFBlock* elseb = generate_control_flow(func_blocks, jmp->branch.else_block, cf_block);
+
+				add_element_to_list(cf_block->successors, thenb);
+				add_element_to_list(cf_block->successors, elseb);
+
+				break;
+			}
+
+			case IR_NODE_RET:
+			{
+				next_block = 0;
+
+				break;
+			}
+
+			default:
+			{
+				exit(1);
+			}
+		}
 	}
-	else if (tail->type != IR_NODE_RET)
+
+	if (next_block)
 	{
 		IRNode* next_block = find_next_block(func_blocks, block);
 		CFBlock* successor = generate_control_flow(func_blocks, next_block, cf_block);

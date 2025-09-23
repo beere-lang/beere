@@ -37,7 +37,7 @@ static int is_end(const Lexer* lexer)
 	return 0;
 }
 
-static int is_alpha(const char c) 
+static int is_alpha(const char c)
 {
 	if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
 	{
@@ -327,9 +327,9 @@ static Token identifier(Lexer* lexer)
 	{
 		advance(lexer);
 	}
-		 
+
 	const size_t length = (size_t)(lexer->current - lexer->start);
-	
+
 	char* type_str = strndup(lexer->start, length);
 
 	VarType var_type = { 0 };
@@ -355,7 +355,7 @@ static Token identifier(Lexer* lexer)
 	else if (strcmp(type_str, "char") == 0)
 	{
 		var_type = TYPE_CHAR;
-	} 
+	}
 	else if (strcmp(type_str, "bool") == 0)
 	{
 		var_type = TYPE_BOOL;
@@ -367,9 +367,9 @@ static Token identifier(Lexer* lexer)
 
 	free(type_str);
 
-	Token token = (Token){ type, lexer->start, length, lexer->line };
+	Token token = (Token) { type, lexer->start, length, lexer->line };
 
-	if (type == TOKEN_KEYWORD_TYPE) 
+	if (type == TOKEN_KEYWORD_TYPE)
 	{
 		token.var_type = var_type;
 
@@ -388,12 +388,12 @@ static Token handle_string_literal(Lexer* lexer)
 
 	while (peek(lexer) != '\"')
 	{
-		if (peek(lexer) == '\n') 
+		if (peek(lexer) == '\n')
 		{
 			printf("[Lexer] [Error] String not finished...");
 			exit(1);
 		}
-			
+
 		const char c_ = peek(lexer);
 
 		const char tmp[2] = { c_, '\0' };
@@ -415,7 +415,7 @@ static Token handle_string_literal(Lexer* lexer)
 
 	tkn.var_type = TYPE_STRING;
 	tkn.str_value = str;
-		
+
 	return tkn;
 }
 
@@ -428,7 +428,7 @@ Token handle_number_literal(Lexer* lexer, int negative)
 
 	while (is_digit(actual) || actual == '.')
 	{
-		if (actual == '.') 
+		if (actual == '.')
 		{
 			decimal++;
 		}
@@ -475,7 +475,7 @@ Token handle_char_literal(Lexer* lexer)
 
 	char value;
 
-	if (peek(lexer) == '\\') 
+	if (peek(lexer) == '\\')
 	{
 		advance(lexer);
 
@@ -483,30 +483,30 @@ Token handle_char_literal(Lexer* lexer)
 
 		switch (esc)
 		{
-			case 'n': 
+			case 'n':
 			{
-				value = '\n'; 
+				value = '\n';
 
 				break;
 			}
 
 			case 't':
 			{
-				value = '\t'; 
+				value = '\t';
 
 				break;
 			}
 
-			case '\'': 
+			case '\'':
 			{
-				value = '\''; 
+				value = '\'';
 
 				break;
 			}
 
-			case '\\': 
+			case '\\':
 			{
-				value = '\\'; 
+				value = '\\';
 
 				break;
 			}
@@ -526,8 +526,8 @@ Token handle_char_literal(Lexer* lexer)
 		}
 
 		advance(lexer);
-	} 
-	else 
+	}
+	else
 	{
 		value = peek(lexer);
 		advance(lexer);
@@ -545,34 +545,34 @@ Token handle_char_literal(Lexer* lexer)
 
 	token.token_type = TOKEN_LITERAL_CHAR;
 
-	token.start = lexer->start; 
-	token.length = (size_t)(lexer->current - lexer->start);
+	token.start = lexer->start;
+	token.length = (size_t) (lexer->current - lexer->start);
 	token.line = lexer->line;
 
 	token.ch_value = value;
-		
+
 	return token;
 }
 
 Token handle_bool_literal(Lexer* lexer)
 {
-	if (strncmp(lexer->start, "true", 4) == 0) 
+	if (strncmp(lexer->start, "true", 4) == 0)
 	{
 		jmp(lexer, 4);
-			
+
 		Token tkn = (Token) { TOKEN_LITERAL_BOOL, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
 		tkn.bool_value = 1;
 
 		return tkn;
 	}
 
-	if (strncmp(lexer->start, "false", 5) == 0) 
+	if (strncmp(lexer->start, "false", 5) == 0)
 	{
 		jmp(lexer, 5);
-			
+
 		Token tkn = (Token) { TOKEN_LITERAL_BOOL, lexer->start, (size_t) (lexer->current - lexer->start), lexer->line };
 		tkn.bool_value = 0;
-			
+
 		return tkn;
 	}
 
@@ -593,12 +593,12 @@ Token handle_literals(Lexer* lexer, int negative)
 		return handle_number_literal(lexer, negative);
 	}
 
-	if (c == '\'') 
+	if (c == '\'')
 	{
 		return handle_char_literal(lexer);
 	}
 
-	if (peek(lexer) == 't' || peek(lexer) == 'f') 
+	if (peek(lexer) == 't' || peek(lexer) == 'f')
 	{
 		return handle_bool_literal(lexer);
 	}
@@ -619,14 +619,14 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		case '+':
 		{
 			advance(lexer);
-			
-			if (peek(lexer) == '+') 
+
+			if (peek(lexer) == '+')
 			{
 				advance(lexer);
 
 				return (Token){ TOKEN_OPERATOR_INCREMENT, lexer->start, 2, lexer->line };
-			} 
-			else if (peek(lexer) == '=') 
+			}
+			else if (peek(lexer) == '=')
 			{
 				advance(lexer);
 
@@ -639,26 +639,26 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		case '-':
 		{
 			advance(lexer);
-			
-			if (peek(lexer) == '-') 
+
+			if (peek(lexer) == '-')
 			{
 				advance(lexer);
 
 				return (Token){ TOKEN_OPERATOR_DECREMENT, lexer->start, 2, lexer->line };
 			}
-			else if (peek(lexer) == '=') 
+			else if (peek(lexer) == '=')
 			{
 				advance(lexer);
 
 				return (Token){ TOKEN_OPERATOR_MINUS_EQUALS, lexer->start, 2, lexer->line };
 			}
-			else if (peek(lexer) == '>') 
+			else if (peek(lexer) == '>')
 			{
 				advance(lexer);
 
 				return (Token){ TOKEN_OPERATOR_ACCESS_PTR, lexer->start, 2, lexer->line };
 			}
-			else if (is_digit(peek(lexer))) 
+			else if (is_digit(peek(lexer)))
 			{
 				*negative = 1;
 				break;
@@ -670,8 +670,8 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		case '=':
 		{
 			advance(lexer);
-			
-			if (peek(lexer) == '=') 
+
+			if (peek(lexer) == '=')
 			{
 				advance(lexer);
 
@@ -691,14 +691,14 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		case '*':
 		{
 			advance(lexer);
-			
-			if (peek(lexer) == '=') 
+
+			if (peek(lexer) == '=')
 			{
 				advance(lexer);
-					
+
 				return (Token){ TOKEN_OPERATOR_TIMES_EQUALS, lexer->start, 2, lexer->line };
 			}
-				
+
 			return (Token){ TOKEN_CHAR_STAR, lexer->start, 1, lexer->line };
 		}
 
@@ -706,10 +706,10 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		{
 			advance(lexer);
 
-			if (peek(lexer) == '=') 
+			if (peek(lexer) == '=')
 			{
 				advance(lexer);
-					
+
 				return (Token){ TOKEN_OPERATOR_DIVIDED_EQUALS, lexer->start, 2, lexer->line };
 			}
 			else if (peek(lexer) == '/')
@@ -718,7 +718,7 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 				{
 					advance(lexer);
 				}
-			
+
 				return (Token){ TOKEN_KEYWORD_ONE_LINE_COMMENT, lexer->start, (lexer->current - lexer->start), lexer->line };
 			}
 			else if (peek(lexer) == '*')
@@ -739,7 +739,7 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 
 					advance(lexer);
 				}
-			
+
 				return (Token) { TOKEN_KEYWORD_MULTI_LINE_COMMENT, lexer->start, (lexer->current - lexer->start), lexer->line };
 			}
 
@@ -784,7 +784,7 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		case ')':
 		{
 			advance(lexer);
-			
+
 			return (Token) { TOKEN_CHAR_CLOSE_PAREN, lexer->start, 1, lexer->line };
 		}
 
@@ -799,11 +799,11 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		{
 			advance(lexer);
 
-			if (peek(lexer) == '=') 
+			if (peek(lexer) == '=')
 			{
 				advance(lexer);
 
-				return (Token) { TOKEN_OPERATOR_GREATER_EQUALS, lexer->start, 1, lexer->line };	
+				return (Token) { TOKEN_OPERATOR_GREATER_EQUALS, lexer->start, 1, lexer->line };
 			}
 
 			return (Token) { TOKEN_OPERATOR_GREATER, lexer->start, 1, lexer->line };
@@ -813,7 +813,7 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		{
 			advance(lexer);
 
-			if (peek(lexer) == '=') 
+			if (peek(lexer) == '=')
 			{
 				advance(lexer);
 
@@ -827,7 +827,7 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		{
 			advance(lexer);
 
-			if (peek(lexer) == '=') 
+			if (peek(lexer) == '=')
 			{
 				advance(lexer);
 
@@ -848,7 +848,7 @@ static Token handle_operators(Lexer* lexer, char c, int* negative)
 		{
 			advance(lexer);
 
-			if (peek(lexer) == '&') 
+			if (peek(lexer) == '&')
 			{
 				advance(lexer);
 
@@ -884,7 +884,7 @@ Token read_next_tkn(Lexer* lexer)
 	while (1)
 	{
 		lexer->start = lexer->current;
-		
+
 		if (is_end(lexer))
 		{
 			return (Token){ TOKEN_END_SRC, lexer->start, 0, lexer->line };
@@ -921,7 +921,7 @@ Token read_next_tkn(Lexer* lexer)
 
 		const Token literal = handle_literals(lexer, negative);
 
-		if (literal.token_type != TOKEN_UNKNOWN) 
+		if (literal.token_type != TOKEN_UNKNOWN)
 		{
 			return literal;
 		}
@@ -939,7 +939,7 @@ Token read_next_tkn(Lexer* lexer)
 
 const char* token_type_to_string(const TokenType type)
 {
-	switch (type) 
+	switch (type)
 	{
 		case TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";
 

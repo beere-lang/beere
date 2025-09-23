@@ -18,6 +18,6 @@ struct CFBlock
 	int dt_index;
 };
 
-CFBlock* generate_control_flow(IRNodeList* func_blocks, IRNode* block, CFBlock* predecessor);
+CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* predecessor);
 
 #endif

@@ -107,7 +107,7 @@ struct IRNodeCall
 
 struct IRNodeStore
 {
-	char* dest;
+	IRNode* dest;
 	IRNode* expr;
 };
 

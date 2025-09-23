@@ -8,7 +8,8 @@ typedef struct
 	char* buffer;
 	size_t memory_size;
 	int length;
-} StringBuilder;
+}
+StringBuilder;
 
 void init(StringBuilder* string_builder);
 void free_string_builder(StringBuilder* string_builder);

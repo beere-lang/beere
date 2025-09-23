@@ -100,6 +100,28 @@ static IRNode* generate_while(ASTNode* node)
 	return NULL;
 }
 
+static IRNode* generate_field(ASTNode* node)
+{
+	IRNode* field = create_ir_node(IR_NODE_FIELD);
+
+	field->field.name = _strdup(node->declare.identifier);
+	field->field.type = copy_type(node->declare.var_type);
+
+	field->field.value = generate_expression(node->declare.default_value);
+
+	return field;
+}
+
+static IRNode* generate_store(ASTNode* node)
+{
+	IRNode* store = create_ir_node(IR_NODE_STORE);
+
+	store->store.dest = generate_expression(node->variable_assign.left);
+	store->store.expr = generate_expression(node->variable_assign.expr);
+
+	return store;
+}
+
 // ==---------------------------------- Core --------------------------------------== \\
 
 /**
@@ -122,6 +144,16 @@ static IRNode* generate_ir_node(ASTNode* node)
 		case NODE_WHILE_LOOP:
 		{
 			return generate_while(node);
+		}
+
+		case NODE_FIELD:
+		{
+			return generate_field(node);
+		}
+
+		case NODE_ASSIGN:
+		{
+			return generate_store(node);
 		}
 
 		default:
@@ -181,16 +213,12 @@ static IRNode* generate_operation(ASTNode* node)
 	return operation;
 }
 
-static IRNode* generate_field(ASTNode* node)
+static IRNode* generate_field_literal(ASTNode* node)
 {
-	IRNode* field = create_ir_node(IR_NODE_FIELD);
+	IRNode* field_literal = create_ir_node(IR_NODE_FIELD_LITERAL);
+	field_literal->field_literal.name = _strdup(node->variable.identifier);
 
-	field->field.name = _strdup(node->declare.identifier);
-	field->field.type = copy_type(node->declare.var_type);
-
-	field->field.value = generate_expression(node->declare.default_value);
-
-	return field;
+	return field_literal;
 }
 
 /**
@@ -210,9 +238,9 @@ static IRNode* generate_expression(ASTNode* node)
 			return generate_operation(node);
 		}
 
-		case NODE_FIELD:
+		case NODE_IDENT:
 		{
-			return generate_field(node);
+			return generate_field_literal(node);
 		}
 
 		default:
@@ -540,6 +568,21 @@ static void free_node(IRNode* node)
 			{
 				free(node->literal.string_val);
 			}
+
+			break;
+		}
+
+		case IR_NODE_FIELD_LITERAL:
+		{
+			free(node->field_literal.name);
+
+			break;
+		}
+
+		case IR_NODE_STORE:
+		{
+			free_node(node->store.dest);
+			free_node(node->store.expr);
 
 			break;
 		}
