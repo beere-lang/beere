@@ -6,16 +6,23 @@ typedef struct CFBlock CFBlock;
 #include "../../structure/ir/ir-nodes.h"
 #include "../../../utils/list/list.h"
 
+typedef struct SizedArr SizedArr;
+
+struct SizedArr
+{
+	int      length;
+	IRNode** elements;
+};
+
 struct CFBlock
 {
 	IRNode* block;
 
-	DList* predecessors;
-	DList* successors;
+	DList*  predecessors;
+	DList*  successors;
 
-	int visited;
-
-	int dt_index;
+	int     visited;
+	int     dt_index;
 };
 
 CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* predecessor);

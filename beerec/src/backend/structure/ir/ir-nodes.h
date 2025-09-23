@@ -65,13 +65,13 @@ struct IRNodeList
 {
 	IRNode** elements;
 
-	int length;
-	int capacity;
+	int      length;
+	int      capacity;
 };
 
 struct IRNodeBlock
 {
-	char* label;
+	char*  label;
 	DList* nodes;
 };
 
@@ -79,8 +79,8 @@ struct IRNodeOperation
 {
 	IROperationType type;
 
-	IRNode* left;
-	IRNode* right;
+	IRNode*         left;
+	IRNode*         right;
 };
 
 struct IRNodeRet
@@ -90,13 +90,13 @@ struct IRNodeRet
 
 struct IRNodeFunc
 {
-	Type* type;
+	Type*        type;
 
-	char* name;
+	char*        name;
 
-	DList* blocks;
+	DList*       blocks;
 
-	IRNode** params;
+	IRNode**     params;
 	unsigned int params_size;
 };
 
@@ -126,24 +126,24 @@ struct IRNodeBranch
 
 struct IRNodeLiteral
 {
-	Type* type;
+	Type*          type;
 
 	union
 	{
-		int int_val;
-		float float_val;
+		int    int_val;
+		float  float_val;
 		double double_val;
-		char* string_val;
-		char char_val;
-		int bool_val;
+		char*  string_val;
+		char   char_val;
+		int    bool_val;
 	};
 };
 
 struct IRNodeField
 {
-	Type* type;
+	Type*   type;
 
-	char* name;
+	char*   name;
 	IRNode* value;
 };
 
@@ -173,20 +173,20 @@ struct IRNode
 {
 	IRNodeType type;
 
-	IRNodeBlock block;
-	IRNodeOperation operation;
-	IRNodeRet ret;
-	IRNodeCall call;
-	IRNodeStore store;
-	IRNodeLiteral literal;
-	IRNodeDereference dereference;
-	IRNodeReference reference;
-	IRNodeFunc func;
-	IRNodeField field;
+	IRNodeBlock        block;
+	IRNodeOperation    operation;
+	IRNodeRet          ret;
+	IRNodeCall         call;
+	IRNodeStore        store;
+	IRNodeLiteral      literal;
+	IRNodeDereference  dereference;
+	IRNodeReference    reference;
+	IRNodeFunc         func;
+	IRNodeField        field;
 	IRNodeFieldLiteral field_literal;
-	IRNodeGoto go_to;
-	IRNodeBranch branch;
-	IRNodeParam param;
+	IRNodeGoto         go_to;
+	IRNodeBranch       branch;
+	IRNodeParam        param;
 };
 
 IRNode* create_ir_node(IRNodeType type);

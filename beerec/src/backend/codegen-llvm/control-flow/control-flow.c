@@ -42,7 +42,7 @@ CFBlock* find_cf_block(IRNode* block)
 	return NULL;
 }
 
-void* get_flow_cases(IRNode* block)
+SizedArr* get_flow_cases(IRNode* block)
 {
 	IRNode** list = malloc(sizeof(IRNode*) * block->block.nodes->length);
 
@@ -53,7 +53,7 @@ void* get_flow_cases(IRNode* block)
 	{
 		IRNode* curr = block->block.nodes->elements[i];
 
-		if (curr->type != IR_NODE_GOTO || curr->type != IR_NODE_BRANCH || IR_NODE_RET)
+		if (curr->type != IR_NODE_GOTO && curr->type != IR_NODE_BRANCH && curr->type != IR_NODE_RET)
 		{
 			continue;
 		}
@@ -61,12 +61,12 @@ void* get_flow_cases(IRNode* block)
 		list[count++] = curr;
 	}
 
-	void* strct = malloc(sizeof(int) + sizeof(IRNode**));
+	SizedArr* arr = malloc(sizeof(SizedArr));
 
-	((int*) strct)[0] = count;
-	*((IRNode***) (strct + 8)) = list;
+	arr->elements = list;
+	arr->length = count;
 
-	return strct;
+	return arr;
 }
 
 IRNode* find_next_block(DList* blocks, IRNode* block)
@@ -135,10 +135,10 @@ CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* prede
 		return cf_block;
 	}
 
-	void* flow_cases =  get_flow_cases(block);
+	SizedArr* flow_cases =  get_flow_cases(block);
 
-	IRNode** jmps = flow_cases + sizeof(int);
-	const int length = ((int*) flow_cases)[0];
+	IRNode** jmps = flow_cases->elements;
+	const int length = flow_cases->length;
 
 	int next_block = 1;
 

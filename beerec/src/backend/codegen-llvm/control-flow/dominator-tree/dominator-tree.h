@@ -10,7 +10,7 @@ struct DTBlock
 	CFBlock* block;
 
 	DTBlock* dominator;
-	DList* dominateds;
+	DList*   dominateds;
 };
 
 DTBlock* generate_dominator_tree(CFBlock* entry, int size);
