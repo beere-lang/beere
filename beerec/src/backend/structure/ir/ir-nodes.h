@@ -102,7 +102,8 @@ struct IRNodeFunc
 
 struct IRNodeCall
 {
-	char* func;
+	IRNode* func;
+	DList*  args;
 };
 
 struct IRNodeStore

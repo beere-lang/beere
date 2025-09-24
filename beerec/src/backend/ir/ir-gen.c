@@ -122,6 +122,44 @@ static IRNode* generate_store(ASTNode* node)
 	return store;
 }
 
+static IRNode* generate_operation(ASTNode* node)
+{
+	IRNode* operation = create_ir_node(IR_NODE_OPERATION);
+
+	operation->operation.type = convert_op_type(node->operation.op);
+
+	operation->operation.left = generate_expression(node->operation.left);
+	operation->operation.right = generate_expression(node->operation.right);
+
+	return operation;
+}
+
+static IRNode* generate_call(ASTNode* node)
+{
+	IRNode* call = create_ir_node(IR_NODE_CALL);
+	call->call.func = generate_expression(node->function_call.callee);
+	
+	call->call.args = create_list(8);
+
+	const int length = count_linked_list(node->function_call.arguments->head);
+	ASTNode* curr = node->function_call.arguments->head;
+
+	for (int i = 0; i < length; i++)
+	{
+		if (curr == NULL)
+		{
+			continue;
+		}
+		
+		IRNode* arg = generate_expression(curr);
+		add_element_to_list(call->call.args, curr);
+
+		curr = curr->next;
+	}
+
+	return call;
+}
+
 // ==---------------------------------- Core --------------------------------------== \\
 
 /**
@@ -154,6 +192,16 @@ static IRNode* generate_ir_node(ASTNode* node)
 		case NODE_ASSIGN:
 		{
 			return generate_store(node);
+		}
+
+		case NODE_OPERATION:
+		{
+			return generate_operation(node);
+		}
+
+		case NODE_CALL:
+		{
+			return generate_call(node);
 		}
 
 		default:
@@ -201,24 +249,28 @@ static IRNode* generate_literal(ASTNode* node)
 	return literal;
 }
 
-static IRNode* generate_operation(ASTNode* node)
-{
-	IRNode* operation = create_ir_node(IR_NODE_OPERATION);
-
-	operation->operation.type = convert_op_type(node->operation.op);
-
-	operation->operation.left = generate_expression(node->operation.left);
-	operation->operation.right = generate_expression(node->operation.right);
-
-	return operation;
-}
-
 static IRNode* generate_field_literal(ASTNode* node)
 {
 	IRNode* field_literal = create_ir_node(IR_NODE_FIELD_LITERAL);
 	field_literal->field_literal.name = _strdup(node->variable.identifier);
 
 	return field_literal;
+}
+
+static IRNode* generate_reference(ASTNode* node)
+{
+	IRNode* reference = create_ir_node(IR_NODE_REFERENCE);
+	reference->reference.expr = generate_expression(node->adress_of.expr);
+
+	return reference;
+}
+
+static IRNode* generate_dereference(ASTNode* node)
+{
+	IRNode* reference = create_ir_node(IR_NODE_DEREFERENCE);
+	reference->reference.expr = generate_expression(node->dereference.expr);
+
+	return reference;
 }
 
 /**
@@ -241,6 +293,21 @@ static IRNode* generate_expression(ASTNode* node)
 		case NODE_IDENT:
 		{
 			return generate_field_literal(node);
+		}
+
+		case NODE_REFERENCE:
+		{
+			return generate_reference(node);
+		}
+
+		case NODE_DEREFERENCE:
+		{
+			return generate_dereference(node);
+		}
+
+		case NODE_CALL:
+		{
+			return generate_call(node);
 		}
 
 		default:
