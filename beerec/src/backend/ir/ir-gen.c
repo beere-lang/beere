@@ -654,6 +654,41 @@ static void free_node(IRNode* node)
 			break;
 		}
 
+		case IR_NODE_CALL:
+		{
+			free_node(node->call.func);
+
+			const int length = node->call.args->length;
+
+			for (int i = 0; i < length; i++)
+			{
+				IRNode* arg = node->call.args->elements[i];
+
+				if (arg == NULL)
+				{
+					continue;
+				}
+
+				free_node(arg);
+			}
+
+			break;
+		}
+
+		case IR_NODE_REFERENCE:
+		{
+			free_node(node->reference.expr);
+
+			break;
+		}
+
+		case IR_NODE_DEREFERENCE:
+		{
+			free_node(node->dereference.expr);
+		
+			break;
+		}
+
 		default:
 		{
 			println("Invalid node while freeing with type id: %d...", node->type);
