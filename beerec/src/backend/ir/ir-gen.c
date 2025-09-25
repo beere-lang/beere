@@ -295,7 +295,7 @@ static IRNode* generate_member_access(ASTNode* node)
 {
 	IRNode* maccess = create_ir_node(IR_NODE_MEMBER_ACCESS);
 
-	maccess->member_access.member = generate_expression(node->member_access.object);
+	maccess->member_access.object = generate_expression(node->member_access.object);
 	maccess->member_access.member = _strdup(node->member_access.member_name);
 	maccess->member_access.is_func = node->member_access.is_function;
 
