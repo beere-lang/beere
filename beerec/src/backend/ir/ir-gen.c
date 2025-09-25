@@ -35,12 +35,17 @@ static IRNode* generate_func(ASTNode* node)
 
 	func->func.type = copy_type(node->function.return_type);
 
-	const int length = count_linked_list(node->function.params->head);
+	func->func.params = NULL;
 
-	func->func.params = malloc(sizeof(IRNode*) * length);
-	func->func.params_size = length;
+        if (node->function.params != NULL)
+        {
+                const int length = count_linked_list(node->function.params->head);
 
-	setup_func_params(func, node->function.params->head, length);
+	        func->func.params = malloc(sizeof(IRNode*) * length);
+	        func->func.params_size = length;
+
+                setup_func_params(func, node->function.params->head, length);
+        }
 
 	curr_func = func;
 
@@ -134,29 +139,42 @@ static IRNode* generate_operation(ASTNode* node)
 	return operation;
 }
 
+static IRNode* generate_argument(ASTNode* node)
+{
+        IRNode* arg = create_ir_node(IR_NODE_ARGUMENT);
+        arg->argument.value = generate_expression(node->argument.value);
+
+        return arg;
+}
+
 static IRNode* generate_call(ASTNode* node)
 {
 	IRNode* call = create_ir_node(IR_NODE_CALL);
 	call->call.func = generate_expression(node->function_call.callee);
 	
-	call->call.args = create_list(8);
+        call->call.args = NULL;
+	
+        if (node->function_call.arguments != NULL)
+        {
+                call->call.args = create_list(8);
 
-	const int length = count_linked_list(node->function_call.arguments->head);
-	ASTNode* curr = node->function_call.arguments->head;
+	        const int length = count_linked_list(node->function_call.arguments->head);
+                ASTNode* curr = node->function_call.arguments->head;
 
-	for (int i = 0; i < length; i++)
-	{
-		if (curr == NULL)
-		{
-			continue;
-		}
-		
-		IRNode* arg = generate_expression(curr);
-		add_element_to_list(call->call.args, curr);
+	        for (int i = 0; i < length; i++)
+	        {
+		        if (curr == NULL)
+		        {
+			        continue;
+		        }
 
-		curr = curr->next;
-	}
+		        IRNode* arg = generate_argument(curr);
+		        add_element_to_list(call->call.args, curr);
 
+		        curr = curr->next;
+	        }
+        }
+        
 	return call;
 }
 
@@ -273,6 +291,17 @@ static IRNode* generate_dereference(ASTNode* node)
 	return reference;
 }
 
+static IRNode* generate_member_access(ASTNode* node)
+{
+	IRNode* maccess = create_ir_node(IR_NODE_MEMBER_ACCESS);
+
+	maccess->member_access.member = generate_expression(node->member_access.object);
+	maccess->member_access.member = _strdup(node->member_access.member_name);
+	maccess->member_access.is_func = node->member_access.is_function;
+
+	return maccess;
+}
+
 /**
  * TODO: terminar de implementar todas as possiveis nodes.
  */
@@ -308,6 +337,11 @@ static IRNode* generate_expression(ASTNode* node)
 		case NODE_CALL:
 		{
 			return generate_call(node);
+		}
+
+		case NODE_MEMBER_ACCESS:
+		{
+			return generate_member_access(node);
 		}
 
 		default:
@@ -515,9 +549,6 @@ static void free_type(Type* type)
 	free(type);
 }
 
-/**
- * TODO: adicionar mais nodes conforme for adicionando.
- */
 static void free_node(IRNode* node)
 {
 	switch (node->type)
@@ -529,12 +560,20 @@ static void free_node(IRNode* node)
 
 			free_type(node->func.type);
 
-			for (int i = 0; i < node->func.params_size; i++)
-			{
-				IRNode* param = node->func.params[i];
+			if (node->func.params != NULL)
+                        {
+                                for (int i = 0; i < node->func.params_size; i++)
+			        {
+				        IRNode* param = node->func.params[i];
 
-				free_node(param);
-			}
+                                        if (param == NULL)
+                                        {
+                                                continue;
+                                        }
+
+				        free_node(param);
+			        }
+                        }
 
 			const int length = node->func.blocks->length;
 
@@ -658,19 +697,22 @@ static void free_node(IRNode* node)
 		{
 			free_node(node->call.func);
 
-			const int length = node->call.args->length;
+			if (node->call.args != NULL)
+                        {
+                                const int length = node->call.args->length;
 
-			for (int i = 0; i < length; i++)
-			{
-				IRNode* arg = node->call.args->elements[i];
+			        for (int i = 0; i < length; i++)
+			        {
+				        IRNode* arg = node->call.args->elements[i];
 
-				if (arg == NULL)
-				{
-					continue;
-				}
+				        if (arg == NULL)
+				        {
+					        continue;
+				        }
 
-				free_node(arg);
-			}
+				        free_node(arg);
+			        }
+                        }
 
 			break;
 		}
@@ -688,6 +730,23 @@ static void free_node(IRNode* node)
 		
 			break;
 		}
+
+		case IR_NODE_MEMBER_ACCESS:
+		{
+			free_node(node->member_access.object);
+
+			if (node->member_access.member != NULL)
+			{
+				free(node->member_access.member);
+			}
+
+			break;
+		}
+
+                case IR_NODE_ARGUMENT:
+                {
+                        free_node(node->argument.value);
+                }
 
 		default:
 		{
