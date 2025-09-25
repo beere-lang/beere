@@ -28,7 +28,7 @@ static IRNode* generate_func(ASTNode* node)
 {
 	IRNode* func = create_ir_node(IR_NODE_FUNC);
 
-	char buff[64];
+        char buff[64];
 	snprintf(buff, 64, ".fn_%s", node->function.identifier);
 
 	func->func.name = _strdup(buff);
@@ -53,7 +53,7 @@ static IRNode* generate_func(ASTNode* node)
 
 	curr_block = entry;
 
-	generate_func_instructions(node->function.block->block.statements->head);
+        generate_func_instructions(node->function.block->block.statements->head);
 
 	return func;
 }
