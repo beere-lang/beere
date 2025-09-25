@@ -66,9 +66,6 @@ static IRNode* generate_ret(ASTNode* node)
 	return ret;
 }
 
-/**
- * TODO: implementar labels nisso.
- */
 static IRNode* generate_while(ASTNode* node)
 {
 	char buff[64];
@@ -82,7 +79,8 @@ static IRNode* generate_while(ASTNode* node)
 	add_element_to_list(curr_block->block.nodes, go_to);
 
 	snprintf(buff, 64, ".while_post_%d", whiles_count);
-	IRNode* postb = create_block(_strdup(buff), 0);
+	
+        IRNode* postb = create_block(_strdup(buff), 0);
 
 	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
 
