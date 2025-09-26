@@ -443,7 +443,7 @@ static IROperationType convert_op_type(const TokenType type)
 
 		case TOKEN_OPERATOR_MINUS:
 		{
-			return IR_OPERATION_SUB;
+			return IR_OPERATION_SUB; 
 		}
 
 		case TOKEN_CHAR_STAR:

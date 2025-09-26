@@ -20,7 +20,7 @@ char* strndup(const char* src, const size_t len)
 
 char* get_directory(char* path)
 {
-	char* copy = strdup(path);
+	char* copy = _strdup(path);
 
 	if (copy == NULL)
 	{
@@ -60,7 +60,7 @@ char* get_dot_mod_relative_path(char* mod_path, const char* relative)
 	char* buffer = malloc(2048);
 
 	char temp[2048];
-	strcpy(temp, mod_path);
+	strcpy_s(temp, 2048, mod_path);
 
 	char* directory = get_directory(temp);
 
@@ -115,9 +115,11 @@ char* read_file(const char* file_path, int mod)
 		return NULL;
 	}
 
-	FILE* file = fopen(file_path, "rb");
+	FILE* file = NULL;
+        
+        fopen_s(&file, file_path, "rb");
 
-	if (!file)
+	if (file == NULL)
 	{
 		printf("[FileReader] Failed to get input file: %s\n", file_path);
 

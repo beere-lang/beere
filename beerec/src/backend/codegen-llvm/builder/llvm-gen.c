@@ -12,235 +12,129 @@
 static size_t expr_count = 0;
 static size_t fload_count = 0;
 
-static LLVMFieldTable* field_table = NULL;
-
+static LLVMTypeRef get_type(Type* type);
+static const char* generate_expr_label(int inc);
+static LLVMTypeRef* get_args_type(IRNode** args, unsigned int args_size);
+static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int args_size);
 static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node);
+static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node);
+static void generate_func_blocks(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* func, const LLVMValueRef llvm_func);
 
-static void setup_field_table()
-{
-	field_table = malloc(sizeof(LLVMFieldTable));
-
-	field_table->length = 0;
-	field_table->capacity = FIELD_TABLE_DEFAULT_START_CAPACITY;
-
-	field_table->fields = malloc(sizeof(LLVMValueRef) * FIELD_TABLE_DEFAULT_START_CAPACITY);
-	field_table->names = malloc(sizeof(char*) * FIELD_TABLE_DEFAULT_START_CAPACITY);
-	field_table->types = malloc(sizeof(char*) * FIELD_TABLE_DEFAULT_START_CAPACITY);
-}
-
-static void add_field_to_table(const LLVMValueRef field, const char* name, Type* type)
-{
-	if (field_table == NULL)
-	{
-		return;
-	}
-
-	if (field_table->capacity <= field_table->length)
-	{
-		field_table->capacity *= 2;
-
-		field_table->fields = realloc(field_table->fields, sizeof(LLVMValueRef) * field_table->capacity);
-		field_table->names = realloc(field_table->names, sizeof(char*) * field_table->capacity);
-		field_table->types = realloc(field_table->types, sizeof(Type*) * field_table->capacity);
-	}
-
-	field_table->fields[field_table->length] = field;
-	field_table->names[field_table->length] = _strdup(name);
-	field_table->types[field_table->length] = type;
-
-	field_table->length++;
-}
-
-static LLVMValueRef get_field_from_table(const char* name)
-{
-	if (field_table == NULL)
-	{
-		return NULL;
-	}
-
-	for (int i = 0; i < field_table->length; i++)
-	{
-		char* field_name = field_table->names[i];
-		LLVMValueRef field = field_table->fields[i];
-
-		if (field == NULL || name == NULL)
-		{
-			continue;
-		}
-
-		if (strcmp(name, field_name) != 0)
-		{
-			continue;
-		}
-
-		return field;
-	}
-
-	return NULL;
-}
-
-static Type* get_field_type_from_table(const char* name)
-{
-	if (field_table == NULL)
-	{
-		return NULL;
-	}
-
-	for (int i = 0; i < field_table->length; i++)
-	{
-		const char* field_name = field_table->names[i];
-
-		LLVMValueRef field = field_table->fields[i];
-		Type* type = field_table->types[i];
-
-		if (field == NULL || name == NULL)
-		{
-			continue;
-		}
-
-		if (strcmp(name, field_name) != 0)
-		{
-			continue;
-		}
-
-		return type;
-	}
-
-	return NULL;
-}
-
-static const char* generate_expr_label(int inc)
-{
-	char buff[128];
-	snprintf(buff, 128, ".expr_%d", (int) expr_count);
-
-	expr_count += inc;
-
-	return _strdup(buff);
-}
-
-static const char* generate_field_load_label(int inc)
-{
-	char buff[128];
-	snprintf(buff, 128, ".fieldl%d", (int) fload_count);
-
-	fload_count += inc;
-
-	return _strdup(buff);
-}
-
-static LLVMTypeRef get_type(Type* type)
-{
-	switch (type->type)
-	{
-		case TYPE_FLOAT:
-		{
-			return LLVMFloatType();
-		}
-
-		case TYPE_DOUBLE:
-		{
-			return LLVMDoubleType();
-		}
-
-		case TYPE_STRING:
-		{
-			return LLVMPointerType(LLVMInt8Type(), 0); // sei la porra, muda isso depois
-		}
-
-		case TYPE_PTR:
-		{
-			return LLVMPointerType(get_type(type->base), 0);
-		}
-
-		case TYPE_INT:
-		{
-			return LLVMInt32Type();
-		}
-
-		default:
-		{
-			return NULL;
-		}
-	}
-}
-
-static LLVMTypeRef* get_args_type(IRNode** args, unsigned int args_size)
-{
-	LLVMTypeRef* args_type = malloc(sizeof(LLVMTypeRef) * args_size);
-
-	int j = 0;
-
-	for (int i = 0; i < args_size; i++)
-	{
-		IRNode* arg = args[i];
-
-		if (arg == NULL)
-		{
-			continue;
-		}
-
-		args_type[j] = get_type(arg->field.type);
-		j++;
-	}
-
-	return args_type;
-}
-
-static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int args_size)
-{
-	for (int i = 0; i < args_size; i++)
-	{
-		IRNode* arg = args[i];
-		LLVMValueRef arg_ref = LLVMGetParam(*func, i);
-
-		if (arg == NULL || arg_ref)
-		{
-			continue;
-		}
-
-		LLVMSetValueName(arg_ref, arg->field.name);
-	}
-}
+// -------------------------------- Statements -------------------------------- \\
 
 static void generate_func(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
 	LLVMTypeRef return_type = get_type(node->func.type);
 
-	unsigned int args_size = node->func.args_size;
-	LLVMTypeRef* args_type = get_args_type(node->func.args, args_size);
+	unsigned int params_size = node->func.params_size;
+	LLVMTypeRef* params_type = get_args_type(node->func.params, params_size);
 
-	LLVMTypeRef type = LLVMFunctionType(return_type, args_type, args_size, 0);
+	LLVMTypeRef type = LLVMFunctionType(return_type, params_type, params_size, 0);
 	LLVMValueRef func = LLVMAddFunction(module, node->func.name, type);
 
-	setup_func_arg_names(&func, node->func.args, args_size);
+	setup_func_arg_names(&func, node->func.params, params_size);
 
-	LLVMBasicBlockRef entry = LLVMAppendBasicBlock(func, ENTRY_NAME);
-
-	LLVMPositionBuilderAtEnd(llvm, entry);
-
-	/**
-	 * TODO: implementar os multiplos blocos em funções aqui
-	 */
-	/*
-	int length = node->func->block.nodes->length;
-	IRNode** nodes = node->func->block.nodes->elements;
-
-	for (int i = 0; i < length; i++)
-	{
-		IRNode* node = nodes[i];
-
-		if (node == NULL)
-		{
-			continue;
-		}
-
-		generate_llvm_from_node(module, llvm, node);
-	}
-	*/
+	generate_func_blocks(module, llvm, node, func);
 
 	LLVMDumpModule(module);
 }
+
+static void generate_field(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
+{
+	LLVMTypeRef type = get_type(node->field.type);
+	LLVMValueRef field = LLVMBuildAlloca(llvm, type, node->field.name);
+
+	// add_field_to_table(field, node->field.name, node->field.type);
+
+	if (node->field.value == NULL)
+	{
+		return;
+	}
+
+	LLVMValueRef value = generate_expr(module, llvm, node->field.value);
+
+	LLVMBuildStore(llvm, value, field);
+}
+
+static void generate_block(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* block)
+{
+        const int length = block->block.nodes->length;
+
+        for (int i = 0; i < length; i++)
+        {
+                IRNode* instruction = block->block.nodes->elements[i];
+
+                if (instruction == NULL)
+                {
+                        return;
+                }
+
+                generate_llvm_from_node(module, llvm, instruction);
+        }
+}
+
+static void generate_ret(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
+{
+        if (node->ret.value != NULL)
+        {
+                LLVMValueRef value = generate_expr(module, llvm, node->ret.value);
+                LLVMBuildRet(llvm, value);
+        }
+        else
+        {
+                LLVMBuildRetVoid(llvm);
+        }
+}
+
+// -------------------------------- Core -------------------------------- \\
+
+static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
+{
+	switch (node->type)
+	{
+		case IR_NODE_FUNC:
+		{
+			generate_func(module, llvm, node);
+
+			break;
+		}
+
+		case IR_NODE_FIELD:
+		{
+			generate_field(module, llvm, node);
+
+                        break;
+		}
+
+                case IR_NODE_RET:
+                {
+                        generate_ret(module, llvm, node);
+
+                        break;
+                }
+
+		default:
+		{
+			break;
+		}
+	}
+
+        println("Node with type id: %d, not implemented...", node->type);
+        exit(1);
+}
+
+/**
+ * TODO: adicionar o sistema de modulos depois
+ */
+void generate_module_llvm(IRNode* init)
+{
+	const LLVMModuleRef module = LLVMModuleCreateWithName("test_module"); /** TODO: implementar o negocio certo nisso */
+	const LLVMBuilderRef builder = LLVMCreateBuilder();
+
+	generate_llvm_from_node(module, builder, init);
+}
+
+// -------------------------------- Expressions -------------------------------- \\
 
 static LLVMValueRef generate_literal_i32(const LLVMModuleRef module, const LLVMBuilderRef llvm, const int value)
 {
@@ -361,7 +255,8 @@ static LLVMValueRef generate_operation(const LLVMModuleRef module, const LLVMBui
 
 static LLVMValueRef generate_field_literal(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
-	const LLVMValueRef field = get_field_from_table(node->field_literal.name);
+	/*
+        const LLVMValueRef field = get_field_from_table(node->field_literal.name);
 	Type* type = get_field_type_from_table(node->field_literal.name);
 
 	if (field == NULL || type == NULL)
@@ -375,6 +270,9 @@ static LLVMValueRef generate_field_literal(const LLVMModuleRef module, const LLV
 	const LLVMValueRef value = LLVMBuildLoad2(llvm, ftype, field, fload_name);
 
 	return value;
+        */
+
+        return NULL;
 }
 
 static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
@@ -405,55 +303,118 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 	return NULL;
 }
 
-static void generate_field(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
+// -------------------------------- Utils -------------------------------- \\
+
+static void generate_func_blocks(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* func, const LLVMValueRef llvm_func)
 {
-	LLVMTypeRef type = get_type(node->field.type);
-	LLVMValueRef field = LLVMBuildAlloca(llvm, type, node->field.name);
+        const int length = func->func.blocks->length;
 
-	add_field_to_table(field, node->field.name, node->field.type);
+        for (int i = 0; i < length; i++)
+        {
+                IRNode* block = func->func.blocks->elements[i];
 
-	if (node->field.value == NULL)
-	{
-		return;
-	}
+                if (block == NULL)
+                {
+                        continue;
+                }
 
-	LLVMValueRef value = generate_expr(module, llvm, node->field.value);
+                LLVMBasicBlockRef bb = LLVMAppendBasicBlock(llvm_func, block->block.label);
+                LLVMPositionBuilderAtEnd(llvm, bb);
 
-	LLVMBuildStore(llvm, value, field);
+                generate_block(module, llvm, block);
+        }
 }
 
-static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
+static const char* generate_expr_label(int inc)
 {
-	switch (node->type)
-	{
-		case IR_NODE_FUNC:
-		{
-			generate_func(module, llvm, node);
+	char buff[128];
+	snprintf(buff, 128, ".expr_%d", (int) expr_count);
 
-			break;
+	expr_count += inc;
+
+	return _strdup(buff);
+}
+
+static const char* generate_field_load_label(int inc)
+{
+	char buff[128];
+	snprintf(buff, 128, ".fieldl%d", (int) fload_count);
+
+	fload_count += inc;
+
+	return _strdup(buff);
+}
+
+static LLVMTypeRef get_type(Type* type)
+{
+	switch (type->type)
+	{
+		case TYPE_FLOAT:
+		{
+			return LLVMFloatType();
 		}
 
-		case IR_NODE_FIELD:
+		case TYPE_DOUBLE:
 		{
-			generate_field(module, llvm, node);
+			return LLVMDoubleType();
+		}
+
+		case TYPE_STRING:
+		{
+			return LLVMPointerType(LLVMInt8Type(), 0); // sei la porra, muda isso depois
+		}
+
+		case TYPE_PTR:
+		{
+			return LLVMPointerType(get_type(type->base), 0);
+		}
+
+		case TYPE_INT:
+		{
+			return LLVMInt32Type();
 		}
 
 		default:
 		{
-			break;
+			return NULL;
 		}
 	}
 }
 
-/**
- * TODO: adicionar o sistema de modulos depois
- */
-void generate_module_llvm(IRNode* init)
+static LLVMTypeRef* get_args_type(IRNode** args, unsigned int args_size)
 {
-	setup_field_table();
+	LLVMTypeRef* args_type = malloc(sizeof(LLVMTypeRef) * args_size);
 
-	const LLVMModuleRef module = LLVMModuleCreateWithName("test_module"); /** TODO: implementar o negocio certo nisso */
-	const LLVMBuilderRef builder = LLVMCreateBuilder();
+	int j = 0;
 
-	generate_llvm_from_node(module, builder, init);
+	for (int i = 0; i < args_size; i++)
+	{
+		IRNode* arg = args[i];
+
+		if (arg == NULL)
+		{
+			continue;
+		}
+
+		args_type[j] = get_type(arg->field.type);
+		j++;
+	}
+
+	return args_type;
+}
+
+static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int args_size)
+{
+	for (int i = 0; i < args_size; i++)
+	{
+		IRNode* arg = args[i];
+		LLVMValueRef arg_ref = LLVMGetParam(*func, i);
+
+		if (arg == NULL || arg_ref)
+		{
+			continue;
+		}
+
+		LLVMSetValueName(arg_ref, arg->field.name);
+	}
 }
