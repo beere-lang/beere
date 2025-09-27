@@ -1,15 +1,42 @@
 #include <stdlib.h>
 
 #include "dominance-frontier.h"
+#include "../dominator-tree/dominator-tree.h"
 #include "../control-flow.h"
 
-CFBlock** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int* idominators)
+DTBlock* find_block(DTBlock** list, int size, int index)
 {
-	CFBlock** frontier = malloc(sizeof(CFBlock*) * tlength);
+        for (int i = 0; i < size; i++)
+        {
+                DTBlock* block = list[i];
+
+                if (block == NULL)
+                {
+                        continue;
+                }
+
+                if (block->block->dt_index != index)
+                {
+                        continue;
+                }
+
+                return block;
+        }
+
+        return NULL;
+}
+
+/**
+ * TODO: deixar o gerenciamento dos index melhor.
+ */
+DList** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int* idominators, DTBlock** blocks, int size)
+{
+	DList** frontiers = malloc(sizeof(DList*) * tlength);
 
 	for (int i = 0; i < tlength; i++)
 	{
 		CFBlock* block = lblocks[i];
+                frontiers[i] = create_list(8);
 
 		const int slength = block->successors->length;
 
@@ -23,13 +50,36 @@ CFBlock** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int*
 				continue;
 			}
 
-			frontier[i] = succ;
+			add_element_to_list(frontiers[i], succ);
 		}
+        }
 
-		/**
-		 * TODO: adicionar o segundo loop que vai checar fronteiras indiretas
-		 */
-	}
+        for (int i = 0; i < tlength; i++)
+        {
+                DTBlock* dtblock = find_block(blocks, size, i);
+                const int clength = dtblock->dominateds->length;
 
-	return frontier;
+		for (int j = 0; j < clength; j++)
+                {
+                        DTBlock* child = dtblock->dominateds->elements[j];
+
+                        DList* frontier = frontiers[child->block->dt_index];
+                        const int flength = frontier->length;
+
+                        for (int k = 0; k < flength; k++)
+                        {
+                                CFBlock* block = frontier->elements[k];
+
+                                if (idominators[block->dt_index] == child->block->dt_index)
+                                {
+                                        continue;
+                                }
+
+                                add_element_to_list(frontiers[i], block);
+                        }
+                }
+
+        }
+
+	return frontiers;
 }
