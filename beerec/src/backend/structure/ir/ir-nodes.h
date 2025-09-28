@@ -24,6 +24,7 @@ typedef struct IRNodeParam IRNodeParam;
 typedef struct IRNodeArgument IRNodeArgument;
 typedef struct IRNodeCast IRNodeCast;
 typedef struct IRNodeGoto IRNodeGoto;
+typedef struct IRNodePhi IRNodePhi;
 typedef struct IRType IRType;
 
 typedef enum
@@ -44,7 +45,8 @@ typedef enum
 	IR_NODE_FIELD_LITERAL,
 	IR_NODE_PARAM,
         IR_NODE_ARGUMENT,
-	IR_NODE_CAST
+	IR_NODE_CAST,
+	IR_NODE_PHI
 }
 IRNodeType;
 
@@ -80,6 +82,8 @@ struct IRNodeList
 struct IRNodeBlock
 {
 	char*  label;
+	IRNode* phi;
+
 	DList* nodes;
 };
  
@@ -107,6 +111,9 @@ struct IRNodeFunc
 
 	IRNode**     params;
 	unsigned int params_size;
+
+	DList**      frontiers;
+	unsigned int frontiers_length;
 };
 
 struct IRNodeCall
@@ -200,6 +207,11 @@ struct IRNodeCast
 	Type*   to;
 };
 
+struct IRNodePhi
+{
+	char** labels;
+};
+
 struct IRNode
 {
 	IRNodeType type;
@@ -221,6 +233,7 @@ struct IRNode
 	IRNodeMemberAccess member_access;
         IRNodeArgument     argument;
 	IRNodeCast         cast;
+	IRNodePhi          phi;
 };
 
 IRNode* create_ir_node(IRNodeType type);

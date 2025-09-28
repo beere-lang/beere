@@ -14,6 +14,8 @@ int* idom = NULL;
 CFBlock** bparents = NULL;
 CFBlock** blocks = NULL;
 
+DList* dt_blocks = NULL;
+
 static void setup_data(int size)
 {
 	length = 0;
@@ -22,6 +24,7 @@ static void setup_data(int size)
 	blocks = malloc(sizeof(CFBlock*) * size);
 	semi = malloc(sizeof(int) * size);
 	idom = malloc(sizeof(int) * size);
+	dt_blocks = create_list(DT_BLOCKS_LIST_DEFAULT_START_CAPACITY);
 
 	for (int i = 0; i < size; i++)
 	{
@@ -152,6 +155,8 @@ static DTBlock* link_dominator(CFBlock* block, DTBlock* dominator)
 	const int index = block->dt_index;
 	DTBlock* dt = create_dt_block(block);
 
+	add_element_to_list(dt_blocks, dt);
+
 	dt->dominator = dominator;
 
 	for (int i = 0; i < length; i++)
@@ -173,7 +178,7 @@ static DTBlock* build_dominator_tree()
 	return link_dominator(blocks[0], NULL);
 }
 
-DTBlock* generate_dominator_tree(CFBlock* entry, int size)
+DominatorTree* generate_dominator_tree(CFBlock* entry, int size)
 {
 	setup_data(size);
 
@@ -182,5 +187,12 @@ DTBlock* generate_dominator_tree(CFBlock* entry, int size)
 	get_semi_dominators();
 	get_real_dominators();
 
-	return build_dominator_tree();
+	build_dominator_tree();
+
+	DominatorTree* tree = malloc(sizeof(DominatorTree));
+	
+	tree->blocks = dt_blocks;
+	tree->idominators = idom;
+
+	return tree;
 }

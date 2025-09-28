@@ -4,6 +4,7 @@
 #include "../control-flow.h"
 
 typedef struct DTBlock DTBlock;
+typedef struct DominatorTree DominatorTree;
 
 struct DTBlock
 {
@@ -13,6 +14,12 @@ struct DTBlock
 	DList*   dominateds;
 };
 
-DTBlock* generate_dominator_tree(CFBlock* entry, int size);
+struct DominatorTree
+{
+	DList* blocks;
+	int*   idominators;
+};
+
+DominatorTree* generate_dominator_tree(CFBlock* entry, int size);
 
 #endif

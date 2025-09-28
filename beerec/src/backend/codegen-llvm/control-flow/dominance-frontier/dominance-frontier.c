@@ -1,32 +1,12 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "dominance-frontier.h"
 #include "../dominator-tree/dominator-tree.h"
+
 #include "../control-flow.h"
 
 #define DOMINANCE_FRONTIER_LIST_START_CAPACITY 8
-
-DTBlock* find_block(DTBlock** list, int size, int index)
-{
-        for (int i = 0; i < size; i++)
-        {
-                DTBlock* block = list[i];
-
-                if (block == NULL)
-                {
-                        continue;
-                }
-
-                if (block->block->dt_index != index)
-                {
-                        continue;
-                }
-
-		return block;
-        }
-
-	return NULL;
-}
 
 /**
  * TODO: deixar o gerenciamento dos index melhor.
@@ -34,6 +14,7 @@ DTBlock* find_block(DTBlock** list, int size, int index)
 DList** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int* idominators, DTBlock** blocks, int size)
 {
 	DList** frontiers = malloc(sizeof(DList*) * tlength);
+	memset(frontiers, 0, sizeof(DList*) * tlength);
 
 	for (int i = 0; i < tlength; i++)
 	{
@@ -58,7 +39,9 @@ DList** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int* i
 
         for (int i = 0; i < tlength; i++)
         {
-                DTBlock* dtblock = find_block(blocks, size, i);
+                CFBlock* block = lblocks[i];
+
+		DTBlock* dtblock = blocks[block->dt_index];
                 const int clength = dtblock->dominateds->length;
 
 		for (int j = 0; j < clength; j++)

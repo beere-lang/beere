@@ -6,6 +6,10 @@
 
 #include "../../../utils/logger/logger.h"
 
+#include "../control-flow/control-flow.h"
+#include "../control-flow/dominator-tree/dominator-tree.h"
+#include "../control-flow/dominance-frontier/dominance-frontier.h"
+
 #define ENTRY_NAME ".entry"
 #define FIELD_TABLE_DEFAULT_START_CAPACITY 4
 
@@ -124,14 +128,75 @@ static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilde
 }
 
 /**
+ * TODO: terminar essa função (inserir as node phi) e depois nomear as variaveis das nodes phi. 
+ */
+void insert_func_phis(DList** frontier, const int length)
+{
+
+}
+
+/** 
+ * TODO: testar muito essa função porque ela ta meio experimental (principalmente a generate_dominance_frontier) 
+ */
+void generate_func_phi(IRNode* func)
+{
+	DList* cf = init_control_flow(func);
+	DominatorTree* dt = generate_dominator_tree(cf->elements[0], cf->length);
+
+	CFBlock** cf_list = (CFBlock**) cf->elements;
+	
+	DTBlock** dt_list = (DTBlock**) dt->blocks->elements;
+	const int dt_length = dt->blocks->length;
+
+	DList** frontiers = generate_dominance_frontier(cf_list, cf->length, dt->idominators, dt_list, dt_length);
+	
+	func->func.frontiers = frontiers;
+	func->func.frontiers_length = cf->length;
+
+	insert_func_phis(frontiers, cf->length);
+}
+
+void generate_funcs_phi(IRNode** nodes, const int length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		IRNode* node = nodes[i];
+
+		if (node == NULL)
+		{
+			continue;
+		}
+
+		if (node->type != IR_NODE_FUNC)
+		{
+			continue;
+		}
+
+		generate_func_phi(node);
+	}
+}
+
+/**
  * TODO: adicionar o sistema de modulos depois
  */
-void generate_module_llvm(IRNode* init)
+void generate_module_llvm(IRNode** nodes, const int length)
 {
 	const LLVMModuleRef module = LLVMModuleCreateWithName("test_module"); /** TODO: implementar o negocio certo nisso */
 	const LLVMBuilderRef builder = LLVMCreateBuilder();
 
-	generate_llvm_from_node(module, builder, init);
+	generate_funcs_phi(nodes, length);
+
+	for (int i = 0; i < length; i++)
+	{
+		IRNode* curr = nodes[i];
+
+		if (curr == NULL)
+		{
+			continue;
+		}
+
+		generate_llvm_from_node(module, builder, curr);
+	}
 }
 
 // ==------------------------------------ Expressions ------------------------------------== \\

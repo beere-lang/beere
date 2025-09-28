@@ -6,14 +6,14 @@
 
 #define CF_BLOCK_LIST_DEFAULT_START_CAPACITY 4
 
-DList* cf_blocks = NULL;
+static DList* cf_blocks = NULL;
 
-void setup_cf_blocks()
+static void setup_cf_blocks()
 {
 	cf_blocks = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
 }
 
-CFBlock* find_cf_block(IRNode* block)
+static CFBlock* find_cf_block(IRNode* block)
 {
 	if (cf_blocks == NULL)
 	{
@@ -42,7 +42,7 @@ CFBlock* find_cf_block(IRNode* block)
 	return NULL;
 }
 
-SizedArr* get_flow_cases(IRNode* block)
+static SizedArr* get_flow_cases(IRNode* block)
 {
 	IRNode** list = malloc(sizeof(IRNode*) * block->block.nodes->length);
 
@@ -69,7 +69,7 @@ SizedArr* get_flow_cases(IRNode* block)
 	return arr;
 }
 
-IRNode* find_next_block(DList* blocks, IRNode* block)
+static IRNode* find_next_block(DList* blocks, IRNode* block)
 {
 	int length = blocks->length;
 
@@ -98,7 +98,7 @@ IRNode* find_next_block(DList* blocks, IRNode* block)
 	return NULL;
 }
 
-CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* predecessor)
+static CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* predecessor)
 {
 	if (block == NULL)
 	{
@@ -194,9 +194,10 @@ CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* prede
 	return cf_block;
 }
 
-void init_control_flow(IRNode* func)
+DList* init_control_flow(IRNode* func)
 {
 	IRNode* entry = func->func.blocks->elements[0];
-
 	generate_control_flow(func->func.blocks, entry, NULL);
+
+	return cf_blocks;
 }

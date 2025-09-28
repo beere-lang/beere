@@ -25,6 +25,6 @@ struct CFBlock
 	int     dt_index;
 };
 
-CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock* predecessor);
+DList* init_control_flow(IRNode* func);
 
 #endif
