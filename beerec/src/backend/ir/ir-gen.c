@@ -3,6 +3,7 @@
 
 #include "ir-gen.h"
 #include "../../utils/logger/logger.h"
+#include "../../frontend/semantic/analyzer/analyzer.h"
 
 #define ENTRY_BLOCK_LABEL ".entry"
 #define BLOCK_START_INSTRUCTIONS_CAPACITY 16
@@ -14,6 +15,7 @@ static int whiles_count = 0;
 
 static Type* copy_type(Type* type);
 static int count_linked_list(ASTNode* head);
+static Type* get_expression_type(IRNode* expr);
 static IRNode* generate_ir_node(ASTNode* node);
 static IRNode* generate_expression(ASTNode* node);
 static void generate_func_instructions(ASTNode* head);
@@ -129,7 +131,8 @@ static IRNode* generate_operation(ASTNode* node)
 {
 	IRNode* operation = create_ir_node(IR_NODE_OPERATION);
 
-	operation->operation.type = convert_op_type(node->operation.op);
+	operation->operation.operation = convert_op_type(node->operation.op);
+	operation->operation.type = analyzer_return_type_of_expression(NULL, node, NULL, NULL, 0, NULL); // TODO: adicionar o escopo disso e o modulo
 
 	operation->operation.left = generate_expression(node->operation.left);
 	operation->operation.right = generate_expression(node->operation.right);
@@ -300,6 +303,18 @@ static IRNode* generate_member_access(ASTNode* node)
 	return maccess;
 }
 
+static IRNode* generate_cast(ASTNode* node)
+{
+	IRNode* cast = create_ir_node(IR_NODE_CAST);
+
+	cast->cast.to = copy_type(node->cast_node.cast_type);
+	cast->cast.from = analyzer_return_type_of_expression(NULL, node->cast_node.expr, NULL, NULL, 0, NULL);
+
+	cast->cast.expr = generate_expression(node->cast_node.expr);
+
+	return cast;
+}
+
 /**
  * TODO: terminar de implementar todas as possiveis nodes.
  */
@@ -340,6 +355,11 @@ static IRNode* generate_expression(ASTNode* node)
 		case NODE_MEMBER_ACCESS:
 		{
 			return generate_member_access(node);
+		}
+
+		case NODE_CAST:
+		{
+			return generate_cast(node);
 		}
 
 		default:

@@ -22,6 +22,7 @@ typedef struct IRNodeBranch IRNodeBranch;
 typedef struct IRNodeMemberAccess IRNodeMemberAccess;
 typedef struct IRNodeParam IRNodeParam;
 typedef struct IRNodeArgument IRNodeArgument;
+typedef struct IRNodeCast IRNodeCast;
 typedef struct IRNodeGoto IRNodeGoto;
 typedef struct IRType IRType;
 
@@ -42,7 +43,8 @@ typedef enum
 	IR_NODE_REFERENCE,
 	IR_NODE_FIELD_LITERAL,
 	IR_NODE_PARAM,
-        IR_NODE_ARGUMENT
+        IR_NODE_ARGUMENT,
+	IR_NODE_CAST
 }
 IRNodeType;
 
@@ -61,7 +63,9 @@ typedef enum
 	IR_OPERATION_GREATER,
 	IR_OPERATION_LESS,
 	IR_OPERATION_GREATER_EQUALS,
-	IR_OPERATION_LESS_EQUALS
+	IR_OPERATION_LESS_EQUALS,
+	IR_OPERATION_AND,
+	IR_OPERATION_OR
 }
 IROperationType;
 
@@ -81,7 +85,8 @@ struct IRNodeBlock
  
 struct IRNodeOperation
 {
-	IROperationType type;
+	IROperationType operation;
+	Type*           type;
 
 	IRNode*         left;
 	IRNode*         right;
@@ -187,6 +192,14 @@ struct IRNodeArgument
         IRNode* value;
 };
 
+struct IRNodeCast
+{
+	IRNode* expr;
+
+	Type*   from;
+	Type*   to;
+};
+
 struct IRNode
 {
 	IRNodeType type;
@@ -207,6 +220,7 @@ struct IRNode
 	IRNodeParam        param;
 	IRNodeMemberAccess member_access;
         IRNodeArgument     argument;
+	IRNodeCast         cast;
 };
 
 IRNode* create_ir_node(IRNodeType type);

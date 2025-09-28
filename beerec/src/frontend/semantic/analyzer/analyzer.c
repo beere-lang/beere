@@ -1518,13 +1518,7 @@ static Type* analyzer_get_operation_type(Module* module, ASTNode* node, SymbolTa
 	Type* right = analyzer_return_type_of_expression(module, node->operation.right, scope, NULL, 0, NULL);
 
 	switch (node->operation.op)
-	{
-		case TOKEN_OPERATOR_OR: // ||
-		case TOKEN_OPERATOR_AND: // &&
-		{
-			return create_type(TYPE_BOOL, NULL);
-		}
-				
+	{		
 		case TOKEN_OPERATOR_DIVIDED_EQUALS: // /=
 		case TOKEN_OPERATOR_TIMES_EQUALS: // *=
 		case TOKEN_OPERATOR_MINUS_EQUALS: // -=
@@ -1545,6 +1539,8 @@ static Type* analyzer_get_operation_type(Module* module, ASTNode* node, SymbolTa
 		case TOKEN_OPERATOR_GREATER: // >
 		case TOKEN_OPERATOR_EQUALS: // ==
 		case TOKEN_OPERATOR_NOT_EQUALS:
+		case TOKEN_OPERATOR_OR: // ||
+		case TOKEN_OPERATOR_AND: // &&
 		{
 			return create_type(TYPE_BOOL, NULL);
 		}

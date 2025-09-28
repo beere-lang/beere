@@ -20,7 +20,7 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node);
 static void generate_func_blocks(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* func, const LLVMValueRef llvm_func);
 
-// -------------------------------- Statements -------------------------------- \\
+// ==------------------------------------ Statements ------------------------------------== \\
 
 static void generate_func(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
@@ -86,7 +86,7 @@ static void generate_ret(const LLVMModuleRef module, const LLVMBuilderRef llvm, 
         }
 }
 
-// -------------------------------- Core -------------------------------- \\
+// ==------------------------------------ Core ------------------------------------== \\
 
 static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
@@ -134,7 +134,7 @@ void generate_module_llvm(IRNode* init)
 	generate_llvm_from_node(module, builder, init);
 }
 
-// -------------------------------- Expressions -------------------------------- \\
+// ==------------------------------------ Expressions ------------------------------------== \\
 
 static LLVMValueRef generate_literal_i32(const LLVMModuleRef module, const LLVMBuilderRef llvm, const int value)
 {
@@ -194,9 +194,23 @@ static LLVMValueRef generate_iadd_operation(const LLVMModuleRef module, const LL
 	return result;
 }
 
+static LLVMValueRef generate_fadd_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFAdd(llvm, left, right, generate_expr_label(1));
+
+	return result;
+}
+
 static LLVMValueRef generate_isub_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
 {
 	const LLVMValueRef result = LLVMBuildSub(llvm, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_fsub_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFSub(llvm, left, right, generate_expr_label(1));
 
 	return result;
 }
@@ -208,6 +222,13 @@ static LLVMValueRef generate_imul_operation(const LLVMModuleRef module, const LL
 	return result;
 }
 
+static LLVMValueRef generate_fmul_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFMul(llvm, left, right, generate_expr_label(1));
+
+	return result;
+}
+
 static LLVMValueRef generate_idiv_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
 {
 	const LLVMValueRef result = LLVMBuildSDiv(llvm, left, right, generate_expr_label(1));
@@ -215,37 +236,234 @@ static LLVMValueRef generate_idiv_operation(const LLVMModuleRef module, const LL
 	return result;
 }
 
+static LLVMValueRef generate_fdiv_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFDiv(llvm, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_and_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildAnd(llvm, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_or_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildOr(llvm, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_igt_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildICmp(llvm, LLVMIntSGT, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_fgt_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealUGT, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_ige_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildICmp(llvm, LLVMIntSGE, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_fge_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealUGE, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_ilt_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildICmp(llvm, LLVMIntSLT, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_flt_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealULT, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_ile_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildICmp(llvm, LLVMIntSLE, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_fle_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealULE, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_ie_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealUEQ, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_fe_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealUEQ, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_ine_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealUNE, left, right, generate_expr_label(1));
+
+	return result;
+}
+
+static LLVMValueRef generate_fne_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, const LLVMValueRef left, const LLVMValueRef right)
+{
+	const LLVMValueRef result = LLVMBuildFCmp(llvm, LLVMRealUNE, left, right, generate_expr_label(1));
+
+	return result;
+}
+
 static LLVMValueRef generate_operation(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
+	Type* type = node->operation.type;
+
 	const LLVMValueRef left = generate_expr(module, llvm, node->operation.left);
 	const LLVMValueRef right = generate_expr(module, llvm, node->operation.right);
 
-	switch (node->operation.type) /** TODO: implementar coisa pra floating numbers (float, double) */
+	switch (node->operation.operation)
 	{
 		case IR_OPERATION_ADD:
 		{
-			return generate_iadd_operation(module, llvm, left, right);
+			if (type->type == TYPE_INT)
+			{
+				return generate_iadd_operation(module, llvm, left, right);
+			}
+			
+			return generate_fadd_operation(module, llvm, left, right);
 		}
 
 		case IR_OPERATION_SUB:
 		{
-			return generate_isub_operation(module, llvm, left, right);
+			if (type->type == TYPE_INT)
+			{
+				return generate_isub_operation(module, llvm, left, right);
+			}
+			
+			return generate_fsub_operation(module, llvm, left, right);
 		}
 
 		case IR_OPERATION_MUL:
 		{
-			return generate_imul_operation(module, llvm, left, right);
+			if (type->type == TYPE_INT)
+			{
+				return generate_imul_operation(module, llvm, left, right);
+			}
+			
+			return generate_fmul_operation(module, llvm, left, right);
 		}
 
 		case IR_OPERATION_DIV:
 		{
-			return generate_idiv_operation(module, llvm, left, right);
+			if (type->type == TYPE_INT)
+			{
+				return generate_idiv_operation(module, llvm, left, right);
+			}
+			
+			return generate_fdiv_operation(module, llvm, left, right);
+		}
+		
+		case IR_OPERATION_GREATER:
+		{
+			if (type->type == TYPE_INT)
+			{
+				return generate_igt_operation(module, llvm, left, right);
+			}
+			
+			return generate_fgt_operation(module, llvm, left, right);
+		}
+
+		case IR_OPERATION_GREATER_EQUALS:
+		{
+			if (type->type == TYPE_INT)
+			{
+				return generate_ige_operation(module, llvm, left, right);
+			}
+			
+			return generate_fge_operation(module, llvm, left, right);
+
+		}
+
+		case IR_OPERATION_LESS:
+		{
+			if (type->type == TYPE_INT)
+			{
+				return generate_ilt_operation(module, llvm, left, right);
+			}
+			
+			return generate_flt_operation(module, llvm, left, right);
+		}
+
+		case IR_OPERATION_LESS_EQUALS:
+		{
+			if (type->type == TYPE_INT)
+			{
+				return generate_ile_operation(module, llvm, left, right);
+			}
+			
+			return generate_fle_operation(module, llvm, left, right);
+		}
+
+		case IR_OPERATION_EQUALS:
+		{
+			if (type->type == TYPE_INT)
+			{
+				return generate_ie_operation(module, llvm, left, right);
+			}
+			
+			return generate_fe_operation(module, llvm, left, right);
+		}
+
+		case IR_OPERATION_NOT_EQUALS:
+		{
+			if (type->type == TYPE_INT)
+			{
+				return generate_ine_operation(module, llvm, left, right);
+			}
+			
+			return generate_fne_operation(module, llvm, left, right);
+		}
+
+		case IR_OPERATION_OR:
+		{
+			return generate_or_operation(module, llvm, left, right);
+		}
+
+		case IR_OPERATION_AND:
+		{
+			return generate_and_operation(module, llvm, left, right);
 		}
 
 		default:
 		{
 			println("Found operation node with type not implemented: %d", node->operation.type);
-
 			break;
 		}
 	}
@@ -303,7 +521,7 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 	return NULL;
 }
 
-// -------------------------------- Utils -------------------------------- \\
+// ==------------------------------------ Utils ------------------------------------== \\
 
 static void generate_func_blocks(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* func, const LLVMValueRef llvm_func)
 {
@@ -361,7 +579,7 @@ static LLVMTypeRef get_type(Type* type)
 
 		case TYPE_STRING:
 		{
-			return LLVMPointerType(LLVMInt8Type(), 0); // sei la porra, muda isso depois
+			return LLVMPointerType(LLVMInt8Type(), 0);
 		}
 
 		case TYPE_PTR:

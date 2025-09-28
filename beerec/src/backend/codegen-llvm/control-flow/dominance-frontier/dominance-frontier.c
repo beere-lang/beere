@@ -4,6 +4,8 @@
 #include "../dominator-tree/dominator-tree.h"
 #include "../control-flow.h"
 
+#define DOMINANCE_FRONTIER_LIST_START_CAPACITY 8
+
 DTBlock* find_block(DTBlock** list, int size, int index)
 {
         for (int i = 0; i < size; i++)
@@ -20,10 +22,10 @@ DTBlock* find_block(DTBlock** list, int size, int index)
                         continue;
                 }
 
-                return block;
+		return block;
         }
 
-        return NULL;
+	return NULL;
 }
 
 /**
@@ -36,7 +38,7 @@ DList** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int* i
 	for (int i = 0; i < tlength; i++)
 	{
 		CFBlock* block = lblocks[i];
-                frontiers[i] = create_list(8);
+                frontiers[i] = create_list(DOMINANCE_FRONTIER_LIST_START_CAPACITY);
 
 		const int slength = block->successors->length;
 

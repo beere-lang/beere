@@ -6,5 +6,6 @@
 
 IRNode** generate_ir_nodes(ASTNode** nodes, const int length);
 void free_nodes(IRNode** nodes, int length);
+Type* get_operation_type(IRNode* node);
 
 #endif
