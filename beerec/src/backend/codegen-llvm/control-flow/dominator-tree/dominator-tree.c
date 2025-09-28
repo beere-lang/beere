@@ -128,6 +128,11 @@ static void get_real_dominators()
 		CFBlock* block = blocks[i];
 		idom[i] = semi[i];
 
+		if (idom[i] == 0)
+		{
+			continue;
+		}
+		
 		for (int j = 0; j < block->predecessors->length; j++)
 		{
 			CFBlock* pred = block->predecessors->elements[j];
