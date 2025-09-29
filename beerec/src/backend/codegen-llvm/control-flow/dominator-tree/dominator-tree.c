@@ -132,7 +132,7 @@ static void get_real_dominators()
 		{
 			continue;
 		}
-		
+
 		for (int j = 0; j < block->predecessors->length; j++)
 		{
 			CFBlock* pred = block->predecessors->elements[j];

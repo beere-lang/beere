@@ -82,7 +82,7 @@ struct IRNodeList
 struct IRNodeBlock
 {
 	char*  label;
-	IRNode* phi;
+	DList* phis;
 
 	DList* nodes;
 };
@@ -124,6 +124,8 @@ struct IRNodeCall
 
 struct IRNodeStore
 {
+	char*   ssa_label;
+
 	IRNode* dest;
 	IRNode* expr;
 };
@@ -209,7 +211,7 @@ struct IRNodeCast
 
 struct IRNodePhi
 {
-	char** labels;
+	DList* labels;
 };
 
 struct IRNode

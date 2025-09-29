@@ -11,7 +11,8 @@
 #include "../control-flow/dominance-frontier/dominance-frontier.h"
 
 #define ENTRY_NAME ".entry"
-#define FIELD_TABLE_DEFAULT_START_CAPACITY 4
+#define DEFAULT_PHI_START_CAPACITY 4
+#define DEFAULT_BLOCK_PHIS_START_CAPACITY 3
 
 static size_t expr_count = 0;
 static size_t fload_count = 0;
@@ -128,7 +129,7 @@ static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilde
 }
 
 /**
- * TODO: terminar essa função (inserir as node phi) e depois nomear as variaveis das nodes phi. 
+ * TODO: terminar essa função (inserir as node phi). 
  */
 void insert_func_phis(DList** frontier, const int length)
 {

@@ -540,6 +540,7 @@ static IRNode* create_block(const char* label, const int add_to_func)
 
 	block->block.nodes = create_list(BLOCK_START_INSTRUCTIONS_CAPACITY);
 	block->block.label = _strdup(label);
+	block->block.phis = NULL;
 
 	if (add_to_func)
 	{
