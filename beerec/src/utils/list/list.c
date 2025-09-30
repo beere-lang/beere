@@ -90,6 +90,21 @@ int contains_element(DList* list, void* element)
 	return 0;
 }
 
+void* pop_list(DList* list)
+{
+	void* element = list->elements[list->length - 1];
+
+	list->length--;
+	list->elements[list->length - 1] = NULL;
+
+	return element;
+}
+
+int is_empty_list(DList* list)
+{
+	return list->length <= 0;
+}
+
 void free_list(DList* list)
 {
 	for (int i = 0; i < list->length; i++)

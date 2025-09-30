@@ -23,6 +23,7 @@ struct CFBlock
 
 	int     visited;
 	int     dt_index;
+	int     cf_index;
 };
 
 DList* init_control_flow(IRNode* func);

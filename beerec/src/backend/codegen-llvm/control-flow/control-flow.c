@@ -118,6 +118,7 @@ static CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock
 		cf_block->successors = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
 		cf_block->block = block;
 
+		cf_block->cf_index = cf_blocks->length;
 		add_element_to_list(cf_blocks, cf_block);
 	}
 	else
@@ -186,9 +187,13 @@ static CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock
 	if (next_block)
 	{
 		IRNode* next_block = find_next_block(func_blocks, block);
-		CFBlock* successor = generate_control_flow(func_blocks, next_block, cf_block);
 
-		add_element_to_list(cf_block->successors, successor);
+		if (next_block != NULL)
+		{
+			CFBlock* successor = generate_control_flow(func_blocks, next_block, cf_block);
+
+			add_element_to_list(cf_block->successors, successor);
+		}
 	}
 
 	return cf_block;

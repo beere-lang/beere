@@ -19,6 +19,7 @@ static size_t fload_count = 0;
 
 static LLVMTypeRef get_type(Type* type);
 static const char* generate_expr_label(int inc);
+static int defines_field(char* field_label, CFBlock* block);
 static LLVMTypeRef* get_args_type(IRNode** args, unsigned int args_size);
 static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int args_size);
 static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node);
@@ -128,18 +129,85 @@ static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilde
         exit(1);
 }
 
-/**
- * TODO: terminar essa função (inserir as node phi). 
- */
-void insert_func_phis(DList** frontier, const int length)
+static void insert_func_phis(IRNode** fields, const unsigned int fields_length, CFBlock** blocks, const unsigned int blocks_length, DList** frontiers)
 {
+	int has_phi[fields_length][blocks_length];
 
+	for (int i = 0; i < fields_length; i++)
+	{
+		IRNode* field = fields[i];
+
+		if (field == NULL)
+		{
+			continue;
+		}
+
+		DList* work_list = create_list(8);
+
+		for (int j = 0; j < blocks_length; j++)
+		{
+			CFBlock* block = blocks[j];
+
+			if (block == NULL)
+			{
+				continue;
+			}
+
+			if (!defines_field(field->field.name, block))
+			{
+				continue;
+			}
+
+			int* index = malloc(sizeof(int));
+			*index = block->dt_index; // frontiers usa dt_index
+
+			add_element_to_list(work_list, index);
+		}
+
+		while (!is_empty_list(work_list))
+		{
+			int* index = pop_list(work_list);
+
+			DList* frontier = frontiers[*index];
+			const unsigned int length = frontier->length;
+
+			for (int j = 0; j < length; j++)
+			{
+				CFBlock* block = frontier->elements[j];
+
+				if (block == NULL)
+				{
+					continue;
+				}
+
+				if (has_phi[i][block->cf_index])
+				{
+					continue;
+				}
+
+				IRNode* phi = create_ir_node(IR_NODE_PHI);
+				phi->phi.labels = create_list(4);
+
+				add_element_to_list(block->block->block.phis, phi);
+				has_phi[i][block->cf_index] = 1;
+
+				int* index = malloc(sizeof(int));
+				*index = block->dt_index;
+
+				add_element_to_list(work_list, index);
+			}
+		}
+
+		free_list(work_list);
+	}
 }
 
-/** 
- * TODO: testar muito essa função porque ela ta meio experimental (principalmente a generate_dominance_frontier) 
- */
-void generate_func_phi(IRNode* func)
+static void rename_func_phis(DTBlock* dt_block)
+{
+	
+}
+
+static void generate_func_phi(IRNode* func)
 {
 	DList* cf = init_control_flow(func);
 	DominatorTree* dt = generate_dominator_tree(cf->elements[0], cf->length);
@@ -154,10 +222,11 @@ void generate_func_phi(IRNode* func)
 	func->func.frontiers = frontiers;
 	func->func.frontiers_length = cf->length;
 
-	insert_func_phis(frontiers, cf->length);
+	insert_func_phis(func->func.fields, func->func.fields_length, cf_list, cf->length, frontiers); /** TODO: inserir os argumentos certos */
+	rename_func_phis(dt_list[0]); /** TODO: inserir os argumentos certos */
 }
 
-void generate_funcs_phi(IRNode** nodes, const int length)
+static void generate_funcs_phi(IRNode** nodes, const int length)
 {
 	for (int i = 0; i < length; i++)
 	{
@@ -180,7 +249,7 @@ void generate_funcs_phi(IRNode** nodes, const int length)
 /**
  * TODO: adicionar o sistema de modulos depois
  */
-void generate_module_llvm(IRNode** nodes, const int length)
+void generate_module_llvm(IRNode** nodes, IRNode** fields, const int length)
 {
 	const LLVMModuleRef module = LLVMModuleCreateWithName("test_module"); /** TODO: implementar o negocio certo nisso */
 	const LLVMBuilderRef builder = LLVMCreateBuilder();
@@ -588,6 +657,35 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 }
 
 // ==------------------------------------ Utils ------------------------------------== \\
+
+static int defines_field(char* field_label, CFBlock* block)
+{
+	const unsigned int length = block->block->block.nodes->length;
+
+	for (int i = 0; i < length; i++)
+	{
+		IRNode* node = block->block->block.nodes->elements[i];
+
+		if (node == NULL)
+		{
+			continue;
+		}
+
+		if (node->type != IR_NODE_STORE && node->type != IR_NODE_FIELD)
+		{
+			continue;
+		}
+
+		if (node->type == IR_NODE_FIELD && node->field.value == NULL)
+		{
+			continue;
+		}
+
+		return 1;
+	}
+
+	return 0;
+}
 
 static void generate_func_blocks(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* func, const LLVMValueRef llvm_func)
 {

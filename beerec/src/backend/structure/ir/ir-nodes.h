@@ -114,6 +114,9 @@ struct IRNodeFunc
 
 	DList**      frontiers;
 	unsigned int frontiers_length;
+
+	IRNode**     fields;
+	unsigned int fields_length;
 };
 
 struct IRNodeCall
