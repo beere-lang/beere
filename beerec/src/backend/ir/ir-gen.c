@@ -198,6 +198,11 @@ static IRNode* generate_ir_node(ASTNode* node)
 			return generate_ret(node);
 		}
 
+		case NODE_IF:
+		{
+			//return generate_if(node);
+		}
+
 		case NODE_WHILE_LOOP:
 		{
 			return generate_while(node);

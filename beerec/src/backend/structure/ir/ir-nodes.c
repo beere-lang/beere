@@ -4,7 +4,7 @@
 
 IRNode* create_ir_node(IRNodeType type)
 {
-        IRNode* node = malloc(sizeof(IRNode));	
+	 IRNode* node = malloc(sizeof(IRNode));	
         
         node->type = type;
         
