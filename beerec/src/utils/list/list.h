@@ -22,5 +22,6 @@ int is_empty_list(DList* list);
 void free_list(DList* list);
 
 int contains_element(DList* list, void* element);
+void* get_element(DList* list, void* element);
 
 #endif

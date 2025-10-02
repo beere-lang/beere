@@ -190,6 +190,7 @@ static void insert_func_phis(IRNode** fields, const unsigned int fields_length, 
 				IRNode* phi = create_ir_node(IR_NODE_PHI);
 				
 				phi->phi.labels = create_list(4);
+				
 				phi->phi.field = fields[i];
 				phi->phi.field_index = i;
 
@@ -207,17 +208,12 @@ static void insert_func_phis(IRNode** fields, const unsigned int fields_length, 
 	}
 }
 
-static void rename_block_phi(CFBlock* block, const unsigned int cf_blocks_length, int field_count[][cf_blocks_length], int* has_renamed)
+static void handle_block_definitions(CFBlock* block, const unsigned int cf_blocks_length, int** field_count)
 {
-	if (has_renamed[block->cf_index])
-	{
-		return;
-	}
+	const unsigned int length = block->block->block.nodes->length;
+	const unsigned int phis_length = block->block->block.phis->length;
 
-	const unsigned int pred_length = block->predecessors->length;
-	const unsigned int phi_length = block->block->block.phis->length;
-
-	for (int i = 0; i < phi_length; i++)
+	for (int i = 0; i < phis_length; i++)
 	{
 		IRNode* phi = block->block->block.phis->elements[i];
 
@@ -226,52 +222,141 @@ static void rename_block_phi(CFBlock* block, const unsigned int cf_blocks_length
 			continue;
 		}
 
-		int* preds = malloc(sizeof(int) * pred_length); // ALERT: temporario só pra não ter chance de estourar a stack
-		int k = 0;
-
-		for (int j = 0; j < pred_length; j++)
-		{
-			CFBlock* pred = block->predecessors->elements[j];
-
-			int count = field_count[phi->phi.field_index][pred->cf_index];
-			char* label = get_field_label(phi->phi.field->field.name, count);
-
-			add_element_to_list(phi->phi.labels, label);
-
-			preds[k] = count;
-			k++;
-		}
-
-		field_count[phi->phi.field_index][block->cf_index] = get_biggest(preds, pred_length) + 1;
-		free(preds);
+		field_count[phi->phi.field_index][block->cf_index]++;
 	}
-	
-	has_renamed[block->cf_index] = 1;
 
-	const unsigned int succ_length = block->successors->length;
-
-	for (int i = 0; i < succ_length; i++)
+	for (int i = 0; i < length; i++)
 	{
-		CFBlock* succ = block->successors->elements[i];
+		IRNode* node = block->block->block.nodes->elements[i];
 
-		if (succ == NULL)
+		if (node == NULL)
 		{
 			continue;
 		}
 
-		rename_block_phi(succ, cf_blocks_length, field_count, has_renamed);
+		if (node->type != IR_NODE_STORE && node->type != IR_NODE_FIELD)
+		{
+			continue;
+		}
+
+		if (node->type == IR_NODE_FIELD)
+		{
+			/*
+			 * if (node->field.value == NULL)
+			 * {
+			 *	continue;
+			 * }
+			 *
+			 * if (node->field.field_index == -1)
+			 * {
+			 *	continue;
+			 * }
+			 *
+			 * field_count[node->field.field_index][block->cf_index]++;
+			 */
+		}
+		else 
+		{
+			if (node->store.field_index == -1)
+			{
+				continue;
+			}
+			
+			field_count[node->store.field_index][block->cf_index]++;
+		}
 	}
 }
 
-static void rename_func_phis(CFBlock** cf_blocks, const unsigned int cf_blocks_length, IRNode** fields, const unsigned int fields_length)
+static void rename_block_phi(DTBlock* block, int* field_stack, const unsigned int fields_length, const unsigned int cf_blocks_length, int** field_count, int* has_renamed)
 {
-	int field_count[fields_length][cf_blocks_length];
+	if (has_renamed[block->block->cf_index])
+	{
+		return;
+	}
+
+	has_renamed[block->block->cf_index] = 1;
+
+	const unsigned int preds_length = block->block->predecessors->length;
+	const unsigned int phis_length = block->block->block->block.phis->length;
+
+	for (int i = 0; i < phis_length; i++)
+	{
+		IRNode* phi = block->block->block->block.phis->elements[i];
+
+		if (phi == NULL)
+		{
+			continue;
+		}
+
+		char* name = phi->phi.field->field.name;
+
+		for (int j = 0; j < preds_length; j++)
+		{
+			CFBlock* pred = block->block->predecessors->elements[j];
+
+			if (pred == NULL)
+			{
+				continue;
+			}
+
+			char* label = get_field_label(name, field_count[phi->phi.field_index][pred->cf_index]);
+			add_element_to_list(phi->phi.labels, label);
+		}
+	}
+
+	for (int i = 0; i < fields_length; i++)
+	{
+		field_count[i][block->block->cf_index] = field_stack[i];
+	}
+
+	handle_block_definitions(block->block, cf_blocks_length, field_count);
+
+	for (int i = 0; i < fields_length; i++)
+	{
+		field_stack[i] = field_count[i][block->block->cf_index];
+	}
+
+	const unsigned int childs_length = block->dominateds->length;
+
+	for (int i = 0; i < childs_length; i++)
+	{
+		DTBlock* child = block->dominateds->elements[i];
+
+		if (child == NULL)
+		{
+			continue;
+		}
+
+		rename_block_phi(child, field_stack, fields_length, cf_blocks_length, field_count, has_renamed);
+	}
+}
+
+static void rename_func_phis(DTBlock* entry, CFBlock** cf_blocks, const unsigned int cf_blocks_length, IRNode** fields, const unsigned int fields_length)
+{
+	int** field_count = malloc(sizeof(int*) * fields_length);
+	
+	int* field_stack = malloc(sizeof(int) * fields_length);
+	memset(field_stack, 0, sizeof(int) * fields_length);
+
 	int has_renamed[cf_blocks_length];
 
-	memset(has_renamed, 0, sizeof(has_renamed));
-	memset(field_count, 0, sizeof(field_count));
+	for (int i = 0; i < fields_length; i++)
+	{
+		field_count[i] = malloc(sizeof(int) * cf_blocks_length);
+		memset(field_count[i], 0, sizeof(int) * cf_blocks_length);
+	}
 
-	rename_block_phi(cf_blocks[0], cf_blocks_length, field_count, has_renamed);
+	memset(has_renamed, 0, sizeof(has_renamed));
+
+	rename_block_phi(entry, field_stack, fields_length, cf_blocks_length, field_count, has_renamed);
+
+	for (int i = 0; i < fields_length; i++)
+	{
+		free(field_count[i]);
+	}
+
+	free(field_count);
+	free(field_stack);
 }
 
 static void generate_func_phi(IRNode* func)
@@ -290,7 +375,7 @@ static void generate_func_phi(IRNode* func)
 	func->func.frontiers_length = cf->length;
 
 	insert_func_phis(func->func.fields, func->func.fields_length, cf_list, cf->length, frontiers);
-	rename_func_phis(cf_list, cf->length, func->func.fields, func->func.fields_length);
+	rename_func_phis(dt_list[0], cf_list, cf->length, func->func.fields, func->func.fields_length);
 }
 
 static void generate_funcs_phi(IRNode** nodes, const int length)

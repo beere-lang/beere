@@ -90,6 +90,35 @@ int contains_element(DList* list, void* element)
 	return 0;
 }
 
+void* get_element(DList* list, void* element)
+{
+	if (list == NULL)
+	{
+		println("List is NULL...");
+		exit(1);
+	}
+
+	if (element == NULL)
+	{
+		println("Element is NULL...");
+		exit(1);
+	}
+
+	for (size_t i = 0; i < list->length; i++)
+	{
+		void* e = list->elements[i];
+
+		if (e != element)
+		{
+			continue;
+		}
+
+		return e;
+	}
+
+	return NULL;
+}
+
 void* pop_list(DList* list)
 {
 	void* element = list->elements[list->length - 1];

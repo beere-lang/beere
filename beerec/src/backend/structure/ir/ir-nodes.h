@@ -131,6 +131,8 @@ struct IRNodeStore
 
 	IRNode* dest;
 	IRNode* expr;
+
+	int     field_index;
 };
 
 struct IRNodeGoto
@@ -167,6 +169,8 @@ struct IRNodeField
 
 	char*   name;
 	IRNode* value;
+
+	int     field_index;
 };
 
 struct IRNodeParam
