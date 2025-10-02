@@ -241,18 +241,8 @@ static void handle_block_definitions(CFBlock* block, const unsigned int cf_block
 
 		if (node->type == IR_NODE_FIELD)
 		{
-			/*
-			 * if (node->field.value == NULL)
-			 * {
-			 *	continue;
-			 * }
-			 *
-			 * if (node->field.field_index == -1)
-			 * {
-			 *	continue;
-			 * }
-			 *
-			 * field_count[node->field.field_index][block->cf_index]++;
+			/**
+			 * TODO: adicionar coisa aqui depois.
 			 */
 		}
 		else 
@@ -283,7 +273,7 @@ static void rename_block_phi(DTBlock* block, int* field_stack, const unsigned in
 	{
 		IRNode* phi = block->block->block->block.phis->elements[i];
 
-		if (phi == NULL)
+		if (phi == NULL || phi->phi.field_index == -1)
 		{
 			continue;
 		}
