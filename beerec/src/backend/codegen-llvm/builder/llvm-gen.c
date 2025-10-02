@@ -26,6 +26,7 @@ static LLVMTypeRef* get_args_type(IRNode** args, unsigned int args_size);
 static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int args_size);
 static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node);
 static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node);
+static void handle_block_definitions(CFBlock* block, const unsigned int cf_blocks_length, int** field_count);
 static void generate_func_blocks(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* func, const LLVMValueRef llvm_func);
 
 // ==------------------------------------ Statements ------------------------------------== \\
@@ -205,55 +206,6 @@ static void insert_func_phis(IRNode** fields, const unsigned int fields_length, 
 		}
 
 		free_list(work_list);
-	}
-}
-
-static void handle_block_definitions(CFBlock* block, const unsigned int cf_blocks_length, int** field_count)
-{
-	const unsigned int length = block->block->block.nodes->length;
-	const unsigned int phis_length = block->block->block.phis->length;
-
-	for (int i = 0; i < phis_length; i++)
-	{
-		IRNode* phi = block->block->block.phis->elements[i];
-
-		if (phi == NULL)
-		{
-			continue;
-		}
-
-		field_count[phi->phi.field_index][block->cf_index]++;
-	}
-
-	for (int i = 0; i < length; i++)
-	{
-		IRNode* node = block->block->block.nodes->elements[i];
-
-		if (node == NULL)
-		{
-			continue;
-		}
-
-		if (node->type != IR_NODE_STORE && node->type != IR_NODE_FIELD)
-		{
-			continue;
-		}
-
-		if (node->type == IR_NODE_FIELD)
-		{
-			/**
-			 * TODO: adicionar coisa aqui depois.
-			 */
-		}
-		else 
-		{
-			if (node->store.field_index == -1)
-			{
-				continue;
-			}
-			
-			field_count[node->store.field_index][block->cf_index]++;
-		}
 	}
 }
 
@@ -799,6 +751,55 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 }
 
 // ==------------------------------------ Utils ------------------------------------== \\
+
+static void handle_block_definitions(CFBlock* block, const unsigned int cf_blocks_length, int** field_count)
+{
+	const unsigned int length = block->block->block.nodes->length;
+	const unsigned int phis_length = block->block->block.phis->length;
+
+	for (int i = 0; i < phis_length; i++)
+	{
+		IRNode* phi = block->block->block.phis->elements[i];
+
+		if (phi == NULL)
+		{
+			continue;
+		}
+
+		field_count[phi->phi.field_index][block->cf_index]++;
+	}
+
+	for (int i = 0; i < length; i++)
+	{
+		IRNode* node = block->block->block.nodes->elements[i];
+
+		if (node == NULL)
+		{
+			continue;
+		}
+
+		if (node->type != IR_NODE_STORE && node->type != IR_NODE_FIELD)
+		{
+			continue;
+		}
+
+		if (node->type == IR_NODE_FIELD)
+		{
+			/**
+			 * TODO: adicionar coisa aqui depois.
+			 */
+		}
+		else 
+		{
+			if (node->store.field_index == -1)
+			{
+				continue;
+			}
+			
+			field_count[node->store.field_index][block->cf_index]++;
+		}
+	}
+}
 
 static int get_biggest(int* values, int length)
 {
