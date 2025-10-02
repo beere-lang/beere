@@ -134,7 +134,12 @@ static void generate_llvm_from_node(const LLVMModuleRef module, const LLVMBuilde
 
 static void insert_func_phis(IRNode** fields, const unsigned int fields_length, CFBlock** blocks, const unsigned int blocks_length, DList** frontiers)
 {
-	int has_phi[fields_length][blocks_length];
+	int** has_phi = malloc(sizeof(int*) * fields_length);
+
+	for (int i = 0; i < fields_length; i++)
+	{
+		has_phi[i] = malloc(sizeof(int) * blocks_length);
+	}
 
 	for (int i = 0; i < fields_length; i++)
 	{
@@ -207,6 +212,13 @@ static void insert_func_phis(IRNode** fields, const unsigned int fields_length, 
 
 		free_list(work_list);
 	}
+
+	for (int i = 0; i < fields_length; i++)
+	{
+		free(has_phi[i]);
+	}
+
+	free(has_phi);
 }
 
 static void rename_block_phi(DTBlock* block, int* field_stack, const unsigned int fields_length, const unsigned int cf_blocks_length, int** field_count, int* has_renamed)
