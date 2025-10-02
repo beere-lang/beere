@@ -19,6 +19,8 @@ static size_t fload_count = 0;
 
 static LLVMTypeRef get_type(Type* type);
 static const char* generate_expr_label(int inc);
+static int get_biggest(int* values, int length);
+static char* get_field_label(char* label, int count);
 static int defines_field(char* field_label, CFBlock* block);
 static LLVMTypeRef* get_args_type(IRNode** args, unsigned int args_size);
 static void setup_func_arg_names(LLVMValueRef* func, IRNode** args, unsigned int args_size);
@@ -186,7 +188,10 @@ static void insert_func_phis(IRNode** fields, const unsigned int fields_length, 
 				}
 
 				IRNode* phi = create_ir_node(IR_NODE_PHI);
+				
 				phi->phi.labels = create_list(4);
+				phi->phi.field = fields[i];
+				phi->phi.field_index = i;
 
 				add_element_to_list(block->block->block.phis, phi);
 				has_phi[i][block->cf_index] = 1;
@@ -202,9 +207,71 @@ static void insert_func_phis(IRNode** fields, const unsigned int fields_length, 
 	}
 }
 
-static void rename_func_phis(DTBlock* dt_block)
+static void rename_block_phi(CFBlock* block, const unsigned int cf_blocks_length, int field_count[][cf_blocks_length], int* has_renamed)
 {
+	if (has_renamed[block->cf_index])
+	{
+		return;
+	}
+
+	const unsigned int pred_length = block->predecessors->length;
+	const unsigned int phi_length = block->block->block.phis->length;
+
+	for (int i = 0; i < phi_length; i++)
+	{
+		IRNode* phi = block->block->block.phis->elements[i];
+
+		if (phi == NULL)
+		{
+			continue;
+		}
+
+		int* preds = malloc(sizeof(int) * pred_length); // ALERT: temporario só pra não ter chance de estourar a stack
+		int k = 0;
+
+		for (int j = 0; j < pred_length; j++)
+		{
+			CFBlock* pred = block->predecessors->elements[j];
+
+			int count = field_count[phi->phi.field_index][pred->cf_index];
+			char* label = get_field_label(phi->phi.field->field.name, count);
+
+			add_element_to_list(phi->phi.labels, label);
+
+			preds[k] = count;
+			k++;
+		}
+
+		field_count[phi->phi.field_index][block->cf_index] = get_biggest(preds, pred_length) + 1;
+		free(preds);
+	}
 	
+	has_renamed[block->cf_index] = 1;
+
+	const unsigned int succ_length = block->successors->length;
+
+	for (int i = 0; i < succ_length; i++)
+	{
+		CFBlock* succ = block->successors->elements[i];
+
+		if (succ == NULL)
+		{
+			continue;
+		}
+
+		rename_block_phi(succ, cf_blocks_length, field_count, has_renamed);
+	}
+}
+
+static void rename_func_phis(CFBlock** cf_blocks, const unsigned int cf_blocks_length, IRNode** fields, const unsigned int fields_length)
+{
+	int field_count[fields_length][cf_blocks_length];
+	int has_renamed[cf_blocks_length];
+
+	memset(has_renamed, 0, sizeof(has_renamed));
+	memset(field_count, 0, sizeof(field_count));
+
+	rename_block_phi(cf_blocks[0], cf_blocks_length, field_count, has_renamed);
 }
 
 static void generate_func_phi(IRNode* func)
@@ -222,8 +289,8 @@ static void generate_func_phi(IRNode* func)
 	func->func.frontiers = frontiers;
 	func->func.frontiers_length = cf->length;
 
-	insert_func_phis(func->func.fields, func->func.fields_length, cf_list, cf->length, frontiers); /** TODO: inserir os argumentos certos */
-	rename_func_phis(dt_list[0]); /** TODO: inserir os argumentos certos */
+	insert_func_phis(func->func.fields, func->func.fields_length, cf_list, cf->length, frontiers);
+	rename_func_phis(cf_list, cf->length, func->func.fields, func->func.fields_length);
 }
 
 static void generate_funcs_phi(IRNode** nodes, const int length)
@@ -657,6 +724,33 @@ static LLVMValueRef generate_expr(const LLVMModuleRef module, const LLVMBuilderR
 }
 
 // ==------------------------------------ Utils ------------------------------------== \\
+
+static int get_biggest(int* values, int length)
+{
+	int biggest = -100000;
+
+	for (int i = 0; i < length; i++)
+	{
+		int value = values[i];
+
+		if (value <= biggest)
+		{
+			continue;
+		}
+
+		biggest = value;
+	}
+
+	return biggest;
+}
+
+static char* get_field_label(char* label, int count)
+{
+	char buff[512];
+	snprintf(buff, 512, ".%s_%d", label, count);
+
+	return _strdup(buff);
+}
 
 static int defines_field(char* field_label, CFBlock* block)
 {

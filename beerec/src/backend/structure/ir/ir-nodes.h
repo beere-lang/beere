@@ -214,7 +214,10 @@ struct IRNodeCast
 
 struct IRNodePhi
 {
-	DList* labels;
+	DList*  labels;
+
+	IRNode* field;
+	int     field_index;
 };
 
 struct IRNode
