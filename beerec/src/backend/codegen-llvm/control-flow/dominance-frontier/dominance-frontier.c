@@ -8,9 +8,6 @@
 
 #define DOMINANCE_FRONTIER_LIST_START_CAPACITY 8
 
-/**
- * TODO: deixar o gerenciamento dos index melhor.
- */
 DList** generate_dominance_frontier(CFBlock** lblocks, const int tlength, int* idominators, DTBlock** blocks, int size)
 {
 	DList** frontiers = malloc(sizeof(DList*) * tlength);
