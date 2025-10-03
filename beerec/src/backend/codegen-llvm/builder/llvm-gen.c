@@ -330,6 +330,17 @@ static void generate_func_phi(IRNode* func)
 
 	insert_func_phis(func->func.fields, func->func.fields_length, cf_list, cf->length, frontiers);
 	rename_func_phis(dt_list[0], cf_list, cf->length, func->func.fields, func->func.fields_length);
+
+	free_list(cf);
+	
+	free_list(dt->blocks);
+	free(dt->idominators);
+	free(dt);
+
+	for (int i = 0; i < cf->length; i++)
+	{
+		free(frontiers[i]);
+	}
 }
 
 static void generate_funcs_phi(IRNode** nodes, const int length)
@@ -714,23 +725,6 @@ static LLVMValueRef generate_operation(const LLVMModuleRef module, const LLVMBui
 
 static LLVMValueRef generate_field_literal(const LLVMModuleRef module, const LLVMBuilderRef llvm, IRNode* node)
 {
-	/*
-        const LLVMValueRef field = get_field_from_table(node->field_literal.name);
-	Type* type = get_field_type_from_table(node->field_literal.name);
-
-	if (field == NULL || type == NULL)
-	{
-		return NULL;
-	}
-
-	const char* fload_name = generate_field_load_label(1);
-	const LLVMTypeRef ftype = get_type(type);
-
-	const LLVMValueRef value = LLVMBuildLoad2(llvm, ftype, field, fload_name);
-
-	return value;
-        */
-
         return NULL;
 }
 

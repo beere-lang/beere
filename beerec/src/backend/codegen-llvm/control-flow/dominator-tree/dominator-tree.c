@@ -3,100 +3,22 @@
 #include "dominator-tree.h"
 #include "../control-flow.h"
 
+static DTBlock* link_dominator(CFBlock* block, DTBlock* dominator);
+
 #define DT_BLOCKS_LIST_DEFAULT_START_CAPACITY 4
 #define NCA_LIST_DEFAULT_START_CAPACITY 4
 
-int length = 0;
+static int length = 0;
 
-int* semi = NULL;
-int* idom = NULL;
+static int* semi = NULL;
+static int* idom = NULL;
 
-CFBlock** bparents = NULL;
-CFBlock** blocks = NULL;
+static CFBlock** bparents = NULL;
+static CFBlock** blocks = NULL;
 
-DList* dt_blocks = NULL;
+static DList* dt_blocks = NULL;
 
-static void setup_data(int size)
-{
-	length = 0;
-
-	bparents = malloc(sizeof(CFBlock*) * size);
-	blocks = malloc(sizeof(CFBlock*) * size);
-	semi = malloc(sizeof(int) * size);
-	idom = malloc(sizeof(int) * size);
-	dt_blocks = create_list(DT_BLOCKS_LIST_DEFAULT_START_CAPACITY);
-
-	for (int i = 0; i < size; i++)
-	{
-		idom[i] = 0;
-		semi[i] = i;
-	}
-}
-
-static DTBlock* create_dt_block(CFBlock* block)
-{
-	DTBlock* dtb = malloc(sizeof(DTBlock));
-
-	dtb->block = block;
-	dtb->dominator = NULL;
-	dtb->dominateds = create_list(DT_BLOCKS_LIST_DEFAULT_START_CAPACITY);
-
-	return dtb;
-}
-
-static void dfs_control_flow(CFBlock* block, CFBlock* parent)
-{
-	if (block == NULL)
-	{
-		return;
-	}
-
-	const int size = block->successors->length;
-
-	block->visited = 1;
-
-	bparents[length] = parent;
-	blocks[length] = block;
-
-	block->dt_index = length;
-
-	semi[length] = length;
-
-	length++;
-
-	DTBlock* dtb = create_dt_block(block);
-
-	for (int i = 0; i < size; i++)
-	{
-		CFBlock* curr = block->successors->elements[i];
-
-		if (curr->visited)
-		{
-			continue;
-		}
-
-		dfs_control_flow(curr, block);
-	}
-}
-
-static void get_semi_dominators()
-{
-	for (int i = length - 1; i >= 1; i--)
-	{
-		CFBlock* block = blocks[i];
-
-		for (int j = 0; j < block->predecessors->length; j++)
-		{
-			CFBlock* pred = block->predecessors->elements[j];
-			int index = pred->dt_index;
-
-			if (index < semi[i])
-			{
-				semi[i] = index;
-			}
-		}
-	}
-}
+// ==----------------------------- Dominator Tree -----------------------------== \\
 
 static CFBlock* nca_blocks(CFBlock* first, CFBlock* second)
 {
@@ -112,28 +34,81 @@ static CFBlock* nca_blocks(CFBlock* first, CFBlock* second)
 	{
 		if (contains_element(visited, second))
 		{
+			free(visited);
 			return second;
 		}
 
 		second = bparents[second->dt_index];
 	}
 
+	free(visited);
 	return NULL;
+}
+
+static void dfs_control_flow(CFBlock* block, CFBlock* parent)
+{
+	if (block == NULL || block->visited)
+	{
+		return;
+	}
+
+	bparents[length] = parent;
+	blocks[length] = block;
+
+	block->dt_index = length;
+	block->visited = 1;
+
+	length++;
+
+	const unsigned int succs_length = block->successors->length;
+
+	for (int i = 0; i < succs_length; i++)
+	{
+		CFBlock* succ = block->successors->elements[i];
+
+		dfs_control_flow(succ, block);
+	}
+}
+
+static void get_semi_dominators()
+{
+	for (int i = length - 1; i > 0; i--)
+	{
+		CFBlock* block = blocks[i];
+		const unsigned int preds_length = block->predecessors->length;
+
+		for (int j = 0; j < preds_length; j++)
+		{
+			CFBlock* pred = block->predecessors->elements[j];
+			int index = pred->dt_index;
+
+			int fetch = (index <= i) ? index : semi[index];
+
+			if (fetch < semi[i])
+			{
+				semi[i] = fetch;
+			}
+		}
+	}
 }
 
 static void get_real_dominators()
 {
-	for (int i = length - 1; i >= 1; i--)
+	for (int i = length - 1; i > 0; i--)
 	{
-		CFBlock* block = blocks[i];
-		idom[i] = semi[i];
-
-		if (idom[i] == 0)
+		if (semi[i] == 0)
 		{
 			continue;
 		}
+		
+		CFBlock* block = blocks[i];
+		idom[i] = semi[i];
 
-		for (int j = 0; j < block->predecessors->length; j++)
+		const unsigned int preds_length = block->predecessors->length;
+
+		int min_semi = semi[idom[i]];
+		
+		for (int j = 0; j < preds_length; j++)
 		{
 			CFBlock* pred = block->predecessors->elements[j];
 			CFBlock* idm = nca_blocks(block, pred);
@@ -144,43 +119,53 @@ static void get_real_dominators()
 			}
 
 			const int index = idm->dt_index;
+			const int idm_semi = semi[index];
 
-			if (idom[i] < index && idom[i] != semi[i])
+			if (idm_semi < min_semi)
 			{
-				continue;
+				min_semi = idm_semi;
+				idom[i] = index;
 			}
-
-			idom[i] = index;
 		}
 	}
-}
-
-static DTBlock* link_dominator(CFBlock* block, DTBlock* dominator)
-{
-	const int index = block->dt_index;
-	DTBlock* dt = create_dt_block(block);
-
-	add_element_to_list(dt_blocks, dt);
-
-	dt->dominator = dominator;
-
-	for (int i = 0; i < length; i++)
-	{
-		if (idom[i] != index)
-		{
-			continue;
-		}
-
-		add_element_to_list(dt->dominateds, blocks[i]);
-		link_dominator(blocks[i], dt);
-	}
-
-	return dt;
 }
 
 static DTBlock* build_dominator_tree()
 {
 	return link_dominator(blocks[0], NULL);
+}
+
+// ==----------------------------- Core -----------------------------== \\
+
+static void setup_data(const unsigned int size)
+{
+	length = 0;
+
+	bparents = malloc(sizeof(CFBlock*) * size);
+	blocks = malloc(sizeof(CFBlock*) * size);
+
+	semi = malloc(sizeof(int) * size);
+	idom = malloc(sizeof(int) * size);
+	
+	dt_blocks = create_list(DT_BLOCKS_LIST_DEFAULT_START_CAPACITY);
+
+	for (int i = 0; i < size; i++)
+	{
+		idom[i] = 0;
+		semi[i] = i;
+	}
+}
+
+static void free_data()
+{
+	length = 0;
+
+	free(bparents);
+
+	free(semi);
+	free(idom);
+
+	free(dt_blocks);
 }
 
 DominatorTree* generate_dominator_tree(CFBlock* entry, int size)
@@ -200,4 +185,39 @@ DominatorTree* generate_dominator_tree(CFBlock* entry, int size)
 	tree->idominators = idom;
 
 	return tree;
+}
+
+// ==----------------------------- Utils -----------------------------== \\
+
+static DTBlock* create_dt_block(CFBlock* block, DTBlock* dominator)
+{
+	DTBlock* dt_block = malloc(sizeof(DTBlock));
+
+	dt_block->dominateds = create_list(8);
+
+	dt_block->block = block;
+	dt_block->dominator = dominator;
+
+	return dt_block;
+}
+
+static DTBlock* link_dominator(CFBlock* block, DTBlock* dominator)
+{
+	const int index = block->dt_index;
+	
+	DTBlock* dt_block = create_dt_block(block, dominator);
+	add_element_to_list(dt_blocks, dt_block);
+
+	for (int i = 0; i < length; i++)
+	{
+		if (idom[i] != index)
+		{
+			continue;
+		}
+
+		DTBlock* dominated = link_dominator(blocks[i], dt_block);
+		add_element_to_list(dt_block->dominateds, dominated);
+	}
+
+	return dt_block;
 }
