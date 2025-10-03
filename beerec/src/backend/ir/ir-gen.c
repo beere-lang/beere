@@ -105,6 +105,26 @@ static IRNode* generate_while(ASTNode* node)
 	return NULL;
 }
 
+/**
+ * TODO: terminar o IR-Gen do if e mais coisas pra poder partir de vez pro LLVM-Gen
+ */
+static IRNode* generate_if(ASTNode* node)
+{
+	/*
+	 * IRNode* branch = create_ir_node(IR_NODE_BRANCH);
+         *
+	 * IRNode* then_b = create_block()
+	 *
+	 * branch->branch.condition = generate_expression(node->if_statement.condition_top);
+	 *
+	 * add_element_to_list(curr_block->block.nodes, branch);
+	 *
+	 * curr_block = post_b
+	 */
+
+	return NULL;
+}
+
 static IRNode* generate_field(ASTNode* node)
 {
 	IRNode* field = create_ir_node(IR_NODE_FIELD);

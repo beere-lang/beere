@@ -810,7 +810,7 @@ static void handle_block_definitions(CFBlock* block, const unsigned int cf_block
 static int get_biggest(int* values, int length)
 {
 	int biggest = -100000;
-
+	
 	for (int i = 0; i < length; i++)
 	{
 		int value = values[i];
