@@ -14,8 +14,8 @@ static IRNode* curr_block = NULL;
 static int whiles_count = 0;
 
 static Type* copy_type(Type* type);
+static IRNode* copy_node(IRNode* node);
 static int count_linked_list(ASTNode* head);
-static Type* get_expression_type(IRNode* expr);
 static IRNode* generate_ir_node(ASTNode* node);
 static IRNode* generate_expression(ASTNode* node);
 static void generate_func_instructions(ASTNode* head);
@@ -106,21 +106,85 @@ static IRNode* generate_while(ASTNode* node)
 }
 
 /**
- * TODO: terminar o IR-Gen do if e mais coisas pra poder partir de vez pro LLVM-Gen
+ * TODO: adicionar nome aos blocks (usando um counter de labels ja funciona, eu acho)
  */
 static IRNode* generate_if(ASTNode* node)
 {
-	/*
-	 * IRNode* branch = create_ir_node(IR_NODE_BRANCH);
-         *
-	 * IRNode* then_b = create_block()
-	 *
-	 * branch->branch.condition = generate_expression(node->if_statement.condition_top);
-	 *
-	 * add_element_to_list(curr_block->block.nodes, branch);
-	 *
-	 * curr_block = post_b
-	 */
+	IRNode* bpost = create_block(NULL, 1);
+
+	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
+	branch->branch.then_block = NULL;
+	branch->branch.else_block = NULL;
+	branch->branch.condition = generate_expression(node->if_statement.condition_top);
+	
+	IRNode* go_to = create_ir_node(IR_NODE_GOTO); // usado só no then pra não ter double free
+	go_to->go_to.block = bpost;
+
+	IRNode* mblock = curr_block;
+
+	{ // then block
+		IRNode* bthen = create_block(NULL, 1);
+		
+		curr_block = bthen;
+		
+		generate_instructions_in_block(node->if_statement.then_branch->block.statements->head, bthen);
+		branch->branch.then_block = bthen;
+
+		add_element_to_list(curr_block->block.nodes, go_to); // post
+		add_element_to_list(mblock->block.nodes, branch);
+	}
+
+	IRNode* go_to_ = create_ir_node(IR_NODE_GOTO);
+	go_to_->go_to.block = NULL;
+	
+	if (node->if_statement.else_branch != NULL) // elses (else if, else)
+	{
+		ASTNode* currelse = node->if_statement.else_branch;
+		
+		while (currelse != NULL && currelse->type != NODE_BLOCK)
+		{
+			IRNode* belseif = create_block(NULL, 1);
+			
+			curr_block = belseif;
+		
+			IRNode* elseifbranch = create_ir_node(IR_NODE_BRANCH);
+			elseifbranch->branch.then_block = belseif;
+			elseifbranch->branch.else_block = NULL;
+			elseifbranch->branch.condition = generate_expression(currelse->if_statement.condition_top);
+			
+			generate_instructions_in_block(currelse->if_statement.then_branch->block.statements->head, belseif);
+			add_element_to_list(curr_block->block.nodes, copy_node(go_to)); // post
+
+			currelse = currelse->if_statement.else_branch;
+
+			add_element_to_list(mblock->block.nodes, elseifbranch);
+		}
+		
+		if (currelse != NULL)
+		{
+			IRNode* belse = create_block(NULL, 1);
+			
+			curr_block = belse;
+
+			generate_instructions_in_block(currelse->block.statements->head, belse);
+			add_element_to_list(curr_block->block.nodes, copy_node(go_to)); // post
+
+			go_to_->go_to.block = belse;
+			add_element_to_list(mblock->block.nodes, go_to_);
+		}
+		else // non else
+		{
+			go_to_->go_to.block = bpost;
+			add_element_to_list(mblock->block.nodes, go_to_); // post
+		}
+	}
+	else // non else
+	{
+		go_to_->go_to.block = bpost;
+		add_element_to_list(mblock->block.nodes, go_to_); // post
+	}
+
+	curr_block = bpost;
 
 	return NULL;
 }
@@ -220,7 +284,7 @@ static IRNode* generate_ir_node(ASTNode* node)
 
 		case NODE_IF:
 		{
-			//return generate_if(node);
+			return generate_if(node);
 		}
 
 		case NODE_WHILE_LOOP:
@@ -397,8 +461,26 @@ static IRNode* generate_expression(ASTNode* node)
 
 // ==---------------------------------- Utils --------------------------------------== \\
 
+static IRNode* copy_node(IRNode* node)
+{
+	if (node == NULL)
+	{
+		exit(1);
+	}
+	
+	IRNode* copy = malloc(sizeof(IRNode));
+	memcpy(copy, node, sizeof(IRNode));
+
+	return copy;
+}
+
 static Type* copy_type(Type* type)
 {
+	if (type == NULL)
+	{
+		exit(1);
+	}
+	
 	Type* copy = malloc(sizeof(Type));
 
 	copy->type = type->type;
