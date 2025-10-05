@@ -82,20 +82,35 @@ static IRNode* generate_while(ASTNode* node)
 	snprintf(buff, 128, ".while_post_%d", count);
 	const char* postl = _strdup(buff);
 
+	snprintf(buff, 128, ".while_cond_%d", count);
+	const char* condl = _strdup(buff);
+
 	IRNode* thenb = create_block(thenl, 1);
 	IRNode* postb = create_block(postl, 1);
+	IRNode* condb = create_block(condl, 1);
 
 	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
 	branch->branch.condition = generate_expression(node->while_loop.condition);
 	branch->branch.then_block = thenb;
 	branch->branch.else_block = postb;
 
-	add_element_to_list(thenb->block.nodes, branch);
+	IRNode* loops = create_ir_node(IR_NODE_GOTO);
+	loops->go_to.block = condb;
+	
+	IRNode* loopl = create_ir_node(IR_NODE_GOTO);
+	loopl->go_to.block = condb;
+
+	add_element_to_list(curr_block->block.nodes, loops);
+
+	curr_block = condb;
+
+	add_element_to_list(curr_block->block.nodes, branch);
 
 	curr_block = thenb;
-
+	
 	generate_instructions_in_block(node->while_loop.then_block->block.statements->head, curr_block);
-
+	add_element_to_list(curr_block->block.nodes, loopl);
+	
 	curr_block = postb;
 
 	return NULL;
