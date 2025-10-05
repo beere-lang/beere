@@ -20,6 +20,7 @@ static IRNode* copy_node(IRNode* node);
 static int count_linked_list(ASTNode* head);
 static IRNode* generate_ir_node(ASTNode* node);
 static IRNode* generate_expression(ASTNode* node);
+static void dump_node(IRNode* node, const int depth);
 static void generate_func_instructions(ASTNode* head);
 static IROperationType convert_op_type(const TokenType type);
 static IRNode* create_block(const char* label, const int add_to_func);
@@ -348,7 +349,7 @@ static IRNode* generate_ir_node(ASTNode* node)
 	}
 }
 
-IRNode** generate_ir_nodes(ASTNode** nodes, const int length)
+IRNode** generate_ir_nodes(ASTNode** nodes, const unsigned int length)
 {
 	IRNode** irs = malloc(sizeof(IRNode*) * length);
 
@@ -356,6 +357,8 @@ IRNode** generate_ir_nodes(ASTNode** nodes, const int length)
 	{
 		irs[i] = generate_ir_node(nodes[i]);
 	}
+
+	dump_module(irs, length); // debug
 
 	return irs;
 }
@@ -685,6 +688,196 @@ static IRNode* create_block(const char* label, const int add_to_func)
 	return block;
 }
 
+// ==---------------------------------------- Debug --------------------------------------------== \\
+
+static void get_type_str(Type* type, char* buff)
+{
+	get_type_str(type->base, buff);
+	char* text = malloc(256);
+	
+	switch (type->type)
+	{
+		case TYPE_INT:
+		{
+			text = "int";
+
+			break;
+		}
+
+		case TYPE_FLOAT:
+		{
+			text = "float";
+
+			break;
+		}
+		
+		case TYPE_DOUBLE:
+		{
+			text = "double";
+
+			break;
+		}
+
+		case TYPE_CHAR:
+		{
+			text = "char";
+
+			break;
+		}
+
+		case TYPE_STRING:
+		{
+			text = "string";
+
+			break;
+		}
+
+		case TYPE_ARRAY:
+		{
+			text = "[]";
+
+			break;
+		}
+
+		case TYPE_BOOL:
+		{
+			text = "bool";
+
+			break;
+		}
+
+		case TYPE_PTR:
+		{
+			text = "*";
+
+			break;
+		}
+
+		case TYPE_CLASS:
+		{
+			snprintf(text, 128, "Class (%s)", type->class_name);
+
+			break;
+		}
+
+		default:
+		{
+			break;
+		}
+	}
+
+	const char* copy;
+	strcpy(buff, copy);
+
+	snprintf(buff, 128, "%s%s", buff, text);
+
+	free(text);
+}
+
+static char* type_to_str(Type* type)
+{
+	char buff[512] = "";
+	get_type_str(type, buff);
+
+	return _strdup(buff);
+}
+
+static void print_depth(int depth)
+{
+	for (int i = 0; i < depth; i++)
+	{
+		printf("	");
+	}
+}
+
+static void dump_func(IRNode* func, int depth)
+{
+	print_depth(depth);
+	printf("Func %s - %s:\n", func->func.name, type_to_str(func->func.type));
+
+	const unsigned int blocks_length = func->func.blocks->length;
+
+	for (int i = 0; i < blocks_length; i++)
+	{
+		IRNode* block = func->func.blocks->elements[i];
+
+		if (block == NULL)
+		{
+			continue;
+		}
+
+		dump_node(block, ++depth);
+	}
+}
+
+static void dump_block(IRNode* block, int depth)
+{
+	print_depth(depth);
+	printf("%s:\n", block->block.label);
+
+	const unsigned int nodes_length = block->block.nodes->length;
+
+	for (int i = 0; i < nodes_length; i++)
+	{
+		IRNode* node = block->block.nodes->elements[i];
+
+		if (node == NULL)
+		{
+			continue;
+		}
+
+		dump_node(node, ++depth);
+	}
+}
+
+static void dump_node(IRNode* node, const int depth)
+{
+	switch (node->type)
+	{
+		case IR_NODE_FUNC:
+		{
+			dump_func(node, depth);
+
+			break;
+		}
+
+		case IR_NODE_BLOCK:
+		{
+			dump_block(node, depth);
+
+			break;
+		}
+
+		default:
+		{
+			print_depth(depth);
+			printf("Node: %d\n", node->type);
+
+			break;
+		}
+	}
+}
+
+/**
+ * TODO: implementar isso com modulos reais quando implementar modulos no ir-gen
+ * 
+ * WARNING: não muito util, mas ja ajuda no debug
+ */
+void dump_module(IRNode** nodes, const unsigned int nodes_length)
+{
+	for (int i = 0; i < nodes_length; i++)
+	{
+		IRNode* node = nodes[i];
+
+		if (node == NULL)
+		{
+			continue;
+		}
+
+		dump_node(node, 0);
+	}
+}
+
 // ==---------------------------------- Memory Management --------------------------------------== \\
 
 static void free_type(Type* type)
@@ -900,7 +1093,17 @@ static void free_node(IRNode* node)
                 case IR_NODE_ARGUMENT:
                 {
                         free_node(node->argument.value);
+
+			break;
                 }
+
+		case IR_NODE_PARAM:
+		{
+			free(node->param.name);
+			free_type(node->param.type);
+
+			break;
+		}
 
 		default:
 		{
