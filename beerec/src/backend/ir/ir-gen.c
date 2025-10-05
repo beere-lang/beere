@@ -12,6 +12,8 @@ static IRNode* curr_func = NULL;
 static IRNode* curr_block = NULL;
 
 static int whiles_count = 0;
+static int ifs_count = 0; // then & post
+static int elses_count = 0; // elses
 
 static Type* copy_type(Type* type);
 static IRNode* copy_node(IRNode* node);
@@ -70,47 +72,45 @@ static IRNode* generate_ret(ASTNode* node)
 
 static IRNode* generate_while(ASTNode* node)
 {
-	char buff[64];
-	snprintf(buff, 64, ".while_body_%d", whiles_count);
+	char buff[128];
 
-	IRNode* loopb = create_block(_strdup(buff), 1);
-
-	IRNode* go_to = create_ir_node(IR_NODE_GOTO);
-	go_to->go_to.block = loopb;
-
-	add_element_to_list(curr_block->block.nodes, go_to);
-
-	snprintf(buff, 64, ".while_post_%d", whiles_count);
+	const int count = whiles_count++;
 	
-        IRNode* postb = create_block(_strdup(buff), 0);
+	snprintf(buff, 128, ".while_then_%d", count);
+	const char* thenl = _strdup(buff);
+
+	snprintf(buff, 128, ".while_post_%d", count);
+	const char* postl = _strdup(buff);
+
+	IRNode* thenb = create_block(thenl, 1);
+	IRNode* postb = create_block(postl, 1);
 
 	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
-
-	curr_block = loopb;
-
-	whiles_count++;
-
-	generate_instructions_in_block(node->while_loop.then_block->block.statements->head, curr_block);
-
 	branch->branch.condition = generate_expression(node->while_loop.condition);
-	branch->branch.then_block = loopb;
+	branch->branch.then_block = thenb;
 	branch->branch.else_block = postb;
 
-	add_element_to_list(curr_block->block.nodes, branch);
+	add_element_to_list(thenb->block.nodes, branch);
 
-	add_element_to_list(curr_func->func.blocks, postb);
+	curr_block = thenb;
+
+	generate_instructions_in_block(node->while_loop.then_block->block.statements->head, curr_block);
 
 	curr_block = postb;
 
 	return NULL;
 }
 
-/**
- * TODO: adicionar nome aos blocks (usando um counter de labels ja funciona, eu acho)
- */
 static IRNode* generate_if(ASTNode* node)
 {
-	IRNode* bpost = create_block(NULL, 1);
+	char buff[128];
+	
+	const int count = ifs_count++;
+
+	snprintf(buff, 128, ".if_post_%d", count);
+	const char* postl = _strdup(buff);
+	
+	IRNode* bpost = create_block(postl, 1);
 
 	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
 	branch->branch.then_block = NULL;
@@ -123,7 +123,10 @@ static IRNode* generate_if(ASTNode* node)
 	IRNode* mblock = curr_block;
 
 	{ // then block
-		IRNode* bthen = create_block(NULL, 1);
+		snprintf(buff, 128, ".if_then_%d", count);
+		const char* thenl = _strdup(buff);
+		
+		IRNode* bthen = create_block(thenl, 1);
 		
 		curr_block = bthen;
 		
@@ -143,7 +146,12 @@ static IRNode* generate_if(ASTNode* node)
 		
 		while (currelse != NULL && currelse->type != NODE_BLOCK)
 		{
-			IRNode* belseif = create_block(NULL, 1);
+			const int elsec = elses_count++;
+			
+			snprintf(buff, 128, ".if_else_%d", elsec);
+			const char* elsel = _strdup(buff);
+			
+			IRNode* belseif = create_block(elsel, 1);
 			
 			curr_block = belseif;
 		
@@ -162,7 +170,12 @@ static IRNode* generate_if(ASTNode* node)
 		
 		if (currelse != NULL)
 		{
-			IRNode* belse = create_block(NULL, 1);
+			const int elsec = elses_count++;
+			
+			snprintf(buff, 128, ".if_else_%d", elsec);
+			const char* elsel = _strdup(buff);
+			
+			IRNode* belse = create_block(elsel, 1);
 			
 			curr_block = belse;
 
