@@ -1944,7 +1944,7 @@ static Type* analyzer_get_identifier_type(ASTNode* node, SymbolTable* scope, int
 	if (symbol == NULL)
 	{
 		printf("[Analyzer] [Debug] Variable not declared: %s...\n", node->variable.identifier);
-		exit(1);
+		exit(2);
 	}
 	
 	if (symbol->type == SYMBOL_CLASS)
@@ -2685,6 +2685,8 @@ static void analyzer_handle_operation(Module* module, ASTNode* node, SymbolTable
 	
 	analyzer_analyze_node(module, operation->left, scope, NULL);
 	analyzer_analyze_node(module, operation->right, scope, NULL);
+
+	operation->type = analyzer_return_type_of_expression(module, node->operation.right, scope, NULL, 0, NULL); // usado no IR-Gen
 	
 	if (!analyzer_is_operation_compatible(module, node, scope))
 	{

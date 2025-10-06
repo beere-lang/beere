@@ -32,6 +32,7 @@ typedef struct
 	ASTNode* right;
 	
 	TokenType op;
+	Type* type;
 }
 ASTNodeOperation;
 

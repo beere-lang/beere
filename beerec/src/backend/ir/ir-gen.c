@@ -7,6 +7,7 @@
 
 #define ENTRY_BLOCK_LABEL ".entry"
 #define BLOCK_START_INSTRUCTIONS_CAPACITY 16
+#define FUNC_START_BLOCKS_CAPACITY 8
 
 static IRNode* curr_func = NULL;
 static IRNode* curr_block = NULL;
@@ -37,9 +38,7 @@ static IRNode* generate_func(ASTNode* node)
 	snprintf(buff, 64, ".fn_%s", node->function.identifier);
 
 	func->func.name = _strdup(buff);
-
 	func->func.type = copy_type(node->function.return_type);
-
 	func->func.params = NULL;
 
         if (node->function.params != NULL)
@@ -51,6 +50,8 @@ static IRNode* generate_func(ASTNode* node)
 
                 setup_func_params(func, node->function.params->head, length);
         }
+
+	func->func.blocks = create_list(FUNC_START_BLOCKS_CAPACITY);
 
 	curr_func = func;
 
@@ -245,7 +246,7 @@ static IRNode* generate_operation(ASTNode* node)
 	IRNode* operation = create_ir_node(IR_NODE_OPERATION);
 
 	operation->operation.operation = convert_op_type(node->operation.op);
-	operation->operation.type = analyzer_return_type_of_expression(NULL, node, NULL, NULL, 0, NULL); // TODO: adicionar o escopo disso e o modulo
+	operation->operation.type = copy_type(node->operation.type);
 
 	operation->operation.left = generate_expression(node->operation.left);
 	operation->operation.right = generate_expression(node->operation.right);
@@ -299,6 +300,11 @@ static IRNode* generate_call(ASTNode* node)
  */
 static IRNode* generate_ir_node(ASTNode* node)
 {
+	if (node == NULL)
+	{
+		return NULL;
+	}
+	
 	switch (node->type)
 	{
 		case NODE_FUNC:
@@ -370,7 +376,7 @@ static IRNode* generate_literal(ASTNode* node)
 	IRNode* literal = create_ir_node(IR_NODE_LITERAL);
 	literal->literal.type = copy_type(node->literal.literal_type);
 
-	if (literal->literal.string_val != NULL)
+	if (literal->literal.string_val != NULL && literal->literal.type->type == TYPE_STRING)
 	{
 		literal->literal.string_val = _strdup(node->literal.string_value);
 	}
@@ -509,7 +515,7 @@ static Type* copy_type(Type* type)
 {
 	if (type == NULL)
 	{
-		exit(1);
+		return NULL;
 	}
 	
 	Type* copy = malloc(sizeof(Type));
@@ -517,10 +523,9 @@ static Type* copy_type(Type* type)
 	copy->type = type->type;
 	copy->class_name = (type->class_name != NULL) ? _strdup(type->class_name) : NULL;
 
-	if (type->base != NULL)
-	{
-		copy->base = copy_type(type->base);
-	}
+	copy->base = NULL;
+
+	copy->base = copy_type(type->base);
 
 	return copy;
 }
@@ -692,6 +697,11 @@ static IRNode* create_block(const char* label, const int add_to_func)
 
 static void get_type_str(Type* type, char* buff)
 {
+	if (type == NULL)
+	{
+		return;
+	}
+	
 	get_type_str(type->base, buff);
 	char* text = malloc(256);
 	
@@ -699,63 +709,70 @@ static void get_type_str(Type* type, char* buff)
 	{
 		case TYPE_INT:
 		{
-			text = "int";
+			text = _strdup("int");
 
 			break;
 		}
 
 		case TYPE_FLOAT:
 		{
-			text = "float";
+			text = _strdup("float");
 
 			break;
 		}
 		
 		case TYPE_DOUBLE:
 		{
-			text = "double";
+			text = _strdup("double");
 
 			break;
 		}
 
 		case TYPE_CHAR:
 		{
-			text = "char";
+			text = _strdup("char");
 
 			break;
 		}
 
 		case TYPE_STRING:
 		{
-			text = "string";
+			text = _strdup("string");
 
 			break;
 		}
 
 		case TYPE_ARRAY:
 		{
-			text = "[]";
+			text = _strdup("[]");
 
 			break;
 		}
 
 		case TYPE_BOOL:
 		{
-			text = "bool";
+			text = _strdup("bool");
 
 			break;
 		}
 
 		case TYPE_PTR:
 		{
-			text = "*";
+			text = _strdup("*");
 
 			break;
 		}
 
 		case TYPE_CLASS:
 		{
-			snprintf(text, 128, "Class (%s)", type->class_name);
+			snprintf(text, 256, "Class (%s)", type->class_name);
+
+			break;
+		}
+
+		case TYPE_VOID:
+		{
+			text = _strdup("void");
 
 			break;
 		}
@@ -766,11 +783,7 @@ static void get_type_str(Type* type, char* buff)
 		}
 	}
 
-	const char* copy;
-	strcpy(buff, copy);
-
 	snprintf(buff, 128, "%s%s", buff, text);
-
 	free(text);
 }
 
@@ -806,7 +819,7 @@ static void dump_func(IRNode* func, int depth)
 			continue;
 		}
 
-		dump_node(block, ++depth);
+		dump_node(block, depth + 1);
 	}
 }
 
@@ -816,7 +829,7 @@ static void dump_block(IRNode* block, int depth)
 	printf("%s:\n", block->block.label);
 
 	const unsigned int nodes_length = block->block.nodes->length;
-
+	
 	for (int i = 0; i < nodes_length; i++)
 	{
 		IRNode* node = block->block.nodes->elements[i];
@@ -826,7 +839,7 @@ static void dump_block(IRNode* block, int depth)
 			continue;
 		}
 
-		dump_node(node, ++depth);
+		dump_node(node, depth + 1);
 	}
 }
 

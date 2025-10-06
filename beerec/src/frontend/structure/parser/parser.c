@@ -241,10 +241,15 @@ static Type* handle_type_declaration(Parser* parser)
 		Token* name = consume_token(parser);
 		result = create_type(TYPE_CLASS, strndup(name->start, name->length));
 	}
-	else
+	else if (peek_tkn(parser)->token_type == TOKEN_KEYWORD_TYPE)
 	{
 		Token* type = consume_token(parser);
 		result = create_type(type->var_type, NULL);
+	}
+	else
+	{
+		advance_tkn(parser);
+		result = create_type(TYPE_VOID, NULL);
 	}
    
 	while (peek_tkn(parser)->token_type == TOKEN_CHAR_STAR || peek_tkn(parser)->token_type == TOKEN_CHAR_OPEN_BRACKET) 
@@ -277,6 +282,7 @@ static ASTNode* parse_literal(Parser* parser)
 		}
 
 		literal_node->type = NODE_LITERAL;
+		literal_node->literal.string_value = NULL;
 
 		switch (tkn_type) 
 		{
@@ -836,6 +842,7 @@ static ASTNode* parse_var_increment(Parser* parser, ASTNode* left)
 	}
 
 	ASTNode* node_literal = malloc(sizeof(ASTNode));
+	node_literal->literal.string_value = NULL;
 
 	if (node_literal == NULL) 
 	{ 
