@@ -5,13 +5,6 @@ set(CMAKE_C_STANDARD 99)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(LLVM_DIR "C:/LLVM/src")
-include_directories("C:/LLVM/include")
-link_directories("C:/LLVM/lib")
-
-include_directories("C:/LLVM/src/include")
-link_directories("C:/LLVM/src/lib")
-
 add_executable(beerec
         src/init/main.c
         src/init/compiler.c
@@ -24,5 +17,3 @@ add_executable(beerec
         src/frontend/modules/modules.c
         src/frontend/modules/handler/module-handler.c
 )
-
-target_link_libraries(beerec LLVMCore LLVMExecutionEngine LLVMSupport)

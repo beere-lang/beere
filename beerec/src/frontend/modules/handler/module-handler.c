@@ -34,7 +34,7 @@ static void skip_end_lines(ModuleParser* parser)
 }
 
 /**
- * Não é uma função segura, mas não tem como dar algum erro em uso normal.
+ * WARNING: não é uma função segura, mas não tem como dar algum erro em uso normal
  */
 static char* get_token_names(Token* arr, int size)
 {

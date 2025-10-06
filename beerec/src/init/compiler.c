@@ -6,9 +6,12 @@
 #include "../frontend/modules/modules.h"
 #include "../frontend/structure/parser/parser.h"
 #include "../frontend/lexer/lexer.h"
+
+#include "../backend/ir/ir-gen.h"
+
 #include "../utils/utils.h"
 
-void free_nodes(ASTNode** node_list)
+void free_ast_nodes(ASTNode** node_list)
 {
 	ASTNode* ASTNode;
 
@@ -37,20 +40,20 @@ void analyze_nodes(Module* module, ASTNode** node_list)
 {
 	analyzer_init(module, node_list);
 
-	ASTNode* ASTNode;
+	ASTNode* node;
 
 	int l = 0;
 
 	while (1)
 	{
-		ASTNode = node_list[l];
+		node = node_list[l];
 
-		if (ASTNode == NULL)
+		if (node == NULL)
 		{
 			break;
 		}
 
-		analyzer_global_analyze(module, ASTNode);
+		analyzer_global_analyze(module, node);
 		
 		l++;
 	}
@@ -155,9 +158,18 @@ static void free_content(char* content)
 	content = NULL;
 }
 
-static void generate_assembly(ASTNode** nodes, Module* module)
+static void generate_ir(ASTNode** nodes, Module* module)
 {
-	// em breve
+	ASTNode* curr = nodes[0];
+	unsigned int nodes_length = 0;
+	
+	while (curr != NULL)
+	{
+		curr = nodes[nodes_length];
+		nodes_length++;
+	}
+	
+	generate_ir_nodes(nodes, nodes_length);
 }
 
 Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)
@@ -198,9 +210,9 @@ Module* compile(ModuleHandler* handler, char* file_path, char* lexer_flag)
 
 	analyze_nodes(module, node_list);
 
-	generate_assembly(node_list, module);
+	generate_ir(node_list, module);
 
-	free_nodes(node_list);
+	free_ast_nodes(node_list);
 
 	return module;
 }

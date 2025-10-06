@@ -84,7 +84,7 @@ int push_stack_module(ModuleStack* stack, Module* module)
 }
 
 /**
- * Importante: Função checa pelo endereço.
+ * WARNING: checa pelo endereço.
  */
 int pop_stack_module(ModuleStack* stack, Module* module)
 {
