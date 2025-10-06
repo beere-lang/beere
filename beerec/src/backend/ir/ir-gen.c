@@ -821,6 +821,8 @@ static void dump_func(IRNode* func, int depth)
 
 		dump_node(block, depth + 1);
 	}
+
+	printf("\n"); // pular linha
 }
 
 static void dump_block(IRNode* block, int depth)

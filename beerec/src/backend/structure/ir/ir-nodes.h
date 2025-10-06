@@ -228,24 +228,27 @@ struct IRNode
 {
 	IRNodeType type;
 
-	IRNodeBlock        block;
-	IRNodeOperation    operation;
-	IRNodeRet          ret;
-	IRNodeCall         call;
-	IRNodeStore        store;
-	IRNodeLiteral      literal;
-	IRNodeDereference  dereference;
-	IRNodeReference    reference;
-	IRNodeFunc         func;
-	IRNodeField        field; 
-	IRNodeFieldLiteral field_literal;
-	IRNodeGoto         go_to;
-	IRNodeBranch       branch;
-	IRNodeParam        param;
-	IRNodeMemberAccess member_access;
-        IRNodeArgument     argument;
-	IRNodeCast         cast;
-	IRNodePhi          phi;
+	union
+	{
+		IRNodeBlock        block;
+		IRNodeOperation    operation;
+		IRNodeRet          ret;
+		IRNodeCall         call;
+		IRNodeStore        store;
+		IRNodeLiteral      literal;
+		IRNodeDereference  dereference;
+		IRNodeReference    reference;
+		IRNodeFunc         func;
+		IRNodeField        field; 
+		IRNodeFieldLiteral field_literal;
+		IRNodeGoto         go_to;
+		IRNodeBranch       branch;
+		IRNodeParam        param;
+		IRNodeMemberAccess member_access;
+		IRNodeArgument     argument;
+		IRNodeCast         cast;
+		IRNodePhi          phi;
+	};
 };
 
 IRNode* create_ir_node(IRNodeType type);

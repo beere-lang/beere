@@ -14,5 +14,11 @@ fn main(): void {
         x = sum(10, x)
     }
 
+    let i: int = 0
+
+    while (i < 1000) {
+        i += 1
+    }
+
     x += (int) 1F
 }
