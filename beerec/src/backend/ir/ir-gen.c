@@ -4,29 +4,18 @@
 #include "ir-gen.h"
 #include "../../utils/logger/logger.h"
 
-#define ENTRY_BLOCK_LABEL ".entry"
-#define FUNC_LABEL_PREFIX ".fn_"
-
-#define WHILE_COND_LABEL_PREFIX ".while_cond_"
-#define WHILE_THEN_LABEL_PREFIX ".while_then_"
-#define WHILE_POST_LABEL_PREFIX ".while_post_"
-
-#define IF_THEN_LABEL_PREFIX ".if_then_"
-#define IF_ELSE_LABEL_PREFIX ".if_else_"
-#define IF_POST_LABEL_PREFIX ".if_post_"
-
-#define BLOCK_START_INSTRUCTIONS_CAPACITY 16
-#define FUNC_START_BLOCKS_CAPACITY 8
-
-#define CLASSES_START_FIELDS_CAPACITY 8
-#define CLASSES_START_METHODS_CAPACITY 8
-
+// Pointer pra função atual sendo gerada.
 static IRNode* curr_func = NULL;
+
+// Pointer pro bloco atual sendo gerado.
 static IRNode* curr_block = NULL;
 
+// Contagem de whiles (usado nas labels, como especificação).
 static int whiles_count = 0;
+
+// Contagem de blocos if e contagem de blocos else (usado nas labels, como especificação).
 static int ifs_count = 0; // then & post
-static int elses_count = 0; // elses
+static int elses_count = 0; // else & else if
 
 static Type* copy_type(Type* type);
 static IRNode* copy_node(IRNode* node);
@@ -425,6 +414,9 @@ static IRNode* generate_ir_node(ASTNode* node)
 	}
 }
 
+/**
+ * Entry-Point pra transformar as ASTNodes em nodes intermediarias (IRNodes)
+ */
 IRNode** generate_ir_nodes(ASTNode** nodes, const unsigned int length)
 {
 	IRNode** irs = malloc(sizeof(IRNode*) * length);
