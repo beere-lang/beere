@@ -22,6 +22,8 @@ typedef struct IRNodeBranch IRNodeBranch;
 typedef struct IRNodeMemberAccess IRNodeMemberAccess;
 typedef struct IRNodeParam IRNodeParam;
 typedef struct IRNodeArgument IRNodeArgument;
+typedef struct IRNodeArrAccess IRNodeArrAccess;
+typedef struct IRNodeClass IRNodeClass;
 typedef struct IRNodeCast IRNodeCast;
 typedef struct IRNodeGoto IRNodeGoto;
 typedef struct IRNodePhi IRNodePhi;
@@ -44,9 +46,13 @@ typedef enum
 	IR_NODE_REFERENCE,
 	IR_NODE_FIELD_LITERAL,
 	IR_NODE_PARAM,
-        IR_NODE_ARGUMENT,
+	IR_NODE_ARGUMENT,
 	IR_NODE_CAST,
-	IR_NODE_PHI
+	IR_NODE_PHI,
+	IR_NODE_CLASS,
+	IR_NODE_THIS,
+	IR_NODE_SUPER,
+	IR_NODE_ARR_ACCESS
 }
 IRNodeType;
 
@@ -112,11 +118,7 @@ struct IRNodeFunc
 	IRNode**     params;
 	unsigned int params_size;
 
-	DList**      frontiers;
-	unsigned int frontiers_length;
-
-	IRNode**     fields;
-	unsigned int fields_length;
+	int          is_static;
 };
 
 struct IRNodeCall
@@ -171,6 +173,8 @@ struct IRNodeField
 	IRNode* value;
 
 	int     field_index;
+
+	int     is_static;
 };
 
 struct IRNodeParam
@@ -205,7 +209,7 @@ struct IRNodeMemberAccess
 
 struct IRNodeArgument
 {
-        IRNode* value;
+	IRNode* value;
 };
 
 struct IRNodeCast
@@ -222,6 +226,20 @@ struct IRNodePhi
 
 	IRNode* field;
 	int     field_index;
+};
+
+struct IRNodeClass
+{
+	IRNode* constructor;
+
+	DList*  methods;
+ 	DList*  fields;
+};
+
+struct IRNodeArrAccess
+{
+	IRNode* arr;
+	IRNode* index;
 };
 
 struct IRNode
@@ -248,6 +266,8 @@ struct IRNode
 		IRNodeArgument     argument;
 		IRNodeCast         cast;
 		IRNodePhi          phi;
+		IRNodeClass        class;
+		IRNodeArrAccess    arr_access;
 	};
 };
 

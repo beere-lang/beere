@@ -3,11 +3,13 @@
 
 #include "ir-gen.h"
 #include "../../utils/logger/logger.h"
-#include "../../frontend/semantic/analyzer/analyzer.h"
 
 #define ENTRY_BLOCK_LABEL ".entry"
 #define BLOCK_START_INSTRUCTIONS_CAPACITY 16
 #define FUNC_START_BLOCKS_CAPACITY 8
+
+#define CLASSES_START_FIELDS_CAPACITY 8
+#define CLASSES_START_METHODS_CAPACITY 8
 
 static IRNode* curr_func = NULL;
 static IRNode* curr_block = NULL;
@@ -34,22 +36,25 @@ static IRNode* generate_func(ASTNode* node)
 {
 	IRNode* func = create_ir_node(IR_NODE_FUNC);
 
-        char buff[64];
+	char buff[64];
 	snprintf(buff, 64, ".fn_%s", node->function.identifier);
 
 	func->func.name = _strdup(buff);
 	func->func.type = copy_type(node->function.return_type);
+
+	func->func.is_static = node->function.is_static;
+
 	func->func.params = NULL;
 
-        if (node->function.params != NULL)
-        {
-                const int length = count_linked_list(node->function.params->head);
+	if (node->function.params != NULL)
+	{
+		const int length = count_linked_list(node->function.params->head);
 
-	        func->func.params = malloc(sizeof(IRNode*) * length);
-	        func->func.params_size = length;
+		func->func.params = malloc(sizeof(IRNode*) * length);
+		func->func.params_size = length;
 
-                setup_func_params(func, node->function.params->head, length);
-        }
+		setup_func_params(func, node->function.params->head, length);
+	}
 
 	func->func.blocks = create_list(FUNC_START_BLOCKS_CAPACITY);
 
@@ -59,7 +64,7 @@ static IRNode* generate_func(ASTNode* node)
 
 	curr_block = entry;
 
-        generate_func_instructions(node->function.block->block.statements->head);
+	generate_func_instructions(node->function.block->block.statements->head);
 
 	return func;
 }
@@ -228,6 +233,8 @@ static IRNode* generate_field(ASTNode* node)
 
 	field->field.value = generate_expression(node->declare.default_value);
 
+	field->field.is_static = node->declare.is_static;
+
 	return field;
 }
 
@@ -256,10 +263,10 @@ static IRNode* generate_operation(ASTNode* node)
 
 static IRNode* generate_argument(ASTNode* node)
 {
-        IRNode* arg = create_ir_node(IR_NODE_ARGUMENT);
-        arg->argument.value = generate_expression(node->argument.value);
+	IRNode* arg = create_ir_node(IR_NODE_ARGUMENT);
+	arg->argument.value = generate_expression(node->argument.value);
 
-        return arg;
+	return arg;
 }
 
 static IRNode* generate_call(ASTNode* node)
@@ -267,36 +274,81 @@ static IRNode* generate_call(ASTNode* node)
 	IRNode* call = create_ir_node(IR_NODE_CALL);
 	call->call.func = generate_expression(node->function_call.callee);
 	
-        call->call.args = NULL;
+	call->call.args = NULL;
 	
-        if (node->function_call.arguments != NULL)
-        {
-                call->call.args = create_list(8);
+	if (node->function_call.arguments != NULL)
+	{
+		call->call.args = create_list(8);
 
-	        const int length = count_linked_list(node->function_call.arguments->head);
-                ASTNode* curr = node->function_call.arguments->head;
+		const int length = count_linked_list(node->function_call.arguments->head);
+		ASTNode* curr = node->function_call.arguments->head;
 
-	        for (int i = 0; i < length; i++)
-	        {
-		        if (curr == NULL)
-		        {
-			        continue;
-		        }
+		for (int i = 0; i < length; i++)
+		{
+			if (curr == NULL)
+			{
+				continue;
+			}
 
-		        IRNode* arg = generate_argument(curr);
-		        add_element_to_list(call->call.args, curr);
+			IRNode* arg = generate_argument(curr);
+			add_element_to_list(call->call.args, curr);
 
-		        curr = curr->next;
-	        }
-        }
-        
+			curr = curr->next;
+		}
+	}
+	
 	return call;
+}
+
+static IRNode* generate_class(ASTNode* node)
+{
+	IRNode* class = create_ir_node(IR_NODE_CLASS);
+
+	const unsigned int fields_length = node->class_node.fields_count;
+	class->class.fields = create_list(CLASSES_START_FIELDS_CAPACITY);
+
+	for (int i = 0; i < fields_length; i++)
+	{
+		ASTNode* field = node->class_node.fields[i];
+
+		if (field == NULL)
+		{
+			continue;
+		}
+
+		add_element_to_list(class->class.fields, generate_ir_node(field));
+	}
+
+	class->class.constructor = NULL;
+	ASTNode* constructor = node->class_node.constructor;
+
+	if (constructor != NULL)
+	{
+		class->class.constructor = generate_ir_node(constructor);
+	}
+
+	const unsigned int methods_length = node->class_node.funcs_count;
+	class->class.methods = create_list(CLASSES_START_METHODS_CAPACITY);
+
+	for (int i = 0; i < methods_length; i++)
+	{
+		ASTNode* method = node->class_node.funcs[i];
+
+		if (method == NULL)
+		{
+			continue;
+		}
+
+		add_element_to_list(class->class.methods, generate_ir_node(method));
+	}
+
+	return class;
 }
 
 // ==---------------------------------- Core --------------------------------------== \\
 
 /**
- * TODO: terminar de implementar todas as possiveis nodes.
+ * TODO: terminar de implementar as nodes que faltam (continue, break, create inst, static access, arr access, arr literal, for loop, switch)
  */
 static IRNode* generate_ir_node(ASTNode* node)
 {
@@ -345,6 +397,11 @@ static IRNode* generate_ir_node(ASTNode* node)
 		case NODE_CALL:
 		{
 			return generate_call(node);
+		}
+
+		case NODE_CLASS:
+		{
+			return generate_class(node);
 		}
 
 		default:
@@ -429,16 +486,43 @@ static IRNode* generate_member_access(ASTNode* node)
 	return maccess;
 }
 
+/**
+ * TODO: adicionar o from logo no frotend, pra ja pegar direto aqui
+ */
 static IRNode* generate_cast(ASTNode* node)
 {
 	IRNode* cast = create_ir_node(IR_NODE_CAST);
 
 	cast->cast.to = copy_type(node->cast_node.cast_type);
-	cast->cast.from = analyzer_return_type_of_expression(NULL, node->cast_node.expr, NULL, NULL, 0, NULL);
+	//cast->cast.from = analyzer_return_type_of_expression(NULL, node->cast_node.expr, NULL, NULL, 0, NULL);
 
 	cast->cast.expr = generate_expression(node->cast_node.expr);
 
 	return cast;
+}
+
+static IRNode* generate_this(ASTNode* node)
+{
+	IRNode* this = create_ir_node(IR_NODE_THIS);
+
+	return this;
+}
+
+static IRNode* generate_super(ASTNode* node)
+{
+	IRNode* super = create_ir_node(IR_NODE_SUPER);
+
+	return super;
+}
+
+static IRNode* generate_arr_access(ASTNode* node)
+{
+	IRNode* arr_access = create_ir_node(IR_NODE_ARR_ACCESS);
+
+	arr_access->arr_access.arr = generate_expression(node->acess_array.array);
+	arr_access->arr_access.index = generate_expression(node->acess_array.index_expr);
+
+	return arr_access;
 }
 
 /**
@@ -486,6 +570,21 @@ static IRNode* generate_expression(ASTNode* node)
 		case NODE_CAST:
 		{
 			return generate_cast(node);
+		}
+
+		case NODE_THIS:
+		{
+			return generate_this(node);
+		}
+
+		case NODE_SUPER:
+		{
+			return generate_super(node);
+		}
+
+		case NODE_ARR_ACCESS:
+		{
+			return generate_arr_access(node);
 		}
 
 		default:
@@ -874,6 +973,7 @@ static void dump_node(IRNode* node, const int depth)
 }
 
 /**
+ * TODO: adicionar classes aqui
  * TODO: implementar isso com modulos reais quando implementar modulos no ir-gen
  * 
  * WARNING: não muito util, mas ja ajuda no debug
@@ -923,19 +1023,19 @@ static void free_node(IRNode* node)
 			free_type(node->func.type);
 
 			if (node->func.params != NULL)
-                        {
-                                for (int i = 0; i < node->func.params_size; i++)
-			        {
-				        IRNode* param = node->func.params[i];
+			{
+				for (int i = 0; i < node->func.params_size; i++)
+				{
+					IRNode* param = node->func.params[i];
 
-                                        if (param == NULL)
-                                        {
-                                                continue;
-                                        }
+					if (param == NULL)
+					{
+						continue;
+					}
 
-				        free_node(param);
-			        }
-                        }
+					free_node(param);
+				}
+			}
 
 			const int length = node->func.blocks->length;
 
@@ -1060,21 +1160,21 @@ static void free_node(IRNode* node)
 			free_node(node->call.func);
 
 			if (node->call.args != NULL)
-                        {
-                                const int length = node->call.args->length;
+			{
+				const int length = node->call.args->length;
 
-			        for (int i = 0; i < length; i++)
-			        {
-				        IRNode* arg = node->call.args->elements[i];
+				for (int i = 0; i < length; i++)
+				{
+					IRNode* arg = node->call.args->elements[i];
 
-				        if (arg == NULL)
-				        {
-					        continue;
-				        }
+					if (arg == NULL)
+					{
+						continue;
+					}
 
-				        free_node(arg);
-			        }
-                        }
+					free_node(arg);
+				}
+			}
 
 			break;
 		}
@@ -1105,18 +1205,66 @@ static void free_node(IRNode* node)
 			break;
 		}
 
-                case IR_NODE_ARGUMENT:
-                {
-                        free_node(node->argument.value);
+		case IR_NODE_ARGUMENT:
+		{
+			free_node(node->argument.value);
 
 			break;
-                }
+		}
 
 		case IR_NODE_PARAM:
 		{
 			free(node->param.name);
 			free_type(node->param.type);
 
+			break;
+		}
+		
+		case IR_NODE_CLASS:
+		{
+			if (node->class.constructor != NULL)
+			{
+				free_node(node->class.constructor);
+			}
+
+			const unsigned int fields_length = node->class.fields->length;
+
+			for (int i = 0; i < fields_length; i++)
+			{
+				IRNode* field = node->class.fields->elements[i];
+
+				if (field == NULL)
+				{
+					continue;
+				}
+
+				free_node(field);
+			}
+
+			const unsigned int methods_length = node->class.methods->length;
+
+			for (int i = 0; i < fields_length; i++)
+			{
+				IRNode* method = node->class.methods->elements[i];
+
+				if (method == NULL)
+				{
+					continue;
+				}
+
+				free_node(method);
+			}
+
+			break;
+		}
+
+		case IR_NODE_SUPER:
+		{
+			break;
+		}
+
+		case IR_NODE_THIS:
+		{
 			break;
 		}
 
