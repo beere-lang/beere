@@ -1106,17 +1106,12 @@ static void free_node(IRNode* node)
 		case IR_NODE_BRANCH:
 		{
 			free_node(node->branch.condition);
-
-			//free_node(node->branch.then_block); ALERT: o bloco deve ser free na propria função.
-			//free_node(node->branch.else_block); ALERT: o bloco deve ser free na propria função.
-
+			
 			break;
 		}
 
 		case IR_NODE_GOTO:
 		{
-			//free_node(node->go_to.block); ALERT: o bloco deve ser free na propria função.
-
 			break;
 		}
 
