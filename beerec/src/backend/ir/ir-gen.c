@@ -1268,6 +1268,14 @@ static void free_node(IRNode* node)
 			break;
 		}
 
+		case IR_NODE_ARR_ACCESS:
+		{
+			free_node(node->arr_access.arr);
+			free_node(node->arr_access.index);
+
+			break;
+		}
+
 		default:
 		{
 			println("Invalid node while freeing with type id: %d...", node->type);
