@@ -5,6 +5,16 @@
 #include "../../utils/logger/logger.h"
 
 #define ENTRY_BLOCK_LABEL ".entry"
+#define FUNC_LABEL_PREFIX ".fn_"
+
+#define WHILE_COND_LABEL_PREFIX ".while_cond_"
+#define WHILE_THEN_LABEL_PREFIX ".while_then_"
+#define WHILE_POST_LABEL_PREFIX ".while_post_"
+
+#define IF_THEN_LABEL_PREFIX ".if_then_"
+#define IF_ELSE_LABEL_PREFIX ".if_else_"
+#define IF_POST_LABEL_PREFIX ".if_post_"
+
 #define BLOCK_START_INSTRUCTIONS_CAPACITY 16
 #define FUNC_START_BLOCKS_CAPACITY 8
 
@@ -37,7 +47,7 @@ static IRNode* generate_func(ASTNode* node)
 	IRNode* func = create_ir_node(IR_NODE_FUNC);
 
 	char buff[64];
-	snprintf(buff, 64, ".fn_%s", node->function.identifier);
+	snprintf(buff, 64, "%s%s", FUNC_LABEL_PREFIX, node->function.identifier);
 
 	func->func.name = _strdup(buff);
 	func->func.type = copy_type(node->function.return_type);
@@ -83,13 +93,13 @@ static IRNode* generate_while(ASTNode* node)
 
 	const int count = whiles_count++;
 	
-	snprintf(buff, 128, ".while_then_%d", count);
+	snprintf(buff, 128, "%s%d", WHILE_THEN_LABEL_PREFIX, count);
 	const char* thenl = _strdup(buff);
 
-	snprintf(buff, 128, ".while_post_%d", count);
+	snprintf(buff, 128, "%s%d", WHILE_POST_LABEL_PREFIX, count);
 	const char* postl = _strdup(buff);
 
-	snprintf(buff, 128, ".while_cond_%d", count);
+	snprintf(buff, 128, "%s%d", WHILE_COND_LABEL_PREFIX, count);
 	const char* condl = _strdup(buff);
 
 	IRNode* thenb = create_block(thenl, 1);
@@ -129,7 +139,7 @@ static IRNode* generate_if(ASTNode* node)
 	
 	const int count = ifs_count++;
 
-	snprintf(buff, 128, ".if_post_%d", count);
+	snprintf(buff, 128, "%s%d", IF_POST_LABEL_PREFIX, count);
 	const char* postl = _strdup(buff);
 	
 	IRNode* bpost = create_block(postl, 1);
@@ -145,7 +155,7 @@ static IRNode* generate_if(ASTNode* node)
 	IRNode* mblock = curr_block;
 
 	{ // then block
-		snprintf(buff, 128, ".if_then_%d", count);
+		snprintf(buff, 128, "%s%d", IF_THEN_LABEL_PREFIX, count);
 		const char* thenl = _strdup(buff);
 		
 		IRNode* bthen = create_block(thenl, 1);
@@ -170,7 +180,7 @@ static IRNode* generate_if(ASTNode* node)
 		{
 			const int elsec = elses_count++;
 			
-			snprintf(buff, 128, ".if_else_%d", elsec);
+			snprintf(buff, 128, "%s%d", IF_ELSE_LABEL_PREFIX, elsec);
 			const char* elsel = _strdup(buff);
 			
 			IRNode* belseif = create_block(elsel, 1);
@@ -194,7 +204,7 @@ static IRNode* generate_if(ASTNode* node)
 		{
 			const int elsec = elses_count++;
 			
-			snprintf(buff, 128, ".if_else_%d", elsec);
+			snprintf(buff, 128, "%s%d", IF_ELSE_LABEL_PREFIX, elsec);
 			const char* elsel = _strdup(buff);
 			
 			IRNode* belse = create_block(elsel, 1);
@@ -300,6 +310,9 @@ static IRNode* generate_call(ASTNode* node)
 	return call;
 }
 
+/**
+ * TODO: adicionar um prefix pras coisa da class, pra não dar conflito com outras funções / fields globais com nome igual
+ */
 static IRNode* generate_class(ASTNode* node)
 {
 	IRNode* class = create_ir_node(IR_NODE_CLASS);
@@ -348,7 +361,7 @@ static IRNode* generate_class(ASTNode* node)
 // ==---------------------------------- Core --------------------------------------== \\
 
 /**
- * TODO: terminar de implementar as nodes que faltam (continue, break, create inst, static access, arr access, arr literal, for loop, switch)
+ * TODO: terminar de implementar as nodes que faltam (continue, break, create inst, static access, arr literal, for loop, switch)
  */
 static IRNode* generate_ir_node(ASTNode* node)
 {
@@ -1106,7 +1119,7 @@ static void free_node(IRNode* node)
 		case IR_NODE_BRANCH:
 		{
 			free_node(node->branch.condition);
-			
+
 			break;
 		}
 
