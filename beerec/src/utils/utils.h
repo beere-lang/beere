@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stdio.h>
+
 char* get_absolute_path(const char* relative_path);
 char* strndup(const char* src, const size_t len);
 char* resolve_path(char* abs_path, char* relative);
