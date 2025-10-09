@@ -2,6 +2,8 @@
 
 #include "compiler.h"
 #include "../utils/files/file-utils.h"
+#include "../utils/logger/logger.h"
+
 // ==---------------------------------- Core --------------------------------------== \\
 
 FILE* compile_module(void* module, str* args, const str path)
@@ -11,6 +13,7 @@ FILE* compile_module(void* module, str* args, const str path)
 
 	if (error)
 	{
+		log_error("Failed to read module source code from path: %s", path);
 		return NULL;
 	}
 

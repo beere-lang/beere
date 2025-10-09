@@ -1,6 +1,8 @@
 #ifndef MODULE_H
 #define MODULE_H
 
+#include "../../../data/data.h"
+
 typedef struct ModuleConfig ModuleConfig;
 
 // Tamanho do buffer em que o conteúdo do .mod vai ser escrito.
@@ -8,10 +10,10 @@ typedef struct ModuleConfig ModuleConfig;
 
 struct ModuleConfig
 {
-	const char* root_path;
+	const str root_path;
 };
 
 // Lida com o dotmod localizado no path, caso tenha algum problema, retorna 'NULL'.
-ModuleConfig* handle_module_config(const char* path);
+ModuleConfig* handle_module_config(const str path);
 
 #endif
