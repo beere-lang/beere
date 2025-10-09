@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <stdlib.h>
 
 #include "modules.h"
 #include "../../utils/files/file-utils.h"
@@ -14,6 +14,8 @@ ModuleConfig* handle_module_config(const char* path)
 	{
 		return NULL;
 	}
+
+	ModuleConfig* mod_cfg = malloc(sizeof(ModuleConfig));
 
 	return NULL;
 }

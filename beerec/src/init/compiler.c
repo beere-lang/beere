@@ -1,13 +1,13 @@
-#include <windows.h>
+#include <stdlib.h>
 
 #include "compiler.h"
 #include "../utils/files/file-utils.h"
 // ==---------------------------------- Core --------------------------------------== \\
 
-FILE* compile_module(void* module, char** args, const char* path)
+FILE* compile_module(void* module, str* args, const str path)
 {
-	char* buff = malloc(FILE_READ_BUFFER_SIZE);
-	const int error = read_file(buff, FILE_READ_BUFFER_SIZE, path);
+	str buff = malloc(FILE_READ_BUFFER_SIZE);
+	const i32 error = read_file(buff, FILE_READ_BUFFER_SIZE, path);
 
 	if (error)
 	{
