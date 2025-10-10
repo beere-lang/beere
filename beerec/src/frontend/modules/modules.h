@@ -53,12 +53,12 @@ struct Module
 };
 
 // Lida com o dotmod localizado no path, caso tenha algum problema, retorna 'NULL'.
-ModuleConfig* handle_dotmod(const str path, const u32 dump_tokens);
+ModuleConfig* handle_dotmod     (const str path, const u32 dump_tokens);
 
 // Da free na struct da config do dotmod 'cfg' e seus atributos.
 void          free_module_config(ModuleConfig* cfg);
 
 // Da setup na structure do module (alocado na heap).
-Module*       setup_module(ModuleConfig* cfg, str path);
+Module*       setup_module      (ModuleConfig* cfg, str path);
 
 #endif

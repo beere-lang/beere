@@ -31,6 +31,6 @@ struct Lexer
 Lexer* tokenize_module(Module* module, u32 max_index, str content);
 
 // Da free na structure do lexer 'lexer' e seu conteúdo.
-void   free_lexer(Lexer* lexer);
+void   free_lexer     (Lexer* lexer);
 
 #endif
