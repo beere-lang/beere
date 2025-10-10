@@ -58,4 +58,7 @@ ModuleConfig* handle_dotmod(const str path, const u32 dump_tokens);
 // Da free na struct da config do dotmod 'cfg' e seus atributos.
 void          free_module_config(ModuleConfig* cfg);
 
+// Da setup na structure do module (alocado na heap).
+Module*       setup_module(ModuleConfig* cfg, str path);
+
 #endif

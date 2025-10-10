@@ -264,6 +264,26 @@ static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 du
 	}
 }
 
+Module* setup_module(ModuleConfig* cfg, str path)
+{
+	Module* module = calloc(1, sizeof(Module));
+	
+	module->cfg = cfg;
+	module->imports = create_list(8);
+
+	str full_path = get_full_path(cfg->root_path, path);
+
+	if (full_path == NULL)
+	{
+		log_error("Failed to get full path from module...");
+		exit(1);
+	}
+
+	module->path = full_path;
+
+	return module;
+}
+
 // ==--------------------------- Memory Management ---------------------------------== \\
 
 void free_module_config(ModuleConfig* cfg)

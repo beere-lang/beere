@@ -24,10 +24,8 @@ Module* compile_module(ModuleConfig* cfg, str* args, const str path)
 		exit(1);
 	}
 
-	Module* module = calloc(1, sizeof(Module));
-	module->cfg = cfg;
-	module->imports = create_list(8);
-
+	Module* module = setup_module(cfg, path);
+	
 	Lexer* lexer = tokenize_module(module, FILE_READ_BUFFER_SIZE, buff);
 
 	return module;
