@@ -12,6 +12,7 @@ typedef struct ModuleToken ModuleToken;
 // Tamanho do buffer em que os tokens são guardados após os dotmod ser tokenizado.
 #define MODULE_TOKENS_BUFFER_SIZE 2048
 
+// Guarda todos os atributos do dotmod.
 struct ModuleConfig
 {
 	str root_path;
@@ -29,6 +30,7 @@ typedef enum
 }
 ModuleTokenType;
 
+// Um token do modulo, usado na tokenização como output.
 struct ModuleToken
 {
 	ModuleTokenType type;

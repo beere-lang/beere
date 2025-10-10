@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "modules.h"
 #include "../../utils/file/file.h"
@@ -121,7 +120,7 @@ static ModuleToken* tokenize_module(ModuleConfig* cfg, str content, u32* length)
 			continue;
 		}
 
-		if (ch == '\"' && content[i + 1] != EOF)
+		if (ch == '\"')
 		{
 			ModuleToken token = { 0 };
 
@@ -135,7 +134,7 @@ static ModuleToken* tokenize_module(ModuleConfig* cfg, str content, u32* length)
 
 			while (*curr != '\"')
 			{
-				if (*curr == '\n' || *curr == EOF)
+				if (*curr == '\n' || *curr == '\0')
 				{
 					log_error("Failed to tokenize dotmod, found a incomplete string at row: %d, column: %d", row, column);
 					exit(1);

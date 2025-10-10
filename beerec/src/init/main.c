@@ -5,7 +5,7 @@
 int main(int argc, char** argv)
 {
 	ModuleConfig* mod_cfg = handle_module_config(argv[1], 0);
-	//compile_module(NULL, argv, argv[2]);
+	compile_module(NULL, argv, argv[2]);
 	
 	return 0;
 }
