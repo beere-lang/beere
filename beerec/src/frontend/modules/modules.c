@@ -11,7 +11,7 @@ static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 du
 
 // ==---------------------------------- Core --------------------------------------== \\
 
-ModuleConfig* handle_module_config(const str path, const u32 dump_tokens)
+ModuleConfig* handle_dotmod(const str path, const u32 dump_tokens)
 {
 	str extension = "";
 	
@@ -42,7 +42,7 @@ ModuleConfig* handle_module_config(const str path, const u32 dump_tokens)
 
 // Tokeniza todo o conteúdo (texto plano) em tokens, que dão
 // um signicado aos pedaços do conteúdo do dotmod.
-static ModuleToken* tokenize_module(ModuleConfig* cfg, str content, u32* length)
+static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 {
 	ModuleToken* buff = calloc(MODULE_TOKENS_BUFFER_SIZE, sizeof(ModuleToken));
 	u32 buff_length = 0;
@@ -204,7 +204,7 @@ static ModuleToken* tokenize_module(ModuleConfig* cfg, str content, u32* length)
 static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 dump_tokens)
 {
 	u32 tokens_length = 0;
-	ModuleToken* tokens = tokenize_module(cfg, content, &tokens_length);
+	ModuleToken* tokens = tokenize_dotmod(cfg, content, &tokens_length);
 	
 	if (dump_tokens)
 	{	
@@ -266,7 +266,6 @@ static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 du
 
 // ==--------------------------- Memory Management ---------------------------------== \\
 
-// Da free na struct da config do dotmod 'cfg' e seus atributos.
 void free_module_config(ModuleConfig* cfg)
 {
 	if (cfg->root_path != NULL)
@@ -276,3 +275,7 @@ void free_module_config(ModuleConfig* cfg)
 
 	free(cfg);
 }
+
+/**
+ * TODO: adicionar memory management pra 'Module' structures.
+ */
