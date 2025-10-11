@@ -23,7 +23,7 @@ Beere is a simple, fast, and low-level programming language, designed for system
 https://discord.gg/2HvEyHXvhb
 
 ## Development
-> Created by aotuser.
+> Created and maintained by aotuser.
 
 ## License
 > BSD 3-Clause License. [Read more](https://github.com/beere-lang/beere?tab=BSD-3-Clause-1-ov-file)
