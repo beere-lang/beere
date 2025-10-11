@@ -52,10 +52,10 @@ struct Module
 	DList*        imports;
 };
 
-// Lida com o dotmod localizado no path, caso tenha algum problema, retorna 'NULL'.
+// Lida com o dotmod localizado no path, caso tenha algum problema, retorna NULL.
 ModuleConfig* handle_dotmod     (const str path, const u32 dump_tokens);
 
-// Da free na struct da config do dotmod 'cfg' e seus atributos.
+// Da free na structure da config do dotmod 'cfg' e seus atributos.
 void          free_module_config(ModuleConfig* cfg);
 
 // Da setup na structure do module (alocado na heap).

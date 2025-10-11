@@ -9,18 +9,18 @@
 
 Module* compile_module(ModuleConfig* cfg, str* args, const str path)
 {
+	if (cfg == NULL)
+	{
+		log_error("Invalid dotmod structure is 'NULL'...");
+		exit(1);
+	}
+	
 	str buff = malloc(FILE_READ_BUFFER_SIZE);
 	const i32 error = read_file(buff, FILE_READ_BUFFER_SIZE, path);
 
 	if (error)
 	{
 		log_error("Failed to read module source code from path: %s", path);
-		exit(1);
-	}
-
-	if (cfg == NULL)
-	{
-		log_error("Invalid dotmod structure is 'NULL'...");
 		exit(1);
 	}
 
