@@ -40,14 +40,16 @@ i32 read_file(str buff, const u32 buff_size, const str path)
 		return 1;
 	}
 
-	if (fread(buff, sizeof(char), buff_size - 1, file) == 0)
+	u32 bytes_read = fread(buff, sizeof(char), buff_size - 2, file);
+
+	if (bytes_read == 0)
 	{
 		return 1;
 	}
 
 	fclose(file);
 	
-	buff[buff_size - 1] = '\0';
+	buff[bytes_read] = '\0';
 
 	return 0;
 }

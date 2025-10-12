@@ -1,11 +1,14 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "lexer.h"
 #include "../../utils/logger/logger.h"
 #include "../../utils/string/string.h"
 
+static i32 is_digit(char ch);
+static i32 is_alpha(char ch);
+static i32 is_aldig(char ch);
 static char get_char(Lexer* lexer);
 static i32 is_unknown(Token* token);
 static char* advance_char(Lexer* lexer);
@@ -20,7 +23,7 @@ static void add_token(Token* token, u32* tokens_length, Token* tokens);
 // Retorna NULL caso não seja um identifier.
 static str handle_identifier(Lexer* lexer, char** start_ref, char** end_ref, u32* length_ref)
 {
-	if (!isalpha(get_char(lexer)))
+	if (!is_alpha(get_char(lexer)))
 	{
 		return NULL;
 	}
@@ -29,7 +32,7 @@ static str handle_identifier(Lexer* lexer, char** start_ref, char** end_ref, u32
 	char* start = lexer->current;
 	char* end = NULL;
 	
-	while (isalpha(get_char(lexer)) || isalnum(get_char(lexer)))
+	while (get_char(lexer) == '_' || is_aldig(get_char(lexer)))
 	{
 		end = consume_char(lexer);
 		++length;
@@ -39,7 +42,9 @@ static str handle_identifier(Lexer* lexer, char** start_ref, char** end_ref, u32
 	*end_ref = end;
 	*length_ref = length;
 
-	return strndup(start, length);
+	str temp =  strndup(start, length);
+	
+	return temp;
 }
 
 // Verifica se a palavra 'identifier' se é igual ao nome de um tipo.
@@ -173,6 +178,21 @@ static Token handle_keywords(Lexer* lexer, str identifier, char* start)
 		token.type = TOKEN_KEYWORD_PRIVATE;
 		token.length = 7;
 	}
+	else if (strncmp(identifier, "for", 3) == 0)
+	{
+		token.type = TOKEN_KEYWORD_FOR;
+		token.length = 3;
+	}
+	else if (strncmp(identifier, "while", 5) == 0)
+	{
+		token.type = TOKEN_KEYWORD_WHILE;
+		token.length = 5;
+	}
+	else if (strncmp(identifier, "void", 4) == 0)
+	{
+		token.type = TOKEN_KEYWORD_VOID;
+		token.length = 4;
+	}
 
 	return token;
 }
@@ -272,6 +292,14 @@ static Token handle_chars(Lexer* lexer)
 			token.type = TOKEN_CHAR_EQUALS;
 		}
 	}
+	else if (ch == '(')
+	{
+		token.type = TOKEN_CHAR_LEFT_PAREN;
+	}
+	else if (ch == ')')
+	{
+		token.type = TOKEN_CHAR_RIGHT_PAREN;
+	}
 	else if (ch == '{')
 	{
 		token.type = TOKEN_CHAR_LEFT_BRACE;
@@ -330,7 +358,7 @@ static Token handle_number_constants(Lexer* lexer)
 
 	char ch = get_char(lexer);
 
-	if (isalnum(ch))
+	if (is_digit(ch))
 	{
 		i32 decimal = 0;
 
@@ -339,9 +367,9 @@ static Token handle_number_constants(Lexer* lexer)
 
 		u32 length = 0;
 		
-		while (isalnum(ch) || ch == '.')
+		while (is_digit(get_char(lexer)) || get_char(lexer) == '.')
 		{
-			if (ch == '.')
+			if (get_char(lexer) == '.')
 			{
 				if (decimal)
 				{
@@ -490,7 +518,7 @@ static Token handle_char_constants(Lexer* lexer) /** TODO: adicionar chars que u
 	return token;
 }
 
-Lexer* tokenize_module(Module* module, u32 max_index, str content)
+Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 {
 	Lexer* lexer = setup_lexer(max_index, content);
 	u32 tokens_length = 0;
@@ -514,12 +542,13 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 			continue;
 		}
 
-		if (ch == '\0')
+		if (ch == '\0' || ch == EOF)
 		{
 			Token token = CREATE_TOKEN(TOKEN_END_SOURCE, lexer->current, 1);
 			add_token(&token, &tokens_length, lexer->tokens);
 
-			advance_char(lexer);
+			log_warning("Found source end at index: %d...", lexer->index);
+
 			break;
 		}
 
@@ -595,6 +624,8 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 		if (identifier != NULL)
 		{
+			log_warning("Adding a identifier: \"%s\"", identifier);
+			
 			Token token = CREATE_TOKEN(TOKEN_IDENTIFIER, start, length);
 			
 			add_token(&token, &tokens_length, lexer->tokens);
@@ -602,10 +633,8 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 		}
 		else
 		{
-			Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, 0);
-			
-			add_token(&token, &tokens_length, lexer->tokens);
-			continue;
+			log_error("Invalid token found, exiting...");
+			exit(1);
 		}
 	}
 
@@ -614,10 +643,29 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 // ==--------------------------------- Utils --------------------------------------== \\
 
+// Checa se um char 'ch' é um char de numero.
+static i32 is_digit(char ch)
+{
+	return ch >= '0' && ch <= '9';
+}
+
+// Checa se um char 'ch' é um char alpha numerico ou um underline (usado em identifiers).
+static i32 is_alpha(char ch)
+{
+	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_';
+}
+
+// Checa se um char 'ch' é um digito ou um char alpha numerico.
+// Veja 'is_digit' e 'is_alpha' pra entender melhor.
+static i32 is_aldig(char ch)
+{
+	return is_digit(ch) || is_alpha(ch);
+}
+
 // Retorna se um token é do tipo desconhecido 'TOKEN_UNKNOWN'.
 static i32 is_unknown(Token* token)
 {
-	return token->type != TOKEN_UNKNOWN;
+	return token->type == TOKEN_UNKNOWN;
 }
 
 // Adiciona o token 'token' a array de tokens 'tokens' e incrementa o valor
@@ -680,14 +728,14 @@ static char get_char(Lexer* lexer)
 }
 
 // Da setup na structure do lexer (alocado na heap).
-static Lexer* setup_lexer(u32 max_index, str content)
+static Lexer* setup_lexer(const u32 max_index, str content)
 {
 	Lexer* lexer = calloc(1, sizeof(Lexer));
 
 	lexer->content = content;
 	lexer->current = content;
 
-	lexer->index = 0;
+	lexer->index = 3;
 
 	lexer->max_index = max_index;
 	lexer->tokens = calloc(LEXER_TOKENS_BUFFER_SIZE, sizeof(Token));

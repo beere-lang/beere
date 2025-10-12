@@ -17,7 +17,7 @@ struct Lexer
 	str    content;
 	
 	char*  current; // ponteiro pro char atual
-	i32    index; // index do char atual
+	u32    index; // index do char atual
 
 	// index maximo que o 'index' pode chegar 
 	// (geralmente é o tamanho do buffer 'content')

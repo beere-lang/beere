@@ -9,7 +9,6 @@ typedef struct ConstantString ConstantString;
 typedef struct ConstantBool ConstantBool;
 typedef struct ConstantChar ConstantChar;
 
-
 // Inicializa uma structure de token, setando apenas os campos principais.
 #define CREATE_TOKEN(t, s, l) { .type = t, .start = s, .length = l }
 
@@ -40,6 +39,9 @@ typedef enum
 	TOKEN_KEYWORD_OVERRIDE,
 	TOKEN_KEYWORD_PUBLIC,
 	TOKEN_KEYWORD_PRIVATE,
+	TOKEN_KEYWORD_FOR,
+	TOKEN_KEYWORD_WHILE,
+	TOKEN_KEYWORD_VOID,
 	
 	TOKEN_TYPE_INT,
 	TOKEN_TYPE_FLOAT,
@@ -134,8 +136,10 @@ struct Token
 	union
 	{
 		ConstantNumber constant_number;
+		
 		ConstantString constant_string;
 		ConstantChar   constant_char;
+		
 		ConstantBool   constant_bool;
 	};
 };
