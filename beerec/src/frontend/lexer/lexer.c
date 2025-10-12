@@ -44,9 +44,9 @@ static str handle_identifier(Lexer* lexer, char** start_ref, char** end_ref, u32
 
 // Verifica se a palavra 'identifier' se é igual ao nome de um tipo.
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
-static Token handle_types(Lexer* lexer, str identifier, char* start, char* end)
+static Token handle_types(Lexer* lexer, str identifier, char* start)
 {
-	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, end, 0);
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, 0);
 
 	if (strncmp(identifier, "int", 3) == 0)
 	{
@@ -84,9 +84,9 @@ static Token handle_types(Lexer* lexer, str identifier, char* start, char* end)
 
 // Verifica se a palavra 'identifier' se é igual ao nome de uma keyword.
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
-static Token handle_keywords(Lexer* lexer, str identifier, char* start, char* end)
+static Token handle_keywords(Lexer* lexer, str identifier, char* start)
 {
-	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, end, 0);
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, 0);
 	
 	if (strncmp(identifier, "if", 2) == 0)
 	{
@@ -181,7 +181,7 @@ static Token handle_keywords(Lexer* lexer, str identifier, char* start, char* en
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
 static Token handle_chars(Lexer* lexer)
 {
-	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, lexer->current, NULL, 1);
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, lexer->current, 1);
 
 	char ch = get_char(lexer);
 	char next = *(lexer->current + 1);
@@ -191,21 +191,16 @@ static Token handle_chars(Lexer* lexer)
 		if (next == '+')
 		{
 			token.type = TOKEN_OPERATOR_INCREMENT;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 		else if (next == '=')
 		{
 			token.type = TOKEN_OPERATOR_PLUS_EQUALS;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 		else
 		{
 			token.type = TOKEN_CHAR_PLUS;
-			token.end = lexer->current;
 		}
 	}
 	else if (ch == '-')
@@ -213,21 +208,16 @@ static Token handle_chars(Lexer* lexer)
 		if (next == '-')
 		{
 			token.type = TOKEN_OPERATOR_DECREMENT;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 		else if (next == '=')
 		{
 			token.type = TOKEN_OPERATOR_MINUS_EQUALS;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 		else
 		{
 			token.type = TOKEN_CHAR_MINUS;
-			token.end = lexer->current;
 		}
 	}
 	else if (ch == '*')
@@ -235,14 +225,11 @@ static Token handle_chars(Lexer* lexer)
 		if (next == '=')
 		{
 			token.type = TOKEN_OPERATOR_TIMES_EQUALS;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 		else
 		{
 			token.type = TOKEN_CHAR_ASTERISK;
-			token.end = lexer->current;
 		}
 	}
 	else if (ch == '/')
@@ -250,14 +237,11 @@ static Token handle_chars(Lexer* lexer)
 		if (next == '=')
 		{
 			token.type = TOKEN_OPERATOR_DIVIDED_EQUALS;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 		else
 		{
 			token.type = TOKEN_CHAR_DASH;
-			token.end = lexer->current;
 		}
 	}
 	else if (ch == '|')
@@ -265,8 +249,6 @@ static Token handle_chars(Lexer* lexer)
 		if (next == '|')
 		{
 			token.type = TOKEN_OPERATOR_LOG_OR;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 	}
@@ -275,8 +257,6 @@ static Token handle_chars(Lexer* lexer)
 		if (next == '&')
 		{
 			token.type = TOKEN_OPERATOR_LOG_AND;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 	}
@@ -285,45 +265,36 @@ static Token handle_chars(Lexer* lexer)
 		if (next == '=')
 		{
 			token.type = TOKEN_OPERATOR_EQUALS;
-			token.end = lexer->current + 1;
-
 			token.length = 2;
 		}
 		else
 		{
 			token.type = TOKEN_CHAR_EQUALS;
-			token.end = lexer->current;
 		}
 	}
 	else if (ch == '{')
 	{
 		token.type = TOKEN_CHAR_LEFT_BRACE;
-		token.end = lexer->current;
 	}
 	else if (ch == '}')
 	{
 		token.type = TOKEN_CHAR_RIGHT_BRACE;
-		token.end = lexer->current;
 	}
 	else if (ch == '[')
 	{
 		token.type = TOKEN_CHAR_LEFT_BRACKET;
-		token.end = lexer->current;
 	}
 	else if (ch == ']')
 	{
 		token.type = TOKEN_CHAR_RIGHT_BRACKET;
-		token.end = lexer->current;
 	}
 	else if (ch == '.')
 	{
 		token.type = TOKEN_CHAR_DOT;
-		token.end = lexer->current;
 	}
 	else if (ch == ':')
 	{
 		token.type = TOKEN_CHAR_COLON;
-		token.end = lexer->current;
 	}
 
 	return token;
@@ -331,9 +302,9 @@ static Token handle_chars(Lexer* lexer)
 
 // Verifica se vai vir uma constant boolean em especifico.
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
-static Token handle_bool_constants(Lexer* lexer, str identifier, char* start, char* end)
+static Token handle_bool_constants(Lexer* lexer, str identifier, char* start)
 {
-	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, end, 0);
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, 0);
 
 	if (strncmp(identifier, "true", 4) == 0)
 	{
@@ -355,7 +326,7 @@ static Token handle_bool_constants(Lexer* lexer, str identifier, char* start, ch
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
 static Token handle_number_constants(Lexer* lexer)
 {
-	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, lexer->current, NULL, 0);
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, lexer->current, 0);
 
 	char ch = get_char(lexer);
 
@@ -386,8 +357,7 @@ static Token handle_number_constants(Lexer* lexer)
 		}
 
 		token.length = length;
-		token.end = token.start + length;
-
+		
 		if (decimal)
 		{
 			token.constant_number.type = NUMBER_TYPE_DOUBLE;
@@ -443,7 +413,7 @@ static Token handle_number_constants(Lexer* lexer)
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
 static Token handle_string_constants(Lexer* lexer) /** TODO: adicionar chars que usam '\'  ('\n', '0', etc).  */
 {
-	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, NULL, 0);
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, 0);
 
 	char ch = get_char(lexer);
 
@@ -470,8 +440,7 @@ static Token handle_string_constants(Lexer* lexer) /** TODO: adicionar chars que
 		token.constant_string.value = strndup(token.start, length);
 
 		token.length = length;
-		token.end = lexer->current;
-
+		
 		advance_char(lexer);
 	}
 
@@ -482,7 +451,7 @@ static Token handle_string_constants(Lexer* lexer) /** TODO: adicionar chars que
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
 static Token handle_char_constants(Lexer* lexer) /** TODO: adicionar chars que usam '\'  ('\n', '0', etc).  */
 {
-	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, NULL, 0);
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, 0);
 
 	char ch = get_char(lexer);
 
@@ -514,8 +483,7 @@ static Token handle_char_constants(Lexer* lexer) /** TODO: adicionar chars que u
 		}
 
 		token.length = length;
-		token.end = lexer->current;
-
+		
 		advance_char(lexer);
 	}
 
@@ -539,7 +507,7 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 		if (ch == '\n')
 		{
-			Token token = CREATE_TOKEN(TOKEN_END_LINE, lexer->current, lexer->current + 1, 1);
+			Token token = CREATE_TOKEN(TOKEN_END_LINE, lexer->current, 1);
 			add_token(&token, &tokens_length, lexer->tokens);
 			
 			advance_char(lexer);
@@ -548,7 +516,7 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 		if (ch == '\0')
 		{
-			Token token = CREATE_TOKEN(TOKEN_END_SOURCE, lexer->current, lexer->current + 1, 1);
+			Token token = CREATE_TOKEN(TOKEN_END_SOURCE, lexer->current, 1);
 			add_token(&token, &tokens_length, lexer->tokens);
 
 			advance_char(lexer);
@@ -563,7 +531,7 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 		if (identifier != NULL)
 		{
-			Token token_type = handle_types(lexer, identifier, start, end);
+			Token token_type = handle_types(lexer, identifier, start);
 			
 			if (!is_unknown(&token_type))
 			{
@@ -571,7 +539,7 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 				continue;
 			}
 	
-			Token token_keyword = handle_keywords(lexer, identifier, start, end);
+			Token token_keyword = handle_keywords(lexer, identifier, start);
 	
 			if (!is_unknown(&token_keyword))
 			{
@@ -579,7 +547,7 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 				continue;
 			}
 
-			Token token_bool = handle_bool_constants(lexer, identifier, start, end);
+			Token token_bool = handle_bool_constants(lexer, identifier, start);
 
 			if (!is_unknown(&token_bool))
 			{
@@ -627,14 +595,14 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 		if (identifier != NULL)
 		{
-			Token token = CREATE_TOKEN(TOKEN_IDENTIFIER, start, end, length);
+			Token token = CREATE_TOKEN(TOKEN_IDENTIFIER, start, length);
 			
 			add_token(&token, &tokens_length, lexer->tokens);
 			continue;
 		}
 		else
 		{
-			Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, NULL, 0);
+			Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, 0);
 			
 			add_token(&token, &tokens_length, lexer->tokens);
 			continue;

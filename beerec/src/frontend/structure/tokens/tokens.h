@@ -11,7 +11,7 @@ typedef struct ConstantChar ConstantChar;
 
 
 // Inicializa uma structure de token, setando apenas os campos principais.
-#define CREATE_TOKEN(t, s, e, l) { .type = t, .start = s, .end = e, .length = l }
+#define CREATE_TOKEN(t, s, l) { .type = t, .start = s, .length = l }
 
 // Tipos de token.
 typedef enum
@@ -128,8 +128,7 @@ struct Token
 	TokenType            type;
 
 	char*                start;
-	char*                end;
-
+	
 	u32                  length;
 
 	union
