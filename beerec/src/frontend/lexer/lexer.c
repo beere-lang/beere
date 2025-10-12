@@ -1,7 +1,10 @@
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "lexer.h"
 #include "../../utils/logger/logger.h"
+#include "../../utils/string/string.h"
 
 static char get_char(Lexer* lexer);
 static i32 is_unknown(Token* token);
@@ -12,59 +15,511 @@ static void add_token(Token* token, u32* tokens_length, Token* tokens);
 
 // ==---------------------------------- Core --------------------------------------== \\
 
-// Lida com um pedaço que pode ser considerado uma palavra com chars ("a-Z", "_", "0-9").
-// Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
-static str handle_identifier(Lexer* lexer)
+// Lida com um pedaço que pode ser considerado uma palavra com chars ("a-Z", "_", "0-9") e
+// seta os valores das referencias 'start_ref', 'end_ref' e 'length_ref' pra uso posterior.
+// Retorna NULL caso não seja um identifier.
+static str handle_identifier(Lexer* lexer, char** start_ref, char** end_ref, u32* length_ref)
 {
-	return NULL;
+	if (!isalpha(get_char(lexer)))
+	{
+		return NULL;
+	}
+
+	u32 length = 0;
+	char* start = lexer->current;
+	char* end = NULL;
+	
+	while (isalpha(get_char(lexer)) || isalnum(get_char(lexer)))
+	{
+		end = consume_char(lexer);
+		++length;
+	}
+	
+	*start_ref = start;
+	*end_ref = end;
+	*length_ref = length;
+
+	return strndup(start, length);
 }
 
 // Verifica se a palavra 'identifier' se é igual ao nome de um tipo.
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
-static Token handle_types(Lexer* lexer, str identifier)
+static Token handle_types(Lexer* lexer, str identifier, char* start, char* end)
 {
-	
-	
-	Token unknown = { 0 };
-	unknown.type = TOKEN_UNKNOWN;
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, end, 0);
 
-	return unknown;
+	if (strncmp(identifier, "int", 3) == 0)
+	{
+		token.type = TOKEN_TYPE_INT;
+		token.length = 3;
+	}
+	else if (strncmp(identifier, "float", 5) == 0)
+	{
+		token.type = TOKEN_TYPE_FLOAT;
+		token.length = 5;
+	}
+	else if (strncmp(identifier, "double", 6) == 0)
+	{
+		token.type = TOKEN_TYPE_DOUBLE;
+		token.length = 6;
+	}
+	else if (strncmp(identifier, "char", 4) == 0)
+	{
+		token.type = TOKEN_TYPE_CHAR;
+		token.length = 4;
+	}
+	else if (strncmp(identifier, "string", 6) == 0)
+	{
+		token.type = TOKEN_TYPE_STRING;
+		token.length = 6;
+	}
+	else if (strncmp(identifier, "bool", 4) == 0)
+	{
+		token.type = TOKEN_TYPE_BOOL;
+		token.length = 4;
+	}
+
+	return token;
 }
 
 // Verifica se a palavra 'identifier' se é igual ao nome de uma keyword.
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
-static Token handle_keywords(Lexer* lexer, str identifier)
+static Token handle_keywords(Lexer* lexer, str identifier, char* start, char* end)
 {
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, end, 0);
 	
-	
-	Token unknown = { 0 };
-	unknown.type = TOKEN_UNKNOWN;
+	if (strncmp(identifier, "if", 2) == 0)
+	{
+		token.type = TOKEN_KEYWORD_IF;
+		token.length = 2;
+	}
+	else if (strncmp(identifier, "else", 4) == 0)
+	{
+		token.type = TOKEN_KEYWORD_ELSE;
+		token.length = 4;
+	}
+	else if (strncmp(identifier, "continue", 8) == 0)
+	{
+		token.type = TOKEN_KEYWORD_CONTINUE;
+		token.length = 8;
+	}
+	else if (strncmp(identifier, "break", 5) == 0)
+	{
+		token.type = TOKEN_KEYWORD_BREAK;
+		token.length = 5;
+	}
+	else if (strncmp(identifier, "class", 5) == 0)
+	{
+		token.type = TOKEN_KEYWORD_CLASS;
+		token.length = 5;
+	}
+	else if (strncmp(identifier, "as", 2) == 0)
+	{
+		token.type = TOKEN_KEYWORD_AS;
+		token.length = 2;
+	}
+	else if (strncmp(identifier, "import", 6) == 0)
+	{
+		token.type = TOKEN_KEYWORD_IMPORT;
+		token.length = 6;
+	}
+	else if (strncmp(identifier, "static", 6) == 0)
+	{
+		token.type = TOKEN_KEYWORD_STATIC;
+		token.length = 6;
+	}
+	else if (strncmp(identifier, "super", 5) == 0)
+	{
+		token.type = TOKEN_KEYWORD_SUPER;
+		token.length = 5;
+	}
+	else if (strncmp(identifier, "return", 6) == 0)
+	{
+		token.type = TOKEN_KEYWORD_RETURN;
+		token.length = 6;
+	}
+	else if (strncmp(identifier, "let", 3) == 0)
+	{
+		token.type = TOKEN_KEYWORD_LET;
+		token.length = 3;
+	}
+	else if (strncmp(identifier, "fn", 2) == 0)
+	{
+		token.type = TOKEN_KEYWORD_FN;
+		token.length = 2;
+	}
+	else if (strncmp(identifier, "const", 5) == 0)
+	{
+		token.type = TOKEN_KEYWORD_CONST;
+		token.length = 5;
+	}
+	else if (strncmp(identifier, "virtual", 7) == 0)
+	{
+		token.type = TOKEN_KEYWORD_VIRTUAL;
+		token.length = 7;
+	}
+	else if (strncmp(identifier, "override", 8) == 0)
+	{
+		token.type = TOKEN_KEYWORD_OVERRIDE;
+		token.length = 8;
+	}
+	else if (strncmp(identifier, "public", 6) == 0)
+	{
+		token.type = TOKEN_KEYWORD_PUBLIC;
+		token.length = 6;
+	}
+	else if (strncmp(identifier, "private", 7) == 0)
+	{
+		token.type = TOKEN_KEYWORD_PRIVATE;
+		token.length = 7;
+	}
 
-	return unknown;
+	return token;
 }
 
 // Verifica se o char atual é algum char especifico ("()", "*", "-", "+", etc).
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
 static Token handle_chars(Lexer* lexer)
 {
-	
-	
-	Token unknown = { 0 };
-	unknown.type = TOKEN_UNKNOWN;
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, lexer->current, NULL, 1);
 
-	return unknown;
+	char ch = get_char(lexer);
+	char next = *(lexer->current + 1);
+
+	if (ch == '+')
+	{
+		if (next == '+')
+		{
+			token.type = TOKEN_OPERATOR_INCREMENT;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+		else if (next == '=')
+		{
+			token.type = TOKEN_OPERATOR_PLUS_EQUALS;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+		else
+		{
+			token.type = TOKEN_CHAR_PLUS;
+			token.end = lexer->current;
+		}
+	}
+	else if (ch == '-')
+	{
+		if (next == '-')
+		{
+			token.type = TOKEN_OPERATOR_DECREMENT;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+		else if (next == '=')
+		{
+			token.type = TOKEN_OPERATOR_MINUS_EQUALS;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+		else
+		{
+			token.type = TOKEN_CHAR_MINUS;
+			token.end = lexer->current;
+		}
+	}
+	else if (ch == '*')
+	{
+		if (next == '=')
+		{
+			token.type = TOKEN_OPERATOR_TIMES_EQUALS;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+		else
+		{
+			token.type = TOKEN_CHAR_ASTERISK;
+			token.end = lexer->current;
+		}
+	}
+	else if (ch == '/')
+	{
+		if (next == '=')
+		{
+			token.type = TOKEN_OPERATOR_DIVIDED_EQUALS;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+		else
+		{
+			token.type = TOKEN_CHAR_DASH;
+			token.end = lexer->current;
+		}
+	}
+	else if (ch == '|')
+	{
+		if (next == '|')
+		{
+			token.type = TOKEN_OPERATOR_LOG_OR;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+	}
+	else if (ch == '&')
+	{
+		if (next == '&')
+		{
+			token.type = TOKEN_OPERATOR_LOG_AND;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+	}
+	else if (ch == '=')
+	{
+		if (next == '=')
+		{
+			token.type = TOKEN_OPERATOR_EQUALS;
+			token.end = lexer->current + 1;
+
+			token.length = 2;
+		}
+		else
+		{
+			token.type = TOKEN_CHAR_EQUALS;
+			token.end = lexer->current;
+		}
+	}
+	else if (ch == '{')
+	{
+		token.type = TOKEN_CHAR_LEFT_BRACE;
+		token.end = lexer->current;
+	}
+	else if (ch == '}')
+	{
+		token.type = TOKEN_CHAR_RIGHT_BRACE;
+		token.end = lexer->current;
+	}
+	else if (ch == '[')
+	{
+		token.type = TOKEN_CHAR_LEFT_BRACKET;
+		token.end = lexer->current;
+	}
+	else if (ch == ']')
+	{
+		token.type = TOKEN_CHAR_RIGHT_BRACKET;
+		token.end = lexer->current;
+	}
+	else if (ch == '.')
+	{
+		token.type = TOKEN_CHAR_DOT;
+		token.end = lexer->current;
+	}
+	else if (ch == ':')
+	{
+		token.type = TOKEN_CHAR_COLON;
+		token.end = lexer->current;
+	}
+
+	return token;
 }
 
-// Verifica se vai vir uma constant (strings, numeros, etc).
+// Verifica se vai vir uma constant boolean em especifico.
 // Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
-static Token handle_constants(Lexer* lexer)
+static Token handle_bool_constants(Lexer* lexer, str identifier, char* start, char* end)
 {
-	
-	
-	Token unknown = { 0 };
-	unknown.type = TOKEN_UNKNOWN;
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, end, 0);
 
-	return unknown;
+	if (strncmp(identifier, "true", 4) == 0)
+	{
+		token.type = TOKEN_CONSTANT_BOOL;
+		token.constant_bool.value = 1;
+		token.length = 4;
+	}
+	else if (strncmp(identifier, "false", 5) == 0)
+	{
+		token.type = TOKEN_CONSTANT_BOOL;
+		token.constant_bool.value = 0;
+		token.length = 5;
+	}
+
+	return token;
+}
+
+// Verifica se vai vir uma constant de numero.
+// Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
+static Token handle_number_constants(Lexer* lexer)
+{
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, lexer->current, NULL, 0);
+
+	char ch = get_char(lexer);
+
+	if (isalnum(ch))
+	{
+		i32 decimal = 0;
+
+		token.type = TOKEN_CONSTANT_NUMBER;
+		token.constant_number.type = NUMBER_TYPE_INT;
+
+		u32 length = 0;
+		
+		while (isalnum(ch) || ch == '.')
+		{
+			if (ch == '.')
+			{
+				if (decimal)
+				{
+					log_error("Found 2 '.' in number constant...");
+					exit(1);
+				}
+
+				decimal = 1;
+			}
+
+			advance_char(lexer);
+			++length;
+		}
+
+		token.length = length;
+		token.end = token.start + length;
+
+		if (decimal)
+		{
+			token.constant_number.type = NUMBER_TYPE_DOUBLE;
+		}
+		
+		if (get_char(lexer) == 'F' || get_char(lexer) == 'f')
+		{
+			token.constant_number.type = NUMBER_TYPE_FLOAT;
+			advance_char(lexer);
+		}
+		else if (get_char(lexer) == 'D' || get_char(lexer) == 'd')
+		{
+			token.constant_number.type = NUMBER_TYPE_DOUBLE;
+			advance_char(lexer);
+		}
+
+		str str_value = strndup(token.start, length);
+
+		switch (token.constant_number.type)
+		{
+			case NUMBER_TYPE_INT:
+			{
+				token.constant_number.int_value = atoi(str_value);
+				break;
+			}
+
+			case NUMBER_TYPE_FLOAT:
+			{
+				token.constant_number.float_value = atof(str_value);
+				break;
+			}
+
+			case NUMBER_TYPE_DOUBLE:
+			{
+				char* end = NULL;
+				token.constant_number.double_value = strtod(str_value, &end);
+
+				if (end == NULL || end == token.start)
+				{
+					log_error("Failed to convert number constant (string) to double...");
+					exit(1);
+				}
+
+				break;
+			}
+		}
+	}
+
+	return token;
+}
+
+// Verifica se vai vir uma constant de string.
+// Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
+static Token handle_string_constants(Lexer* lexer) /** TODO: adicionar chars que usam '\'  ('\n', '0', etc).  */
+{
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, NULL, 0);
+
+	char ch = get_char(lexer);
+
+	if (ch == '\"')
+	{
+		u32 length = 0;
+
+		token.type = TOKEN_CONSTANT_STRING;
+
+		advance_char(lexer);
+		token.start = lexer->current;
+
+		while (get_char(lexer) != '\"')
+		{
+			if (get_char(lexer) == '\n' || get_char(lexer) == '\0')
+			{
+				log_error("Not terminated string constant found...");
+				exit(1);
+			}
+
+			++length;
+		}
+
+		token.constant_string.value = strndup(token.start, length);
+
+		token.length = length;
+		token.end = lexer->current;
+
+		advance_char(lexer);
+	}
+
+	return token;
+}
+
+// Verifica se vai vir uma constant de char.
+// Retorna desconhecido 'TOKEN_UNKNOWN' caso não seja.
+static Token handle_char_constants(Lexer* lexer) /** TODO: adicionar chars que usam '\'  ('\n', '0', etc).  */
+{
+	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, NULL, 0);
+
+	char ch = get_char(lexer);
+
+	if (ch == '\'')
+	{
+		u32 length = 0;
+
+		token.type = TOKEN_CONSTANT_CHAR;
+
+		advance_char(lexer);
+		token.start = lexer->current;
+
+		while (get_char(lexer) != '\'')
+		{
+			if (get_char(lexer) == '\n' || get_char(lexer) == '\0')
+			{
+				log_error("Not terminated char constant found...");
+				exit(1);
+			}
+
+			token.constant_char.value = *(consume_char(lexer));
+			++length;
+		}
+
+		if (length > 1)
+		{
+			log_error("Found a char constant with more than 1 char...");
+			exit(1);
+		}
+
+		token.length = length;
+		token.end = lexer->current;
+
+		advance_char(lexer);
+	}
+
+	return token;
 }
 
 Lexer* tokenize_module(Module* module, u32 max_index, str content)
@@ -84,12 +539,7 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 		if (ch == '\n')
 		{
-			Token token = { 0 };
-			
-			token.start = lexer->current;
-			token.end = lexer->current + 1;
-			token.type = TOKEN_END_LINE;
-
+			Token token = CREATE_TOKEN(TOKEN_END_LINE, lexer->current, lexer->current + 1, 1);
 			add_token(&token, &tokens_length, lexer->tokens);
 			
 			advance_char(lexer);
@@ -98,23 +548,22 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 
 		if (ch == '\0')
 		{
-			Token token = { 0 };
-			
-			token.start = lexer->current;
-			token.end = lexer->current + 1;
-			token.type = TOKEN_END_SOURCE;
-
+			Token token = CREATE_TOKEN(TOKEN_END_SOURCE, lexer->current, lexer->current + 1, 1);
 			add_token(&token, &tokens_length, lexer->tokens);
 
 			advance_char(lexer);
 			break;
 		}
 
-		str identifier = handle_identifier(lexer);
+		char* start = NULL;
+		char* end = NULL;
+		u32 length = 0;
+
+		str identifier = handle_identifier(lexer, &start, &end, &length);
 
 		if (identifier != NULL)
 		{
-			Token token_type = handle_types(lexer, identifier);
+			Token token_type = handle_types(lexer, identifier, start, end);
 			
 			if (!is_unknown(&token_type))
 			{
@@ -122,11 +571,19 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 				continue;
 			}
 	
-			Token token_keyword = handle_keywords(lexer, identifier);
+			Token token_keyword = handle_keywords(lexer, identifier, start, end);
 	
 			if (!is_unknown(&token_keyword))
 			{
 				add_token(&token_keyword, &tokens_length, lexer->tokens);
+				continue;
+			}
+
+			Token token_bool = handle_bool_constants(lexer, identifier, start, end);
+
+			if (!is_unknown(&token_bool))
+			{
+				add_token(&token_bool, &tokens_length, lexer->tokens);
 				continue;
 			}
 		}
@@ -135,15 +592,51 @@ Lexer* tokenize_module(Module* module, u32 max_index, str content)
 	
 		if (!is_unknown(&token_char))
 		{
+			for (i32 i = 0; i < token_char.length; i++)
+			{
+				advance_char(lexer);
+			}
+
 			add_token(&token_char, &tokens_length, lexer->tokens);
 			continue;
 		}
 
-		Token constant = handle_constants(lexer);
+		Token number_constant = handle_number_constants(lexer);
 
-		if (!is_unknown(&constant))
+		if (!is_unknown(&number_constant))
 		{
-			add_token(&constant, &tokens_length, lexer->tokens);
+			add_token(&number_constant, &tokens_length, lexer->tokens);
+			continue;
+		}
+
+		Token str_constant = handle_string_constants(lexer);
+
+		if (!is_unknown(&str_constant))
+		{
+			add_token(&str_constant, &tokens_length, lexer->tokens);
+			continue;
+		}
+
+		Token char_constant = handle_char_constants(lexer);
+
+		if (!is_unknown(&char_constant))
+		{
+			add_token(&char_constant, &tokens_length, lexer->tokens);
+			continue;
+		}
+
+		if (identifier != NULL)
+		{
+			Token token = CREATE_TOKEN(TOKEN_IDENTIFIER, start, end, length);
+			
+			add_token(&token, &tokens_length, lexer->tokens);
+			continue;
+		}
+		else
+		{
+			Token token = CREATE_TOKEN(TOKEN_UNKNOWN, NULL, NULL, 0);
+			
+			add_token(&token, &tokens_length, lexer->tokens);
 			continue;
 		}
 	}
