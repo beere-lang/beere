@@ -24,11 +24,12 @@ struct Lexer
 	u32    max_index;
 
 	Token* tokens; // output
+	u32    tokens_length;
 };
 
 // Tokeniza todo o conteúdo 'content' (texto plano) em tokens, que dão
 // um signicado aos pedaços do conteúdo do module 'content'.
-Lexer* tokenize_module(Module* module, u32 max_index, str content);
+Lexer* tokenize_module(Module* module, const u32 max_index, str content);
 
 // Da free na structure do lexer 'lexer' e seu conteúdo.
 void   free_lexer     (Lexer* lexer);

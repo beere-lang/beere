@@ -638,6 +638,8 @@ Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 		}
 	}
 
+	lexer->tokens_length = tokens_length;
+
 	return lexer;
 }
 
@@ -685,7 +687,6 @@ static char* advance_char(Lexer* lexer)
 		exit(1);
 	}
 	
-	++lexer->current;
 	++lexer->index;
 
 	if (lexer->index > lexer->max_index)
@@ -694,7 +695,7 @@ static char* advance_char(Lexer* lexer)
 		exit(1);
 	}
 
-	return lexer->current;
+	return ++lexer->current;;
 }
 
 // Retorna o char atual, avança pro proximo char do content em 'lexer' e
@@ -738,7 +739,9 @@ static Lexer* setup_lexer(const u32 max_index, str content)
 	lexer->index = 3;
 
 	lexer->max_index = max_index;
+	
 	lexer->tokens = calloc(LEXER_TOKENS_BUFFER_SIZE, sizeof(Token));
+	lexer->tokens_length = 0;
 	
 	return lexer;
 }

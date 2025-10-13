@@ -4,6 +4,7 @@
 #include "../utils/file/file.h"
 #include "../utils/logger/logger.h"
 #include "../frontend/lexer/lexer.h"
+#include "../frontend/parser/parser.h"
 
 // ==---------------------------------- Core --------------------------------------== \\
 
@@ -27,6 +28,7 @@ Module* compile_module(ModuleConfig* cfg, str* args, const str path)
 	Module* module = setup_module(cfg, path);
 	
 	Lexer* lexer = tokenize_module(module, FILE_READ_BUFFER_SIZE, buff);
+	Parser* parser = parse_tokens(lexer);
 
 	return module;
 }
