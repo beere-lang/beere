@@ -4,7 +4,7 @@
 #include "../../../data/data.h"
 
 // Prefixes usados no logger.
-#define LOGGER_ERROR_PREFIX "[ERROR]"
+#define LOGGER_ERROR_PREFIX	"[ERROR]"
 #define LOGGER_SUCCESS_PREFIX "[SUCCESS]"
 #define LOGGER_WARNING_PREFIX "[WARNING]"
 

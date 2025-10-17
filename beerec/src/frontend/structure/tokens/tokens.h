@@ -3,11 +3,11 @@
 
 #include "../../../../data/data.h"
 
-typedef struct Token Token;
+typedef struct Token		Token;
 typedef struct ConstantNumber ConstantNumber;
 typedef struct ConstantString ConstantString;
-typedef struct ConstantBool ConstantBool;
-typedef struct ConstantChar ConstantChar;
+typedef struct ConstantBool	ConstantBool;
+typedef struct ConstantChar	ConstantChar;
 
 // Inicializa uma structure de token, setando apenas os campos principais.
 #define CREATE_TOKEN(t, s, l) { .type = t, .start = s, .length = l }
@@ -17,11 +17,11 @@ typedef enum
 {
 	TOKEN_END_SOURCE,
 	TOKEN_END_LINE,
-	
+
 	TOKEN_UNKNOWN,
 
 	TOKEN_IDENTIFIER,
-	
+
 	TOKEN_KEYWORD_IF,
 	TOKEN_KEYWORD_ELSE,
 	TOKEN_KEYWORD_CONTINUE,
@@ -42,14 +42,14 @@ typedef enum
 	TOKEN_KEYWORD_FOR,
 	TOKEN_KEYWORD_WHILE,
 	TOKEN_KEYWORD_VOID,
-	
+
 	TOKEN_TYPE_INT,
 	TOKEN_TYPE_FLOAT,
 	TOKEN_TYPE_DOUBLE,
 	TOKEN_TYPE_CHAR,
 	TOKEN_TYPE_BOOL,
 	TOKEN_TYPE_STRING,
-	
+
 	TOKEN_CHAR_PLUS,
 	TOKEN_CHAR_MINUS,
 	TOKEN_CHAR_ASTERISK,
@@ -79,8 +79,7 @@ typedef enum
 	TOKEN_CONSTANT_STRING,
 	TOKEN_CONSTANT_CHAR,
 	TOKEN_CONSTANT_NUMBER
-}
-TokenType;
+} TokenType;
 
 // Tipos de literais de numero.
 typedef enum
@@ -88,19 +87,18 @@ typedef enum
 	NUMBER_TYPE_INT,
 	NUMBER_TYPE_FLOAT,
 	NUMBER_TYPE_DOUBLE
-}
-NumberType;
+} NumberType;
 
 // Structure de literais de numero, contendo seu valor e tipo.
 struct ConstantNumber
 {
 	NumberType type;
-	
+
 	union
 	{
-		i32    int_value;
-		f32    float_value;
-		f64    double_value;
+		i32 int_value;
+		f32 float_value;
+		f64 double_value;
 	};
 };
 
@@ -127,19 +125,19 @@ struct ConstantBool
 // (informação de literais, etc).
 struct Token
 {
-	TokenType            type;
+	TokenType type;
 
-	char*                start;
-	
-	u32                  length;
+	char*	    start;
+
+	u32	    length;
 
 	union
 	{
 		ConstantNumber constant_number;
-		
+
 		ConstantString constant_string;
 		ConstantChar   constant_char;
-		
+
 		ConstantBool   constant_bool;
 	};
 };

@@ -1,0 +1,76 @@
+---
+Language: C
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+
+TabWidth: 6
+IndentWidth: 6
+UseTab: Always
+
+AlignConsecutiveAssignments: true
+AlignTrailingComments: true
+ColumnLimit: 120
+
+PointerAlignment: Left
+
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterClass: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: true
+  BeforeWhile: true
+  IndentBraces: false
+
+BracedInitializerIndentWidth: 4
+Cpp11BracedListStyle: false
+
+---
+Language: Cpp
+
+Cpp11BracedListStyle: false
+BracedInitializerIndentWidth: 4
+
+TabWidth: 6
+IndentWidth: 6
+
+UseTab: Always
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+AlignConsecutiveAssignments: Consecutive
+AlignArrayOfStructures: None
+AlignConsecutiveBitFields: Consecutive
+
+AlignTrailingComments: true
+ColumnLimit: 120
+
+PointerAlignment: Left
+
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterClass: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: true
+  BeforeWhile: true
+  IndentBraces: false

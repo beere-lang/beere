@@ -3,7 +3,7 @@
 
 #include "../control-flow.h"
 
-typedef struct DTBlock DTBlock;
+typedef struct DTBlock	     DTBlock;
 typedef struct DominatorTree DominatorTree;
 
 struct DTBlock
@@ -17,7 +17,7 @@ struct DTBlock
 struct DominatorTree
 {
 	DList* blocks;
-	int*   idominators;
+	int*	 idominators;
 };
 
 DominatorTree* generate_dominator_tree(CFBlock* entry, int size);

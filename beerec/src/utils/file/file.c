@@ -1,10 +1,10 @@
-#include <windows.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <windows.h>
 
-#include "file.h"
 #include "../string/string.h"
+#include "file.h"
 
 i32 has_extension(str name, str* ref_extension, str extension)
 {
@@ -21,7 +21,7 @@ i32 has_extension(str name, str* ref_extension, str extension)
 		{
 			*ref_extension = start;
 		}
-		
+
 		if (strcmp(start, extension) == 0)
 		{
 			return 1;
@@ -34,7 +34,7 @@ i32 has_extension(str name, str* ref_extension, str extension)
 i32 read_file(str buff, const u32 buff_size, const str path)
 {
 	FILE* file = fopen(path, FILE_OPEN_MODE);
-	
+
 	if (file == NULL)
 	{
 		return 1;
@@ -48,7 +48,7 @@ i32 read_file(str buff, const u32 buff_size, const str path)
 	}
 
 	fclose(file);
-	
+
 	buff[bytes_read] = '\0';
 
 	return 0;
@@ -56,7 +56,7 @@ i32 read_file(str buff, const u32 buff_size, const str path)
 
 str link_paths(str a, str b)
 {
-	str first = NULL;
+	str	    first	 = NULL;
 	const u32 a_length = strlen(a);
 
 	if (a[a_length - 1] == '/' || a[a_length - 1] == '\\')
@@ -68,7 +68,7 @@ str link_paths(str a, str b)
 		first = strdup(a);
 	}
 
-	str second = NULL;
+	str	    second	 = NULL;
 	const u32 b_length = strlen(b);
 
 	if (b[0] == '/' || b[0] == '\\')

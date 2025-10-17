@@ -1,9 +1,9 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "../structure/tokens/tokens.h"
-#include "../structure/nodes/nodes.h"
 #include "../lexer/lexer.h"
+#include "../structure/nodes/nodes.h"
+#include "../structure/tokens/tokens.h"
 
 #define PARSER_NODES_BUFFER_SIZE 1024
 
@@ -16,8 +16,8 @@ struct Parser
 	Token*    tokens;
 
 	Token*    current;
-	u32       index;
-	
+	u32	    index;
+
 	ASTNode** nodes; // output
 };
 
@@ -26,6 +26,6 @@ struct Parser
 Parser* parse_tokens(Lexer* lexer);
 
 // Da free na structure do parser 'parser' e seu conteúdo.
-void    free_parser (Parser* parser);
+void	  free_parser(Parser* parser);
 
 #endif

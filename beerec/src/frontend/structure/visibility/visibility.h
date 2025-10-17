@@ -6,7 +6,6 @@ typedef enum
 {
 	VISIBILITY_PRIVATE,
 	VISIBILITY_PUBLIC
-}
-Visibility;
+} Visibility;
 
 #endif

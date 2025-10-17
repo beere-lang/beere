@@ -1,14 +1,18 @@
 #include <stdlib.h>
 
-#include "parser.h"
 #include "../../utils/logger/logger.h"
+#include "parser.h"
 
+static Token*  get_token(Parser* parser);
 static Parser* setup_parser(Lexer* lexer);
-static Token* advance_token(Parser* parser);
-static Token* consume_token(Parser* parser);
-static void expect_token(Parser* parser, TokenType* types, const u32 types_length);
+static Token*  advance_token(Parser* parser);
+static Token*  consume_token(Parser* parser);
+static void	   expect_token(Parser* parser, TokenType* types, const u32 types_length);
 
 // ==---------------------------------- Core --------------------------------------== \\
+
+/** TODO: terminar isso. */
+static void handle_token(Parser* parser) { Token* token = get_token(parser); }
 
 Parser* parse_tokens(Lexer* lexer)
 {
@@ -16,7 +20,7 @@ Parser* parse_tokens(Lexer* lexer)
 
 	while (parser->current != TOKEN_END_SOURCE)
 	{
-		
+		handle_token(parser);
 	}
 
 	return parser;
@@ -24,11 +28,11 @@ Parser* parse_tokens(Lexer* lexer)
 
 // ==--------------------------------- Utils --------------------------------------== \\
 
-// Avança pro proximo token dos tokens em 'parser', ja retornando o proximo token.
+// Avança pro proximo token dos tokens em 'parser', ja retornando o proximo
+// token.
 static Token* advance_token(Parser* parser)
 {
 	++parser->index;
-
 	return ++parser->current;
 }
 
@@ -36,15 +40,11 @@ static Token* advance_token(Parser* parser)
 static Token* consume_token(Parser* parser)
 {
 	++parser->index;
-
 	return parser->current++;
 }
 
 // Retorna o token atual em que o pointer 'current' do 'parser' aponta.
-static Token* get_token(Parser* parser)
-{
-	return parser->current;
-}
+static Token* get_token(Parser* parser) { return parser->current; }
 
 // Checa se o tipo do token atual que o 'parser' esta, está nos 'types'.
 // Caso não esteja nos 'types', da log e depois da exit.
@@ -71,7 +71,7 @@ static Parser* setup_parser(Lexer* lexer)
 {
 	Parser* parser = calloc(1, sizeof(Parser));
 
-	parser->tokens = lexer->tokens; // não é uma copia
+	parser->tokens  = lexer->tokens; // não é uma copia
 	parser->current = parser->tokens;
 
 	parser->index = 0;

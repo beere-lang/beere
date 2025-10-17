@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "list.h"
 #include "../logger/logger.h"
+#include "list.h"
 
 DList* create_list(const size_t init_capacity)
 {
@@ -14,7 +14,7 @@ DList* create_list(const size_t init_capacity)
 	}
 
 	list->capacity = init_capacity;
-	list->length = 0;
+	list->length   = 0;
 
 	list->elements = malloc(8 * init_capacity);
 
@@ -129,10 +129,7 @@ void* pop_list(DList* list)
 	return element;
 }
 
-int is_empty_list(DList* list)
-{
-	return list->length <= 0;
-}
+int is_empty_list(DList* list) { return list->length <= 0; }
 
 void free_list(DList* list)
 {

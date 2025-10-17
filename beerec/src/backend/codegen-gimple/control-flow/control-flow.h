@@ -3,14 +3,14 @@
 
 typedef struct CFBlock CFBlock;
 
-#include "../../structure/ir/ir-nodes.h"
 #include "../../../utils/list/list.h"
+#include "../../structure/ir/ir-nodes.h"
 
 typedef struct SizedArr SizedArr;
 
 struct SizedArr
 {
-	int      length;
+	int	   length;
 	IRNode** elements;
 };
 
@@ -21,9 +21,9 @@ struct CFBlock
 	DList*  predecessors;
 	DList*  successors;
 
-	int     visited;
-	int     dt_index;
-	int     cf_index;
+	int	  visited;
+	int	  dt_index;
+	int	  cf_index;
 };
 
 DList* init_control_flow(IRNode* func);

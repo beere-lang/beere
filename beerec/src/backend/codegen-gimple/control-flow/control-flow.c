@@ -1,17 +1,14 @@
 #include <stdlib.h>
 
-#include "control-flow.h"
-#include "../../../utils/logger/logger.h"
 #include "../../../utils/list/list.h"
+#include "../../../utils/logger/logger.h"
+#include "control-flow.h"
 
 #define CF_BLOCK_LIST_DEFAULT_START_CAPACITY 4
 
 static DList* cf_blocks = NULL;
 
-static void setup_cf_blocks()
-{
-	cf_blocks = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
-}
+static void setup_cf_blocks() { cf_blocks = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY); }
 
 static CFBlock* find_cf_block(IRNode* block)
 {
@@ -47,7 +44,7 @@ static SizedArr* get_flow_cases(IRNode* block)
 	IRNode** list = malloc(sizeof(IRNode*) * block->block.nodes->length);
 
 	const int length = block->block.nodes->length;
-	int count = 0;
+	int	    count  = 0;
 
 	for (int i = 0; i < length; i++)
 	{
@@ -64,7 +61,7 @@ static SizedArr* get_flow_cases(IRNode* block)
 	SizedArr* arr = malloc(sizeof(SizedArr));
 
 	arr->elements = list;
-	arr->length = count;
+	arr->length	  = count;
 
 	return arr;
 }
@@ -115,8 +112,8 @@ static CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock
 		cf_block = malloc(sizeof(CFBlock));
 
 		cf_block->predecessors = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
-		cf_block->successors = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
-		cf_block->block = block;
+		cf_block->successors   = create_list(CF_BLOCK_LIST_DEFAULT_START_CAPACITY);
+		cf_block->block	     = block;
 
 		cf_block->cf_index = cf_blocks->length;
 		add_element_to_list(cf_blocks, cf_block);
@@ -136,9 +133,9 @@ static CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock
 		return cf_block;
 	}
 
-	SizedArr* flow_cases =  get_flow_cases(block);
+	SizedArr* flow_cases = get_flow_cases(block);
 
-	IRNode** jmps = flow_cases->elements;
+	IRNode**  jmps   = flow_cases->elements;
 	const int length = flow_cases->length;
 
 	int next_block = 1;
@@ -149,38 +146,38 @@ static CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock
 
 		switch (jmp->type)
 		{
-			case IR_NODE_GOTO:
-			{
-				CFBlock* successor = generate_control_flow(func_blocks, jmp->go_to.block, cf_block);
-				add_element_to_list(cf_block->successors, successor);
+		case IR_NODE_GOTO:
+		{
+			CFBlock* successor = generate_control_flow(func_blocks, jmp->go_to.block, cf_block);
+			add_element_to_list(cf_block->successors, successor);
 
-				next_block = 0;
+			next_block = 0;
 
-				break;
-			}
+			break;
+		}
 
-			case IR_NODE_BRANCH:
-			{
-				CFBlock* thenb = generate_control_flow(func_blocks, jmp->branch.then_block, cf_block);
-				CFBlock* elseb = generate_control_flow(func_blocks, jmp->branch.else_block, cf_block);
+		case IR_NODE_BRANCH:
+		{
+			CFBlock* thenb = generate_control_flow(func_blocks, jmp->branch.then_block, cf_block);
+			CFBlock* elseb = generate_control_flow(func_blocks, jmp->branch.else_block, cf_block);
 
-				add_element_to_list(cf_block->successors, thenb);
-				add_element_to_list(cf_block->successors, elseb);
+			add_element_to_list(cf_block->successors, thenb);
+			add_element_to_list(cf_block->successors, elseb);
 
-				break;
-			}
+			break;
+		}
 
-			case IR_NODE_RET:
-			{
-				next_block = 0;
+		case IR_NODE_RET:
+		{
+			next_block = 0;
 
-				break;
-			}
+			break;
+		}
 
-			default:
-			{
-				exit(1);
-			}
+		default:
+		{
+			exit(1);
+		}
 		}
 	}
 

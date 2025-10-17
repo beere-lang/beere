@@ -11,14 +11,13 @@ typedef enum
 	TYPE_BOOL,
 	TYPE_STRING,
 	TYPE_CHAR
-}
-BaseType;
+} BaseType;
 
 struct Type
 {
 	BaseType type;
 
-	Type*    base;
+	Type*	   base;
 };
 
 #endif

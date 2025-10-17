@@ -14,17 +14,17 @@ typedef struct Lexer Lexer;
 // o output e o gerenciamento do content.
 struct Lexer
 {
-	str    content;
-	
-	char*  current; // ponteiro pro char atual
-	u32    index; // index do char atual
+	str	 content;
 
-	// index maximo que o 'index' pode chegar 
+	char*	 current; // ponteiro pro char atual
+	u32	 index;   // index do char atual
+
+	// index maximo que o 'index' pode chegar
 	// (geralmente é o tamanho do buffer 'content')
-	u32    max_index;
+	u32	 max_index;
 
 	Token* tokens; // output
-	u32    tokens_length;
+	u32	 tokens_length;
 };
 
 // Tokeniza todo o conteúdo 'content' (texto plano) em tokens, que dão
@@ -32,6 +32,6 @@ struct Lexer
 Lexer* tokenize_module(Module* module, const u32 max_index, str content);
 
 // Da free na structure do lexer 'lexer' e seu conteúdo.
-void   free_lexer     (Lexer* lexer);
+void	 free_lexer(Lexer* lexer);
 
 #endif

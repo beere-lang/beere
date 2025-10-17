@@ -4,35 +4,35 @@
 #include "../../../frontend/structure/ast/types/types.h"
 #include "../../../utils/list/list.h"
 
-typedef struct IRNode IRNode;
-typedef struct IRNodeBlock IRNodeBlock;
-typedef struct IRNodeOperation IRNodeOperation;
-typedef struct IRNodeRet IRNodeRet;
-typedef struct IRNodeList IRNodeList;
-typedef struct IRNodeCall IRNodeCall;
-typedef struct IRNodeStore IRNodeStore;
-typedef struct IRNodeLiteral IRNodeLiteral;
-typedef struct IRNodeIf IRNodeIf;
-typedef struct IRNodeFunc IRNodeFunc;
-typedef struct IRNodeField IRNodeField;
-typedef struct IRNodeDereference IRNodeDereference;
+typedef struct IRNode		    IRNode;
+typedef struct IRNodeBlock	    IRNodeBlock;
+typedef struct IRNodeOperation    IRNodeOperation;
+typedef struct IRNodeRet	    IRNodeRet;
+typedef struct IRNodeList	    IRNodeList;
+typedef struct IRNodeCall	    IRNodeCall;
+typedef struct IRNodeStore	    IRNodeStore;
+typedef struct IRNodeLiteral	    IRNodeLiteral;
+typedef struct IRNodeIf		    IRNodeIf;
+typedef struct IRNodeFunc	    IRNodeFunc;
+typedef struct IRNodeField	    IRNodeField;
+typedef struct IRNodeDereference  IRNodeDereference;
 typedef struct IRNodeFieldLiteral IRNodeFieldLiteral;
-typedef struct IRNodeReference IRNodeReference;
-typedef struct IRNodeBranch IRNodeBranch;
+typedef struct IRNodeReference    IRNodeReference;
+typedef struct IRNodeBranch	    IRNodeBranch;
 typedef struct IRNodeMemberAccess IRNodeMemberAccess;
-typedef struct IRNodeParam IRNodeParam;
-typedef struct IRNodeArgument IRNodeArgument;
-typedef struct IRNodeArrAccess IRNodeArrAccess;
-typedef struct IRNodeClass IRNodeClass;
-typedef struct IRNodeCast IRNodeCast;
-typedef struct IRNodeGoto IRNodeGoto;
-typedef struct IRNodePhi IRNodePhi;
-typedef struct IRType IRType;
+typedef struct IRNodeParam	    IRNodeParam;
+typedef struct IRNodeArgument	    IRNodeArgument;
+typedef struct IRNodeArrAccess    IRNodeArrAccess;
+typedef struct IRNodeClass	    IRNodeClass;
+typedef struct IRNodeCast	    IRNodeCast;
+typedef struct IRNodeGoto	    IRNodeGoto;
+typedef struct IRNodePhi	    IRNodePhi;
+typedef struct IRType		    IRType;
 
 typedef enum
 {
 	IR_NODE_BLOCK,
-	IR_NODE_STORE, 
+	IR_NODE_STORE,
 	IR_NODE_LITERAL,
 	IR_NODE_OPERATION,
 	IR_NODE_RET,
@@ -53,8 +53,7 @@ typedef enum
 	IR_NODE_THIS,
 	IR_NODE_SUPER,
 	IR_NODE_ARR_ACCESS
-}
-IRNodeType;
+} IRNodeType;
 
 typedef enum
 {
@@ -74,32 +73,31 @@ typedef enum
 	IR_OPERATION_LESS_EQUALS,
 	IR_OPERATION_AND,
 	IR_OPERATION_OR
-}
-IROperationType;
+} IROperationType;
 
 struct IRNodeList
 {
 	IRNode** elements;
 
-	int      length;
-	int      capacity;
+	int	   length;
+	int	   capacity;
 };
 
 struct IRNodeBlock
 {
-	char*  label;
+	char*	 label;
 	DList* phis;
 
 	DList* nodes;
 };
- 
+
 struct IRNodeOperation
 {
 	IROperationType operation;
-	Type*           type;
+	Type*		    type;
 
-	IRNode*         left;
-	IRNode*         right;
+	IRNode*	    left;
+	IRNode*	    right;
 };
 
 struct IRNodeRet
@@ -109,16 +107,16 @@ struct IRNodeRet
 
 struct IRNodeFunc
 {
-	Type*        type;
+	Type*		 type;
 
-	char*        name;
+	char*		 name;
 
-	DList*       blocks;
+	DList*	 blocks;
 
-	IRNode**     params;
+	IRNode**	 params;
 	unsigned int params_size;
 
-	int          is_static;
+	int		 is_static;
 };
 
 struct IRNodeCall
@@ -129,12 +127,12 @@ struct IRNodeCall
 
 struct IRNodeStore
 {
-	char*   ssa_label;
+	char*	  ssa_label;
 
 	IRNode* dest;
 	IRNode* expr;
 
-	int     field_index;
+	int	  field_index;
 };
 
 struct IRNodeGoto
@@ -152,29 +150,29 @@ struct IRNodeBranch
 
 struct IRNodeLiteral
 {
-	Type*          type;
+	Type* type;
 
 	union
 	{
-		int    int_val;
-		float  float_val;
+		int	 int_val;
+		float	 float_val;
 		double double_val;
-		char*  string_val;
-		char   char_val;
-		int    bool_val;
+		char*	 string_val;
+		char	 char_val;
+		int	 bool_val;
 	};
 };
 
 struct IRNodeField
 {
-	Type*   type;
+	Type*	  type;
 
-	char*   name;
+	char*	  name;
 	IRNode* value;
 
-	int     field_index;
+	int	  field_index;
 
-	int     is_static;
+	int	  is_static;
 };
 
 struct IRNodeParam
@@ -202,9 +200,9 @@ struct IRNodeFieldLiteral
 struct IRNodeMemberAccess
 {
 	IRNode* object;
-	char*   member;
+	char*	  member;
 
-	int     is_func;
+	int	  is_func;
 };
 
 struct IRNodeArgument
@@ -216,8 +214,8 @@ struct IRNodeCast
 {
 	IRNode* expr;
 
-	Type*   from;
-	Type*   to;
+	Type*	  from;
+	Type*	  to;
 };
 
 struct IRNodePhi
@@ -225,7 +223,7 @@ struct IRNodePhi
 	DList*  labels;
 
 	IRNode* field;
-	int     field_index;
+	int	  field_index;
 };
 
 struct IRNodeClass
@@ -233,7 +231,7 @@ struct IRNodeClass
 	IRNode* constructor;
 
 	DList*  methods;
- 	DList*  fields;
+	DList*  fields;
 };
 
 struct IRNodeArrAccess
@@ -248,26 +246,26 @@ struct IRNode
 
 	union
 	{
-		IRNodeBlock        block;
-		IRNodeOperation    operation;
-		IRNodeRet          ret;
-		IRNodeCall         call;
-		IRNodeStore        store;
-		IRNodeLiteral      literal;
-		IRNodeDereference  dereference;
-		IRNodeReference    reference;
-		IRNodeFunc         func;
-		IRNodeField        field; 
+		IRNodeBlock		 block;
+		IRNodeOperation	 operation;
+		IRNodeRet		 ret;
+		IRNodeCall		 call;
+		IRNodeStore		 store;
+		IRNodeLiteral	 literal;
+		IRNodeDereference	 dereference;
+		IRNodeReference	 reference;
+		IRNodeFunc		 func;
+		IRNodeField		 field;
 		IRNodeFieldLiteral field_literal;
-		IRNodeGoto         go_to;
-		IRNodeBranch       branch;
-		IRNodeParam        param;
+		IRNodeGoto		 go_to;
+		IRNodeBranch	 branch;
+		IRNodeParam		 param;
 		IRNodeMemberAccess member_access;
-		IRNodeArgument     argument;
-		IRNodeCast         cast;
-		IRNodePhi          phi;
-		IRNodeClass        class;
-		IRNodeArrAccess    arr_access;
+		IRNodeArgument	 argument;
+		IRNodeCast		 cast;
+		IRNodePhi		 phi;
+		IRNodeClass class;
+		IRNodeArrAccess arr_access;
 	};
 };
 

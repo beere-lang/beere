@@ -1,10 +1,10 @@
 #include <stdlib.h>
 
-#include "compiler.h"
-#include "../utils/file/file.h"
-#include "../utils/logger/logger.h"
 #include "../frontend/lexer/lexer.h"
 #include "../frontend/parser/parser.h"
+#include "../utils/file/file.h"
+#include "../utils/logger/logger.h"
+#include "compiler.h"
 
 // ==---------------------------------- Core --------------------------------------== \\
 
@@ -15,8 +15,8 @@ Module* compile_module(ModuleConfig* cfg, str* args, const str path)
 		log_error("Invalid dotmod structure is 'NULL'...");
 		exit(1);
 	}
-	
-	str buff = malloc(FILE_READ_BUFFER_SIZE);
+
+	str	    buff  = malloc(FILE_READ_BUFFER_SIZE);
 	const i32 error = read_file(buff, FILE_READ_BUFFER_SIZE, path);
 
 	if (error)
@@ -26,13 +26,12 @@ Module* compile_module(ModuleConfig* cfg, str* args, const str path)
 	}
 
 	Module* module = setup_module(cfg, path);
-	
-	Lexer* lexer = tokenize_module(module, FILE_READ_BUFFER_SIZE, buff);
+
+	Lexer*  lexer  = tokenize_module(module, FILE_READ_BUFFER_SIZE, buff);
 	Parser* parser = parse_tokens(lexer);
 
 	return module;
 }
 
 // ==--------------------------------- Utils --------------------------------------== \\
-
 

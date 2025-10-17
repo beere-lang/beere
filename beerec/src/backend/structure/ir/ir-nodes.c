@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "ir-nodes.h"
 #include "../../../utils/logger/logger.h"
+#include "ir-nodes.h"
 
 IRNode* create_ir_node(IRNodeType type)
 {
@@ -13,6 +13,6 @@ IRNode* create_ir_node(IRNodeType type)
 	}
 
 	node->type = type;
-	
+
 	return node;
 }

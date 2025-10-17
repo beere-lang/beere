@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lexer.h"
 #include "../../utils/logger/logger.h"
 #include "../../utils/string/string.h"
+#include "lexer.h"
 
-static i32 is_digit(char ch);
-static i32 is_alpha(char ch);
-static i32 is_aldig(char ch);
-static char get_char(Lexer* lexer);
-static i32 is_unknown(Token* token);
-static char* advance_char(Lexer* lexer);
-static char* consume_char(Lexer* lexer);
+static i32	  is_digit(char ch);
+static i32	  is_alpha(char ch);
+static i32	  is_aldig(char ch);
+static char	  get_char(Lexer* lexer);
+static i32	  is_unknown(Token* token);
+static char*  advance_char(Lexer* lexer);
+static char*  consume_char(Lexer* lexer);
 static Lexer* setup_lexer(u32 max_index, str content);
-static void add_token(Token* token, u32* tokens_length, Token* tokens);
+static void	  add_token(Token* token, u32* tokens_length, Token* tokens);
 
 // ==---------------------------------- Core --------------------------------------== \\
 
@@ -28,22 +28,22 @@ static str handle_identifier(Lexer* lexer, char** start_ref, char** end_ref, u32
 		return NULL;
 	}
 
-	u32 length = 0;
-	char* start = lexer->current;
-	char* end = NULL;
-	
+	u32	length = 0;
+	char* start	 = lexer->current;
+	char* end	 = NULL;
+
 	while (get_char(lexer) == '_' || is_aldig(get_char(lexer)))
 	{
 		end = consume_char(lexer);
 		++length;
 	}
-	
-	*start_ref = start;
-	*end_ref = end;
+
+	*start_ref	= start;
+	*end_ref	= end;
 	*length_ref = length;
 
-	str temp =  strndup(start, length);
-	
+	str temp = strndup(start, length);
+
 	return temp;
 }
 
@@ -55,32 +55,32 @@ static Token handle_types(Lexer* lexer, str identifier, char* start)
 
 	if (strncmp(identifier, "int", 3) == 0)
 	{
-		token.type = TOKEN_TYPE_INT;
+		token.type	 = TOKEN_TYPE_INT;
 		token.length = 3;
 	}
 	else if (strncmp(identifier, "float", 5) == 0)
 	{
-		token.type = TOKEN_TYPE_FLOAT;
+		token.type	 = TOKEN_TYPE_FLOAT;
 		token.length = 5;
 	}
 	else if (strncmp(identifier, "double", 6) == 0)
 	{
-		token.type = TOKEN_TYPE_DOUBLE;
+		token.type	 = TOKEN_TYPE_DOUBLE;
 		token.length = 6;
 	}
 	else if (strncmp(identifier, "char", 4) == 0)
 	{
-		token.type = TOKEN_TYPE_CHAR;
+		token.type	 = TOKEN_TYPE_CHAR;
 		token.length = 4;
 	}
 	else if (strncmp(identifier, "string", 6) == 0)
 	{
-		token.type = TOKEN_TYPE_STRING;
+		token.type	 = TOKEN_TYPE_STRING;
 		token.length = 6;
 	}
 	else if (strncmp(identifier, "bool", 4) == 0)
 	{
-		token.type = TOKEN_TYPE_BOOL;
+		token.type	 = TOKEN_TYPE_BOOL;
 		token.length = 4;
 	}
 
@@ -92,105 +92,105 @@ static Token handle_types(Lexer* lexer, str identifier, char* start)
 static Token handle_keywords(Lexer* lexer, str identifier, char* start)
 {
 	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, start, 0);
-	
+
 	if (strncmp(identifier, "if", 2) == 0)
 	{
-		token.type = TOKEN_KEYWORD_IF;
+		token.type	 = TOKEN_KEYWORD_IF;
 		token.length = 2;
 	}
 	else if (strncmp(identifier, "else", 4) == 0)
 	{
-		token.type = TOKEN_KEYWORD_ELSE;
+		token.type	 = TOKEN_KEYWORD_ELSE;
 		token.length = 4;
 	}
 	else if (strncmp(identifier, "continue", 8) == 0)
 	{
-		token.type = TOKEN_KEYWORD_CONTINUE;
+		token.type	 = TOKEN_KEYWORD_CONTINUE;
 		token.length = 8;
 	}
 	else if (strncmp(identifier, "break", 5) == 0)
 	{
-		token.type = TOKEN_KEYWORD_BREAK;
+		token.type	 = TOKEN_KEYWORD_BREAK;
 		token.length = 5;
 	}
 	else if (strncmp(identifier, "class", 5) == 0)
 	{
-		token.type = TOKEN_KEYWORD_CLASS;
+		token.type	 = TOKEN_KEYWORD_CLASS;
 		token.length = 5;
 	}
 	else if (strncmp(identifier, "as", 2) == 0)
 	{
-		token.type = TOKEN_KEYWORD_AS;
+		token.type	 = TOKEN_KEYWORD_AS;
 		token.length = 2;
 	}
 	else if (strncmp(identifier, "import", 6) == 0)
 	{
-		token.type = TOKEN_KEYWORD_IMPORT;
+		token.type	 = TOKEN_KEYWORD_IMPORT;
 		token.length = 6;
 	}
 	else if (strncmp(identifier, "static", 6) == 0)
 	{
-		token.type = TOKEN_KEYWORD_STATIC;
+		token.type	 = TOKEN_KEYWORD_STATIC;
 		token.length = 6;
 	}
 	else if (strncmp(identifier, "super", 5) == 0)
 	{
-		token.type = TOKEN_KEYWORD_SUPER;
+		token.type	 = TOKEN_KEYWORD_SUPER;
 		token.length = 5;
 	}
 	else if (strncmp(identifier, "return", 6) == 0)
 	{
-		token.type = TOKEN_KEYWORD_RETURN;
+		token.type	 = TOKEN_KEYWORD_RETURN;
 		token.length = 6;
 	}
 	else if (strncmp(identifier, "let", 3) == 0)
 	{
-		token.type = TOKEN_KEYWORD_LET;
+		token.type	 = TOKEN_KEYWORD_LET;
 		token.length = 3;
 	}
 	else if (strncmp(identifier, "fn", 2) == 0)
 	{
-		token.type = TOKEN_KEYWORD_FN;
+		token.type	 = TOKEN_KEYWORD_FN;
 		token.length = 2;
 	}
 	else if (strncmp(identifier, "const", 5) == 0)
 	{
-		token.type = TOKEN_KEYWORD_CONST;
+		token.type	 = TOKEN_KEYWORD_CONST;
 		token.length = 5;
 	}
 	else if (strncmp(identifier, "virtual", 7) == 0)
 	{
-		token.type = TOKEN_KEYWORD_VIRTUAL;
+		token.type	 = TOKEN_KEYWORD_VIRTUAL;
 		token.length = 7;
 	}
 	else if (strncmp(identifier, "override", 8) == 0)
 	{
-		token.type = TOKEN_KEYWORD_OVERRIDE;
+		token.type	 = TOKEN_KEYWORD_OVERRIDE;
 		token.length = 8;
 	}
 	else if (strncmp(identifier, "public", 6) == 0)
 	{
-		token.type = TOKEN_KEYWORD_PUBLIC;
+		token.type	 = TOKEN_KEYWORD_PUBLIC;
 		token.length = 6;
 	}
 	else if (strncmp(identifier, "private", 7) == 0)
 	{
-		token.type = TOKEN_KEYWORD_PRIVATE;
+		token.type	 = TOKEN_KEYWORD_PRIVATE;
 		token.length = 7;
 	}
 	else if (strncmp(identifier, "for", 3) == 0)
 	{
-		token.type = TOKEN_KEYWORD_FOR;
+		token.type	 = TOKEN_KEYWORD_FOR;
 		token.length = 3;
 	}
 	else if (strncmp(identifier, "while", 5) == 0)
 	{
-		token.type = TOKEN_KEYWORD_WHILE;
+		token.type	 = TOKEN_KEYWORD_WHILE;
 		token.length = 5;
 	}
 	else if (strncmp(identifier, "void", 4) == 0)
 	{
-		token.type = TOKEN_KEYWORD_VOID;
+		token.type	 = TOKEN_KEYWORD_VOID;
 		token.length = 4;
 	}
 
@@ -203,19 +203,19 @@ static Token handle_chars(Lexer* lexer)
 {
 	Token token = CREATE_TOKEN(TOKEN_UNKNOWN, lexer->current, 1);
 
-	char ch = get_char(lexer);
+	char ch   = get_char(lexer);
 	char next = *(lexer->current + 1);
 
 	if (ch == '+')
 	{
 		if (next == '+')
 		{
-			token.type = TOKEN_OPERATOR_INCREMENT;
+			token.type	 = TOKEN_OPERATOR_INCREMENT;
 			token.length = 2;
 		}
 		else if (next == '=')
 		{
-			token.type = TOKEN_OPERATOR_PLUS_EQUALS;
+			token.type	 = TOKEN_OPERATOR_PLUS_EQUALS;
 			token.length = 2;
 		}
 		else
@@ -227,12 +227,12 @@ static Token handle_chars(Lexer* lexer)
 	{
 		if (next == '-')
 		{
-			token.type = TOKEN_OPERATOR_DECREMENT;
+			token.type	 = TOKEN_OPERATOR_DECREMENT;
 			token.length = 2;
 		}
 		else if (next == '=')
 		{
-			token.type = TOKEN_OPERATOR_MINUS_EQUALS;
+			token.type	 = TOKEN_OPERATOR_MINUS_EQUALS;
 			token.length = 2;
 		}
 		else
@@ -244,7 +244,7 @@ static Token handle_chars(Lexer* lexer)
 	{
 		if (next == '=')
 		{
-			token.type = TOKEN_OPERATOR_TIMES_EQUALS;
+			token.type	 = TOKEN_OPERATOR_TIMES_EQUALS;
 			token.length = 2;
 		}
 		else
@@ -256,7 +256,7 @@ static Token handle_chars(Lexer* lexer)
 	{
 		if (next == '=')
 		{
-			token.type = TOKEN_OPERATOR_DIVIDED_EQUALS;
+			token.type	 = TOKEN_OPERATOR_DIVIDED_EQUALS;
 			token.length = 2;
 		}
 		else
@@ -268,7 +268,7 @@ static Token handle_chars(Lexer* lexer)
 	{
 		if (next == '|')
 		{
-			token.type = TOKEN_OPERATOR_LOG_OR;
+			token.type	 = TOKEN_OPERATOR_LOG_OR;
 			token.length = 2;
 		}
 	}
@@ -276,7 +276,7 @@ static Token handle_chars(Lexer* lexer)
 	{
 		if (next == '&')
 		{
-			token.type = TOKEN_OPERATOR_LOG_AND;
+			token.type	 = TOKEN_OPERATOR_LOG_AND;
 			token.length = 2;
 		}
 	}
@@ -284,7 +284,7 @@ static Token handle_chars(Lexer* lexer)
 	{
 		if (next == '=')
 		{
-			token.type = TOKEN_OPERATOR_EQUALS;
+			token.type	 = TOKEN_OPERATOR_EQUALS;
 			token.length = 2;
 		}
 		else
@@ -336,15 +336,15 @@ static Token handle_bool_constants(Lexer* lexer, str identifier, char* start)
 
 	if (strncmp(identifier, "true", 4) == 0)
 	{
-		token.type = TOKEN_CONSTANT_BOOL;
+		token.type			  = TOKEN_CONSTANT_BOOL;
 		token.constant_bool.value = 1;
-		token.length = 4;
+		token.length		  = 4;
 	}
 	else if (strncmp(identifier, "false", 5) == 0)
 	{
-		token.type = TOKEN_CONSTANT_BOOL;
+		token.type			  = TOKEN_CONSTANT_BOOL;
 		token.constant_bool.value = 0;
-		token.length = 5;
+		token.length		  = 5;
 	}
 
 	return token;
@@ -362,11 +362,11 @@ static Token handle_number_constants(Lexer* lexer)
 	{
 		i32 decimal = 0;
 
-		token.type = TOKEN_CONSTANT_NUMBER;
+		token.type			   = TOKEN_CONSTANT_NUMBER;
 		token.constant_number.type = NUMBER_TYPE_INT;
 
 		u32 length = 0;
-		
+
 		while (is_digit(get_char(lexer)) || get_char(lexer) == '.')
 		{
 			if (get_char(lexer) == '.')
@@ -385,12 +385,12 @@ static Token handle_number_constants(Lexer* lexer)
 		}
 
 		token.length = length;
-		
+
 		if (decimal)
 		{
 			token.constant_number.type = NUMBER_TYPE_DOUBLE;
 		}
-		
+
 		if (get_char(lexer) == 'F' || get_char(lexer) == 'f')
 		{
 			token.constant_number.type = NUMBER_TYPE_FLOAT;
@@ -406,31 +406,31 @@ static Token handle_number_constants(Lexer* lexer)
 
 		switch (token.constant_number.type)
 		{
-			case NUMBER_TYPE_INT:
+		case NUMBER_TYPE_INT:
+		{
+			token.constant_number.int_value = atoi(str_value);
+			break;
+		}
+
+		case NUMBER_TYPE_FLOAT:
+		{
+			token.constant_number.float_value = atof(str_value);
+			break;
+		}
+
+		case NUMBER_TYPE_DOUBLE:
+		{
+			char* end				     = NULL;
+			token.constant_number.double_value = strtod(str_value, &end);
+
+			if (end == NULL || end == token.start)
 			{
-				token.constant_number.int_value = atoi(str_value);
-				break;
+				log_error("Failed to convert number constant (string) to double...");
+				exit(1);
 			}
 
-			case NUMBER_TYPE_FLOAT:
-			{
-				token.constant_number.float_value = atof(str_value);
-				break;
-			}
-
-			case NUMBER_TYPE_DOUBLE:
-			{
-				char* end = NULL;
-				token.constant_number.double_value = strtod(str_value, &end);
-
-				if (end == NULL || end == token.start)
-				{
-					log_error("Failed to convert number constant (string) to double...");
-					exit(1);
-				}
-
-				break;
-			}
+			break;
+		}
 		}
 	}
 
@@ -468,7 +468,7 @@ static Token handle_string_constants(Lexer* lexer) /** TODO: adicionar chars que
 		token.constant_string.value = strndup(token.start, length);
 
 		token.length = length;
-		
+
 		advance_char(lexer);
 	}
 
@@ -511,7 +511,7 @@ static Token handle_char_constants(Lexer* lexer) /** TODO: adicionar chars que u
 		}
 
 		token.length = length;
-		
+
 		advance_char(lexer);
 	}
 
@@ -520,9 +520,9 @@ static Token handle_char_constants(Lexer* lexer) /** TODO: adicionar chars que u
 
 Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 {
-	Lexer* lexer = setup_lexer(max_index, content);
-	u32 tokens_length = 0;
-	
+	Lexer* lexer	   = setup_lexer(max_index, content);
+	u32	 tokens_length = 0;
+
 	while (1)
 	{
 		const char ch = get_char(lexer);
@@ -537,7 +537,7 @@ Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 		{
 			Token token = CREATE_TOKEN(TOKEN_END_LINE, lexer->current, 1);
 			add_token(&token, &tokens_length, lexer->tokens);
-			
+
 			advance_char(lexer);
 			continue;
 		}
@@ -552,24 +552,24 @@ Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 			break;
 		}
 
-		char* start = NULL;
-		char* end = NULL;
-		u32 length = 0;
+		char* start	 = NULL;
+		char* end	 = NULL;
+		u32	length = 0;
 
 		str identifier = handle_identifier(lexer, &start, &end, &length);
 
 		if (identifier != NULL)
 		{
 			Token token_type = handle_types(lexer, identifier, start);
-			
+
 			if (!is_unknown(&token_type))
 			{
 				add_token(&token_type, &tokens_length, lexer->tokens);
 				continue;
 			}
-	
+
 			Token token_keyword = handle_keywords(lexer, identifier, start);
-	
+
 			if (!is_unknown(&token_keyword))
 			{
 				add_token(&token_keyword, &tokens_length, lexer->tokens);
@@ -586,7 +586,7 @@ Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 		}
 
 		Token token_char = handle_chars(lexer);
-	
+
 		if (!is_unknown(&token_char))
 		{
 			for (i32 i = 0; i < token_char.length; i++)
@@ -625,9 +625,9 @@ Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 		if (identifier != NULL)
 		{
 			log_warning("Adding a identifier: \"%s\"", identifier);
-			
+
 			Token token = CREATE_TOKEN(TOKEN_IDENTIFIER, start, length);
-			
+
 			add_token(&token, &tokens_length, lexer->tokens);
 			continue;
 		}
@@ -646,36 +646,21 @@ Lexer* tokenize_module(Module* module, const u32 max_index, str content)
 // ==--------------------------------- Utils --------------------------------------== \\
 
 // Checa se um char 'ch' é um char de numero.
-static i32 is_digit(char ch)
-{
-	return ch >= '0' && ch <= '9';
-}
+static i32 is_digit(char ch) { return ch >= '0' && ch <= '9'; }
 
 // Checa se um char 'ch' é um char alpha numerico ou um underline (usado em identifiers).
-static i32 is_alpha(char ch)
-{
-	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_';
-}
+static i32 is_alpha(char ch) { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_'; }
 
 // Checa se um char 'ch' é um digito ou um char alpha numerico.
 // Veja 'is_digit' e 'is_alpha' pra entender melhor.
-static i32 is_aldig(char ch)
-{
-	return is_digit(ch) || is_alpha(ch);
-}
+static i32 is_aldig(char ch) { return is_digit(ch) || is_alpha(ch); }
 
 // Retorna se um token é do tipo desconhecido 'TOKEN_UNKNOWN'.
-static i32 is_unknown(Token* token)
-{
-	return token->type == TOKEN_UNKNOWN;
-}
+static i32 is_unknown(Token* token) { return token->type == TOKEN_UNKNOWN; }
 
 // Adiciona o token 'token' a array de tokens 'tokens' e incrementa o valor
 // que o pointer 'tokens_length' aponta.
-static void add_token(Token* token, u32* tokens_length, Token* tokens)
-{
-	tokens[(*tokens_length)++] = *token;
-}
+static void add_token(Token* token, u32* tokens_length, Token* tokens) { tokens[(*tokens_length)++] = *token; }
 
 // Avança pro proximo char do content em 'lexer', ja retornando o proximo char e
 // dando erro caso acesse o conteúdo fora do 'max_index'
@@ -686,7 +671,7 @@ static char* advance_char(Lexer* lexer)
 		log_error("Invalid lexer found is NULL...");
 		exit(1);
 	}
-	
+
 	++lexer->index;
 
 	if (lexer->index > lexer->max_index)
@@ -695,7 +680,8 @@ static char* advance_char(Lexer* lexer)
 		exit(1);
 	}
 
-	return ++lexer->current;;
+	return ++lexer->current;
+	;
 }
 
 // Retorna o char atual, avança pro proximo char do content em 'lexer' e
@@ -707,12 +693,12 @@ static char* consume_char(Lexer* lexer)
 		log_error("Invalid lexer found is NULL...");
 		exit(1);
 	}
-	
+
 	char* ch = lexer->current;
 
 	++lexer->current;
 	++lexer->index;
-	
+
 	if (lexer->index > lexer->max_index)
 	{
 		log_error("Failed to tokenize module, read outside content memory space...");
@@ -723,10 +709,7 @@ static char* consume_char(Lexer* lexer)
 }
 
 // Retorna o char em que o ponteiro 'current' aponta.
-static char get_char(Lexer* lexer)
-{
-	return *lexer->current;
-}
+static char get_char(Lexer* lexer) { return *lexer->current; }
 
 // Da setup na structure do lexer (alocado na heap).
 static Lexer* setup_lexer(const u32 max_index, str content)
@@ -739,10 +722,10 @@ static Lexer* setup_lexer(const u32 max_index, str content)
 	lexer->index = 3;
 
 	lexer->max_index = max_index;
-	
-	lexer->tokens = calloc(LEXER_TOKENS_BUFFER_SIZE, sizeof(Token));
+
+	lexer->tokens	   = calloc(LEXER_TOKENS_BUFFER_SIZE, sizeof(Token));
 	lexer->tokens_length = 0;
-	
+
 	return lexer;
 }
 

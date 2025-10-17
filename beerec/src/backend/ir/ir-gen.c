@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ir-gen.h"
 #include "../../utils/logger/logger.h"
+#include "ir-gen.h"
 
 // Pointer pra função atual sendo gerada.
 static IRNode* curr_func = NULL;
@@ -14,20 +14,20 @@ static IRNode* curr_block = NULL;
 static int whiles_count = 0;
 
 // Contagem de blocos if e contagem de blocos else (usado nas labels, como especificação).
-static int ifs_count = 0; // then & post
+static int ifs_count   = 0; // then & post
 static int elses_count = 0; // else & else if
 
-static Type* copy_type(Type* type);
-static IRNode* copy_node(IRNode* node);
-static int count_linked_list(ASTNode* head);
-static IRNode* generate_ir_node(ASTNode* node);
-static IRNode* generate_expression(ASTNode* node);
-static void dump_node(IRNode* node, const int depth);
-static void generate_func_instructions(ASTNode* head);
+static Type*	     copy_type(Type* type);
+static IRNode*	     copy_node(IRNode* node);
+static int		     count_linked_list(ASTNode* head);
+static IRNode*	     generate_ir_node(ASTNode* node);
+static IRNode*	     generate_expression(ASTNode* node);
+static void		     dump_node(IRNode* node, const int depth);
+static void		     generate_func_instructions(ASTNode* head);
 static IROperationType convert_op_type(const TokenType type);
-static IRNode* create_block(const char* label, const int add_to_func);
-static void generate_instructions_in_block(ASTNode* head, IRNode* block);
-static void setup_func_params(IRNode* func, ASTNode* head, const int length);
+static IRNode*	     create_block(const char* label, const int add_to_func);
+static void		     generate_instructions_in_block(ASTNode* head, IRNode* block);
+static void		     setup_func_params(IRNode* func, ASTNode* head, const int length);
 
 // ==---------------------------------- Statements --------------------------------------== \\
 
@@ -49,7 +49,7 @@ static IRNode* generate_func(ASTNode* node)
 	{
 		const int length = count_linked_list(node->function.params->head);
 
-		func->func.params = malloc(sizeof(IRNode*) * length);
+		func->func.params	     = malloc(sizeof(IRNode*) * length);
 		func->func.params_size = length;
 
 		setup_func_params(func, node->function.params->head, length);
@@ -70,7 +70,7 @@ static IRNode* generate_func(ASTNode* node)
 
 static IRNode* generate_ret(ASTNode* node)
 {
-	IRNode* ret = create_ir_node(IR_NODE_RET);
+	IRNode* ret	   = create_ir_node(IR_NODE_RET);
 	ret->ret.value = generate_expression(node->return_statement.return_value);
 
 	return ret;
@@ -81,7 +81,7 @@ static IRNode* generate_while(ASTNode* node)
 	char buff[128];
 
 	const int count = whiles_count++;
-	
+
 	snprintf(buff, 128, "%s%d", WHILE_THEN_LABEL_PREFIX, count);
 	const char* thenl = _strdup(buff);
 
@@ -95,15 +95,15 @@ static IRNode* generate_while(ASTNode* node)
 	IRNode* postb = create_block(postl, 1);
 	IRNode* condb = create_block(condl, 1);
 
-	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
-	branch->branch.condition = generate_expression(node->while_loop.condition);
+	IRNode* branch		  = create_ir_node(IR_NODE_BRANCH);
+	branch->branch.condition  = generate_expression(node->while_loop.condition);
 	branch->branch.then_block = thenb;
 	branch->branch.else_block = postb;
 
-	IRNode* loops = create_ir_node(IR_NODE_GOTO);
+	IRNode* loops	 = create_ir_node(IR_NODE_GOTO);
 	loops->go_to.block = condb;
-	
-	IRNode* loopl = create_ir_node(IR_NODE_GOTO);
+
+	IRNode* loopl	 = create_ir_node(IR_NODE_GOTO);
 	loopl->go_to.block = condb;
 
 	add_element_to_list(curr_block->block.nodes, loops);
@@ -113,10 +113,10 @@ static IRNode* generate_while(ASTNode* node)
 	add_element_to_list(curr_block->block.nodes, branch);
 
 	curr_block = thenb;
-	
+
 	generate_instructions_in_block(node->while_loop.then_block->block.statements->head, curr_block);
 	add_element_to_list(curr_block->block.nodes, loopl);
-	
+
 	curr_block = postb;
 
 	return NULL;
@@ -125,20 +125,20 @@ static IRNode* generate_while(ASTNode* node)
 static IRNode* generate_if(ASTNode* node)
 {
 	char buff[128];
-	
+
 	const int count = ifs_count++;
 
 	snprintf(buff, 128, "%s%d", IF_POST_LABEL_PREFIX, count);
 	const char* postl = _strdup(buff);
-	
+
 	IRNode* bpost = create_block(postl, 1);
 
-	IRNode* branch = create_ir_node(IR_NODE_BRANCH);
+	IRNode* branch		  = create_ir_node(IR_NODE_BRANCH);
 	branch->branch.then_block = NULL;
 	branch->branch.else_block = NULL;
-	branch->branch.condition = generate_expression(node->if_statement.condition_top);
-	
-	IRNode* go_to = create_ir_node(IR_NODE_GOTO); // usado só no then pra não ter double free
+	branch->branch.condition  = generate_expression(node->if_statement.condition_top);
+
+	IRNode* go_to	 = create_ir_node(IR_NODE_GOTO); // usado só no then pra não ter double free
 	go_to->go_to.block = bpost;
 
 	IRNode* mblock = curr_block;
@@ -146,11 +146,11 @@ static IRNode* generate_if(ASTNode* node)
 	{ // then block
 		snprintf(buff, 128, "%s%d", IF_THEN_LABEL_PREFIX, count);
 		const char* thenl = _strdup(buff);
-		
+
 		IRNode* bthen = create_block(thenl, 1);
-		
+
 		curr_block = bthen;
-		
+
 		generate_instructions_in_block(node->if_statement.then_branch->block.statements->head, bthen);
 		branch->branch.then_block = bthen;
 
@@ -158,29 +158,29 @@ static IRNode* generate_if(ASTNode* node)
 		add_element_to_list(mblock->block.nodes, branch);
 	}
 
-	IRNode* go_to_ = create_ir_node(IR_NODE_GOTO);
+	IRNode* go_to_	  = create_ir_node(IR_NODE_GOTO);
 	go_to_->go_to.block = NULL;
-	
+
 	if (node->if_statement.else_branch != NULL) // elses (else if, else)
 	{
 		ASTNode* currelse = node->if_statement.else_branch;
-		
+
 		while (currelse != NULL && currelse->type != NODE_BLOCK)
 		{
 			const int elsec = elses_count++;
-			
+
 			snprintf(buff, 128, "%s%d", IF_ELSE_LABEL_PREFIX, elsec);
 			const char* elsel = _strdup(buff);
-			
+
 			IRNode* belseif = create_block(elsel, 1);
-			
+
 			curr_block = belseif;
-		
-			IRNode* elseifbranch = create_ir_node(IR_NODE_BRANCH);
+
+			IRNode* elseifbranch		  = create_ir_node(IR_NODE_BRANCH);
 			elseifbranch->branch.then_block = belseif;
 			elseifbranch->branch.else_block = NULL;
-			elseifbranch->branch.condition = generate_expression(currelse->if_statement.condition_top);
-			
+			elseifbranch->branch.condition  = generate_expression(currelse->if_statement.condition_top);
+
 			generate_instructions_in_block(currelse->if_statement.then_branch->block.statements->head, belseif);
 			add_element_to_list(curr_block->block.nodes, copy_node(go_to)); // post
 
@@ -188,16 +188,16 @@ static IRNode* generate_if(ASTNode* node)
 
 			add_element_to_list(mblock->block.nodes, elseifbranch);
 		}
-		
+
 		if (currelse != NULL)
 		{
 			const int elsec = elses_count++;
-			
+
 			snprintf(buff, 128, "%s%d", IF_ELSE_LABEL_PREFIX, elsec);
 			const char* elsel = _strdup(buff);
-			
+
 			IRNode* belse = create_block(elsel, 1);
-			
+
 			curr_block = belse;
 
 			generate_instructions_in_block(currelse->block.statements->head, belse);
@@ -252,9 +252,9 @@ static IRNode* generate_operation(ASTNode* node)
 	IRNode* operation = create_ir_node(IR_NODE_OPERATION);
 
 	operation->operation.operation = convert_op_type(node->operation.op);
-	operation->operation.type = copy_type(node->operation.type);
+	operation->operation.type	 = copy_type(node->operation.type);
 
-	operation->operation.left = generate_expression(node->operation.left);
+	operation->operation.left  = generate_expression(node->operation.left);
 	operation->operation.right = generate_expression(node->operation.right);
 
 	return operation;
@@ -262,7 +262,7 @@ static IRNode* generate_operation(ASTNode* node)
 
 static IRNode* generate_argument(ASTNode* node)
 {
-	IRNode* arg = create_ir_node(IR_NODE_ARGUMENT);
+	IRNode* arg		  = create_ir_node(IR_NODE_ARGUMENT);
 	arg->argument.value = generate_expression(node->argument.value);
 
 	return arg;
@@ -270,17 +270,17 @@ static IRNode* generate_argument(ASTNode* node)
 
 static IRNode* generate_call(ASTNode* node)
 {
-	IRNode* call = create_ir_node(IR_NODE_CALL);
+	IRNode* call    = create_ir_node(IR_NODE_CALL);
 	call->call.func = generate_expression(node->function_call.callee);
-	
+
 	call->call.args = NULL;
-	
+
 	if (node->function_call.arguments != NULL)
 	{
 		call->call.args = create_list(8);
 
 		const int length = count_linked_list(node->function_call.arguments->head);
-		ASTNode* curr = node->function_call.arguments->head;
+		ASTNode*  curr   = node->function_call.arguments->head;
 
 		for (int i = 0; i < length; i++)
 		{
@@ -295,19 +295,20 @@ static IRNode* generate_call(ASTNode* node)
 			curr = curr->next;
 		}
 	}
-	
+
 	return call;
 }
 
 /**
- * TODO: adicionar um prefix pras coisa da class, pra não dar conflito com outras funções / fields globais com nome igual
+ * TODO: adicionar um prefix pras coisa da class, pra não dar conflito com outras funções / fields globais com nome
+ * igual
  */
 static IRNode* generate_class(ASTNode* node)
 {
 	IRNode* class = create_ir_node(IR_NODE_CLASS);
 
 	const unsigned int fields_length = node->class_node.fields_count;
-	class->class.fields = create_list(CLASSES_START_FIELDS_CAPACITY);
+	class->class.fields		   = create_list(CLASSES_START_FIELDS_CAPACITY);
 
 	for (int i = 0; i < fields_length; i++)
 	{
@@ -322,7 +323,7 @@ static IRNode* generate_class(ASTNode* node)
 	}
 
 	class->class.constructor = NULL;
-	ASTNode* constructor = node->class_node.constructor;
+	ASTNode* constructor	 = node->class_node.constructor;
 
 	if (constructor != NULL)
 	{
@@ -330,7 +331,7 @@ static IRNode* generate_class(ASTNode* node)
 	}
 
 	const unsigned int methods_length = node->class_node.funcs_count;
-	class->class.methods = create_list(CLASSES_START_METHODS_CAPACITY);
+	class->class.methods		    = create_list(CLASSES_START_METHODS_CAPACITY);
 
 	for (int i = 0; i < methods_length; i++)
 	{
@@ -350,7 +351,8 @@ static IRNode* generate_class(ASTNode* node)
 // ==---------------------------------- Core --------------------------------------== \\
 
 /**
- * TODO: terminar de implementar as nodes que faltam (continue, break, create inst, static access, arr literal, for loop, switch)
+ * TODO: terminar de implementar as nodes que faltam (continue, break, create inst, static access, arr literal, for
+ * loop, switch)
  */
 static IRNode* generate_ir_node(ASTNode* node)
 {
@@ -358,59 +360,59 @@ static IRNode* generate_ir_node(ASTNode* node)
 	{
 		return NULL;
 	}
-	
+
 	switch (node->type)
 	{
-		case NODE_FUNC:
-		{
-			return generate_func(node);
-		}
+	case NODE_FUNC:
+	{
+		return generate_func(node);
+	}
 
-		case NODE_RET:
-		{
-			return generate_ret(node);
-		}
+	case NODE_RET:
+	{
+		return generate_ret(node);
+	}
 
-		case NODE_IF:
-		{
-			return generate_if(node);
-		}
+	case NODE_IF:
+	{
+		return generate_if(node);
+	}
 
-		case NODE_WHILE_LOOP:
-		{
-			return generate_while(node);
-		}
+	case NODE_WHILE_LOOP:
+	{
+		return generate_while(node);
+	}
 
-		case NODE_FIELD:
-		{
-			return generate_field(node);
-		}
+	case NODE_FIELD:
+	{
+		return generate_field(node);
+	}
 
-		case NODE_ASSIGN:
-		{
-			return generate_store(node);
-		}
+	case NODE_ASSIGN:
+	{
+		return generate_store(node);
+	}
 
-		case NODE_OPERATION:
-		{
-			return generate_operation(node);
-		}
+	case NODE_OPERATION:
+	{
+		return generate_operation(node);
+	}
 
-		case NODE_CALL:
-		{
-			return generate_call(node);
-		}
+	case NODE_CALL:
+	{
+		return generate_call(node);
+	}
 
-		case NODE_CLASS:
-		{
-			return generate_class(node);
-		}
+	case NODE_CLASS:
+	{
+		return generate_class(node);
+	}
 
-		default:
-		{
-			println("Node with type id: %d, not implemented...", node->type);
-			exit(1);
-		}
+	default:
+	{
+		println("Node with type id: %d, not implemented...", node->type);
+		exit(1);
+	}
 	}
 }
 
@@ -435,7 +437,7 @@ IRNode** generate_ir_nodes(ASTNode** nodes, const unsigned int length)
 
 static IRNode* generate_literal(ASTNode* node)
 {
-	IRNode* literal = create_ir_node(IR_NODE_LITERAL);
+	IRNode* literal	    = create_ir_node(IR_NODE_LITERAL);
 	literal->literal.type = copy_type(node->literal.literal_type);
 
 	if (literal->literal.string_val != NULL && literal->literal.type->type == TYPE_STRING)
@@ -458,7 +460,7 @@ static IRNode* generate_literal(ASTNode* node)
 
 static IRNode* generate_field_literal(ASTNode* node)
 {
-	IRNode* field_literal = create_ir_node(IR_NODE_FIELD_LITERAL);
+	IRNode* field_literal		    = create_ir_node(IR_NODE_FIELD_LITERAL);
 	field_literal->field_literal.name = _strdup(node->variable.identifier);
 
 	return field_literal;
@@ -466,7 +468,7 @@ static IRNode* generate_field_literal(ASTNode* node)
 
 static IRNode* generate_reference(ASTNode* node)
 {
-	IRNode* reference = create_ir_node(IR_NODE_REFERENCE);
+	IRNode* reference		  = create_ir_node(IR_NODE_REFERENCE);
 	reference->reference.expr = generate_expression(node->adress_of.expr);
 
 	return reference;
@@ -474,7 +476,7 @@ static IRNode* generate_reference(ASTNode* node)
 
 static IRNode* generate_dereference(ASTNode* node)
 {
-	IRNode* reference = create_ir_node(IR_NODE_DEREFERENCE);
+	IRNode* reference		  = create_ir_node(IR_NODE_DEREFERENCE);
 	reference->reference.expr = generate_expression(node->dereference.expr);
 
 	return reference;
@@ -484,8 +486,8 @@ static IRNode* generate_member_access(ASTNode* node)
 {
 	IRNode* maccess = create_ir_node(IR_NODE_MEMBER_ACCESS);
 
-	maccess->member_access.object = generate_expression(node->member_access.object);
-	maccess->member_access.member = _strdup(node->member_access.member_name);
+	maccess->member_access.object	 = generate_expression(node->member_access.object);
+	maccess->member_access.member	 = _strdup(node->member_access.member_name);
 	maccess->member_access.is_func = node->member_access.is_function;
 
 	return maccess;
@@ -499,7 +501,7 @@ static IRNode* generate_cast(ASTNode* node)
 	IRNode* cast = create_ir_node(IR_NODE_CAST);
 
 	cast->cast.to = copy_type(node->cast_node.cast_type);
-	//cast->cast.from = analyzer_return_type_of_expression(NULL, node->cast_node.expr, NULL, NULL, 0, NULL);
+	// cast->cast.from = analyzer_return_type_of_expression(NULL, node->cast_node.expr, NULL, NULL, 0, NULL);
 
 	cast->cast.expr = generate_expression(node->cast_node.expr);
 
@@ -524,7 +526,7 @@ static IRNode* generate_arr_access(ASTNode* node)
 {
 	IRNode* arr_access = create_ir_node(IR_NODE_ARR_ACCESS);
 
-	arr_access->arr_access.arr = generate_expression(node->acess_array.array);
+	arr_access->arr_access.arr   = generate_expression(node->acess_array.array);
 	arr_access->arr_access.index = generate_expression(node->acess_array.index_expr);
 
 	return arr_access;
@@ -537,66 +539,66 @@ static IRNode* generate_expression(ASTNode* node)
 {
 	switch (node->type)
 	{
-		case NODE_LITERAL:
-		{
-			return generate_literal(node);
-		}
+	case NODE_LITERAL:
+	{
+		return generate_literal(node);
+	}
 
-		case NODE_OPERATION:
-		{
-			return generate_operation(node);
-		}
+	case NODE_OPERATION:
+	{
+		return generate_operation(node);
+	}
 
-		case NODE_IDENT:
-		{
-			return generate_field_literal(node);
-		}
+	case NODE_IDENT:
+	{
+		return generate_field_literal(node);
+	}
 
-		case NODE_REFERENCE:
-		{
-			return generate_reference(node);
-		}
+	case NODE_REFERENCE:
+	{
+		return generate_reference(node);
+	}
 
-		case NODE_DEREFERENCE:
-		{
-			return generate_dereference(node);
-		}
+	case NODE_DEREFERENCE:
+	{
+		return generate_dereference(node);
+	}
 
-		case NODE_CALL:
-		{
-			return generate_call(node);
-		}
+	case NODE_CALL:
+	{
+		return generate_call(node);
+	}
 
-		case NODE_MEMBER_ACCESS:
-		{
-			return generate_member_access(node);
-		}
+	case NODE_MEMBER_ACCESS:
+	{
+		return generate_member_access(node);
+	}
 
-		case NODE_CAST:
-		{
-			return generate_cast(node);
-		}
+	case NODE_CAST:
+	{
+		return generate_cast(node);
+	}
 
-		case NODE_THIS:
-		{
-			return generate_this(node);
-		}
+	case NODE_THIS:
+	{
+		return generate_this(node);
+	}
 
-		case NODE_SUPER:
-		{
-			return generate_super(node);
-		}
+	case NODE_SUPER:
+	{
+		return generate_super(node);
+	}
 
-		case NODE_ARR_ACCESS:
-		{
-			return generate_arr_access(node);
-		}
+	case NODE_ARR_ACCESS:
+	{
+		return generate_arr_access(node);
+	}
 
-		default:
-		{
-			println("Node with type id: %d, not implemented (expressions)...", node->type);
-			exit(1);
-		}
+	default:
+	{
+		println("Node with type id: %d, not implemented (expressions)...", node->type);
+		exit(1);
+	}
 	}
 }
 
@@ -608,7 +610,7 @@ static IRNode* copy_node(IRNode* node)
 	{
 		exit(1);
 	}
-	
+
 	IRNode* copy = malloc(sizeof(IRNode));
 	memcpy(copy, node, sizeof(IRNode));
 
@@ -621,10 +623,10 @@ static Type* copy_type(Type* type)
 	{
 		return NULL;
 	}
-	
+
 	Type* copy = malloc(sizeof(Type));
 
-	copy->type = type->type;
+	copy->type	     = type->type;
 	copy->class_name = (type->class_name != NULL) ? _strdup(type->class_name) : NULL;
 
 	copy->base = NULL;
@@ -676,7 +678,7 @@ static void generate_func_instructions(ASTNode* head)
 	while (curr != NULL)
 	{
 		IRNode* backup = curr_block;
-		IRNode* node = generate_ir_node(curr);
+		IRNode* node   = generate_ir_node(curr);
 
 		if (node != NULL)
 		{
@@ -703,81 +705,81 @@ static IROperationType convert_op_type(const TokenType type)
 {
 	switch (type)
 	{
-		case TOKEN_OPERATOR_PLUS:
-		{
-			return IR_OPERATION_ADD;
-		}
+	case TOKEN_OPERATOR_PLUS:
+	{
+		return IR_OPERATION_ADD;
+	}
 
-		case TOKEN_OPERATOR_MINUS:
-		{
-			return IR_OPERATION_SUB; 
-		}
+	case TOKEN_OPERATOR_MINUS:
+	{
+		return IR_OPERATION_SUB;
+	}
 
-		case TOKEN_CHAR_STAR:
-		{
-			return IR_OPERATION_MUL;
-		}
+	case TOKEN_CHAR_STAR:
+	{
+		return IR_OPERATION_MUL;
+	}
 
-		case TOKEN_OPERATOR_DIVIDED:
-		{
-			return IR_OPERATION_DIV;
-		}
+	case TOKEN_OPERATOR_DIVIDED:
+	{
+		return IR_OPERATION_DIV;
+	}
 
-		case TOKEN_OPERATOR_PLUS_EQUALS:
-		{
-			return IR_OPERATION_ADD_EQUALS;
-		}
+	case TOKEN_OPERATOR_PLUS_EQUALS:
+	{
+		return IR_OPERATION_ADD_EQUALS;
+	}
 
-		case TOKEN_OPERATOR_MINUS_EQUALS:
-		{
-			return IR_OPERATION_SUB_EQUALS;
-		}
+	case TOKEN_OPERATOR_MINUS_EQUALS:
+	{
+		return IR_OPERATION_SUB_EQUALS;
+	}
 
-		case TOKEN_OPERATOR_TIMES_EQUALS:
-		{
-			return IR_OPERATION_MUL_EQUALS;
-		}
+	case TOKEN_OPERATOR_TIMES_EQUALS:
+	{
+		return IR_OPERATION_MUL_EQUALS;
+	}
 
-		case TOKEN_OPERATOR_DIVIDED_EQUALS:
-		{
-			return IR_OPERATION_DIV_EQUALS;
-		}
+	case TOKEN_OPERATOR_DIVIDED_EQUALS:
+	{
+		return IR_OPERATION_DIV_EQUALS;
+	}
 
-		case TOKEN_OPERATOR_GREATER:
-		{
-			return IR_OPERATION_GREATER;
-		}
+	case TOKEN_OPERATOR_GREATER:
+	{
+		return IR_OPERATION_GREATER;
+	}
 
-		case TOKEN_OPERATOR_LESS:
-		{
-			return IR_OPERATION_LESS;
-		}
+	case TOKEN_OPERATOR_LESS:
+	{
+		return IR_OPERATION_LESS;
+	}
 
-		case TOKEN_OPERATOR_EQUALS:
-		{
-			return IR_OPERATION_EQUALS;
-		}
+	case TOKEN_OPERATOR_EQUALS:
+	{
+		return IR_OPERATION_EQUALS;
+	}
 
-		case TOKEN_OPERATOR_NOT_EQUALS:
-		{
-			return IR_OPERATION_NOT_EQUALS;
-		}
+	case TOKEN_OPERATOR_NOT_EQUALS:
+	{
+		return IR_OPERATION_NOT_EQUALS;
+	}
 
-		case TOKEN_OPERATOR_GREATER_EQUALS:
-		{
-			return IR_OPERATION_GREATER_EQUALS;
-		}
+	case TOKEN_OPERATOR_GREATER_EQUALS:
+	{
+		return IR_OPERATION_GREATER_EQUALS;
+	}
 
-		case TOKEN_OPERATOR_LESS_EQUALS:
-		{
-			return IR_OPERATION_LESS_EQUALS;
-		}
+	case TOKEN_OPERATOR_LESS_EQUALS:
+	{
+		return IR_OPERATION_LESS_EQUALS;
+	}
 
-		default:
-		{
-			println("Invalid operation type: %d...", type);
-			exit(1);
-		}
+	default:
+	{
+		println("Invalid operation type: %d...", type);
+		exit(1);
+	}
 	}
 }
 
@@ -787,7 +789,7 @@ static IRNode* create_block(const char* label, const int add_to_func)
 
 	block->block.nodes = create_list(BLOCK_START_INSTRUCTIONS_CAPACITY);
 	block->block.label = _strdup(label);
-	block->block.phis = NULL;
+	block->block.phis	 = NULL;
 
 	if (add_to_func)
 	{
@@ -805,86 +807,86 @@ static void get_type_str(Type* type, char* buff)
 	{
 		return;
 	}
-	
+
 	get_type_str(type->base, buff);
 	char* text = malloc(256);
-	
+
 	switch (type->type)
 	{
-		case TYPE_INT:
-		{
-			text = _strdup("int");
+	case TYPE_INT:
+	{
+		text = _strdup("int");
 
-			break;
-		}
+		break;
+	}
 
-		case TYPE_FLOAT:
-		{
-			text = _strdup("float");
+	case TYPE_FLOAT:
+	{
+		text = _strdup("float");
 
-			break;
-		}
-		
-		case TYPE_DOUBLE:
-		{
-			text = _strdup("double");
+		break;
+	}
 
-			break;
-		}
+	case TYPE_DOUBLE:
+	{
+		text = _strdup("double");
 
-		case TYPE_CHAR:
-		{
-			text = _strdup("char");
+		break;
+	}
 
-			break;
-		}
+	case TYPE_CHAR:
+	{
+		text = _strdup("char");
 
-		case TYPE_STRING:
-		{
-			text = _strdup("string");
+		break;
+	}
 
-			break;
-		}
+	case TYPE_STRING:
+	{
+		text = _strdup("string");
 
-		case TYPE_ARRAY:
-		{
-			text = _strdup("[]");
+		break;
+	}
 
-			break;
-		}
+	case TYPE_ARRAY:
+	{
+		text = _strdup("[]");
 
-		case TYPE_BOOL:
-		{
-			text = _strdup("bool");
+		break;
+	}
 
-			break;
-		}
+	case TYPE_BOOL:
+	{
+		text = _strdup("bool");
 
-		case TYPE_PTR:
-		{
-			text = _strdup("*");
+		break;
+	}
 
-			break;
-		}
+	case TYPE_PTR:
+	{
+		text = _strdup("*");
 
-		case TYPE_CLASS:
-		{
-			snprintf(text, 256, "Class (%s)", type->class_name);
+		break;
+	}
 
-			break;
-		}
+	case TYPE_CLASS:
+	{
+		snprintf(text, 256, "Class (%s)", type->class_name);
 
-		case TYPE_VOID:
-		{
-			text = _strdup("void");
+		break;
+	}
 
-			break;
-		}
+	case TYPE_VOID:
+	{
+		text = _strdup("void");
 
-		default:
-		{
-			break;
-		}
+		break;
+	}
+
+	default:
+	{
+		break;
+	}
 	}
 
 	snprintf(buff, 128, "%s%s", buff, text);
@@ -935,7 +937,7 @@ static void dump_block(IRNode* block, int depth)
 	printf("%s:\n", block->block.label);
 
 	const unsigned int nodes_length = block->block.nodes->length;
-	
+
 	for (int i = 0; i < nodes_length; i++)
 	{
 		IRNode* node = block->block.nodes->elements[i];
@@ -953,34 +955,34 @@ static void dump_node(IRNode* node, const int depth)
 {
 	switch (node->type)
 	{
-		case IR_NODE_FUNC:
-		{
-			dump_func(node, depth);
+	case IR_NODE_FUNC:
+	{
+		dump_func(node, depth);
 
-			break;
-		}
+		break;
+	}
 
-		case IR_NODE_BLOCK:
-		{
-			dump_block(node, depth);
+	case IR_NODE_BLOCK:
+	{
+		dump_block(node, depth);
 
-			break;
-		}
+		break;
+	}
 
-		default:
-		{
-			print_depth(depth);
-			printf("Node: %d\n", node->type);
+	default:
+	{
+		print_depth(depth);
+		printf("Node: %d\n", node->type);
 
-			break;
-		}
+		break;
+	}
 	}
 }
 
 /**
  * TODO: adicionar classes aqui
  * TODO: implementar isso com modulos reais quando implementar modulos no ir-gen
- * 
+ *
  * WARNING: não muito util, mas ja ajuda no debug
  */
 void dump_module(IRNode** nodes, const unsigned int nodes_length)
@@ -1020,267 +1022,267 @@ static void free_node(IRNode* node)
 {
 	switch (node->type)
 	{
-		case IR_NODE_FUNC:
+	case IR_NODE_FUNC:
+	{
+		free(node->func.name);
+		free(node->func.name);
+
+		free_type(node->func.type);
+
+		if (node->func.params != NULL)
 		{
-			free(node->func.name);
-			free(node->func.name);
-
-			free_type(node->func.type);
-
-			if (node->func.params != NULL)
+			for (int i = 0; i < node->func.params_size; i++)
 			{
-				for (int i = 0; i < node->func.params_size; i++)
+				IRNode* param = node->func.params[i];
+
+				if (param == NULL)
 				{
-					IRNode* param = node->func.params[i];
-
-					if (param == NULL)
-					{
-						continue;
-					}
-
-					free_node(param);
+					continue;
 				}
+
+				free_node(param);
+			}
+		}
+
+		const int length = node->func.blocks->length;
+
+		for (int i = 0; i < length; i++)
+		{
+			IRNode* block = node->func.blocks->elements[i];
+
+			if (block == NULL)
+			{
+				continue;
 			}
 
-			const int length = node->func.blocks->length;
+			free_node(block);
+			node->func.blocks->elements[i] = NULL;
+		}
+
+		free(node->func.blocks->elements);
+		free(node->func.blocks);
+
+		break;
+	}
+
+	case IR_NODE_BLOCK:
+	{
+		if (node->block.label != NULL)
+		{
+			free(node->block.label);
+		}
+
+		const int length = node->block.nodes->length;
+
+		for (int i = 0; i < length; i++)
+		{
+			IRNode* block = node->block.nodes->elements[i];
+
+			if (block == NULL)
+			{
+				continue;
+			}
+
+			free_node(block);
+			node->block.nodes->elements[i] = NULL;
+		}
+
+		free(node->block.nodes->elements);
+		free(node->block.nodes);
+
+		break;
+	}
+
+	case IR_NODE_FIELD:
+	{
+		free(node->field.name);
+		free_type(node->field.type);
+
+		free_node(node->field.value);
+
+		break;
+	}
+
+	case IR_NODE_RET:
+	{
+		free_node(node->ret.value);
+
+		break;
+	}
+
+	case IR_NODE_BRANCH:
+	{
+		free_node(node->branch.condition);
+
+		break;
+	}
+
+	case IR_NODE_GOTO:
+	{
+		break;
+	}
+
+	case IR_NODE_OPERATION:
+	{
+		free_node(node->operation.left);
+		free_node(node->operation.right);
+
+		break;
+	}
+
+	case IR_NODE_LITERAL:
+	{
+		free_type(node->literal.type);
+
+		if (node->literal.string_val != NULL)
+		{
+			free(node->literal.string_val);
+		}
+
+		break;
+	}
+
+	case IR_NODE_FIELD_LITERAL:
+	{
+		free(node->field_literal.name);
+
+		break;
+	}
+
+	case IR_NODE_STORE:
+	{
+		free_node(node->store.dest);
+		free_node(node->store.expr);
+
+		break;
+	}
+
+	case IR_NODE_CALL:
+	{
+		free_node(node->call.func);
+
+		if (node->call.args != NULL)
+		{
+			const int length = node->call.args->length;
 
 			for (int i = 0; i < length; i++)
 			{
-				IRNode* block = node->func.blocks->elements[i];
+				IRNode* arg = node->call.args->elements[i];
 
-				if (block == NULL)
+				if (arg == NULL)
 				{
 					continue;
 				}
 
-				free_node(block);
-				node->func.blocks->elements[i] = NULL;
+				free_node(arg);
 			}
-
-			free(node->func.blocks->elements);
-			free(node->func.blocks);
-
-			break;
 		}
 
-		case IR_NODE_BLOCK:
+		break;
+	}
+
+	case IR_NODE_REFERENCE:
+	{
+		free_node(node->reference.expr);
+
+		break;
+	}
+
+	case IR_NODE_DEREFERENCE:
+	{
+		free_node(node->dereference.expr);
+
+		break;
+	}
+
+	case IR_NODE_MEMBER_ACCESS:
+	{
+		free_node(node->member_access.object);
+
+		if (node->member_access.member != NULL)
 		{
-			if (node->block.label != NULL)
+			free(node->member_access.member);
+		}
+
+		break;
+	}
+
+	case IR_NODE_ARGUMENT:
+	{
+		free_node(node->argument.value);
+
+		break;
+	}
+
+	case IR_NODE_PARAM:
+	{
+		free(node->param.name);
+		free_type(node->param.type);
+
+		break;
+	}
+
+	case IR_NODE_CLASS:
+	{
+		if (node->class.constructor != NULL)
+		{
+			free_node(node->class.constructor);
+		}
+
+		const unsigned int fields_length = node->class.fields->length;
+
+		for (int i = 0; i < fields_length; i++)
+		{
+			IRNode* field = node->class.fields->elements[i];
+
+			if (field == NULL)
 			{
-				free(node->block.label);
+				continue;
 			}
 
-			const int length = node->block.nodes->length;
+			free_node(field);
+		}
 
-			for (int i = 0; i < length; i++)
+		const unsigned int methods_length = node->class.methods->length;
+
+		for (int i = 0; i < fields_length; i++)
+		{
+			IRNode* method = node->class.methods->elements[i];
+
+			if (method == NULL)
 			{
-				IRNode* block = node->block.nodes->elements[i];
-
-				if (block == NULL)
-				{
-					continue;
-				}
-
-				free_node(block);
-				node->block.nodes->elements[i] = NULL;
+				continue;
 			}
 
-			free(node->block.nodes->elements);
-			free(node->block.nodes);
-
-			break;
+			free_node(method);
 		}
 
-		case IR_NODE_FIELD:
-		{
-			free(node->field.name);
-			free_type(node->field.type);
+		break;
+	}
 
-			free_node(node->field.value);
+	case IR_NODE_SUPER:
+	{
+		break;
+	}
 
-			break;
-		}
+	case IR_NODE_THIS:
+	{
+		break;
+	}
 
-		case IR_NODE_RET:
-		{
-			free_node(node->ret.value);
+	case IR_NODE_ARR_ACCESS:
+	{
+		free_node(node->arr_access.arr);
+		free_node(node->arr_access.index);
 
-			break;
-		}
+		break;
+	}
 
-		case IR_NODE_BRANCH:
-		{
-			free_node(node->branch.condition);
-
-			break;
-		}
-
-		case IR_NODE_GOTO:
-		{
-			break;
-		}
-
-		case IR_NODE_OPERATION:
-		{
-			free_node(node->operation.left);
-			free_node(node->operation.right);
-
-			break;
-		}
-
-		case IR_NODE_LITERAL:
-		{
-			free_type(node->literal.type);
-
-			if (node->literal.string_val != NULL)
-			{
-				free(node->literal.string_val);
-			}
-
-			break;
-		}
-
-		case IR_NODE_FIELD_LITERAL:
-		{
-			free(node->field_literal.name);
-
-			break;
-		}
-
-		case IR_NODE_STORE:
-		{
-			free_node(node->store.dest);
-			free_node(node->store.expr);
-
-			break;
-		}
-
-		case IR_NODE_CALL:
-		{
-			free_node(node->call.func);
-
-			if (node->call.args != NULL)
-			{
-				const int length = node->call.args->length;
-
-				for (int i = 0; i < length; i++)
-				{
-					IRNode* arg = node->call.args->elements[i];
-
-					if (arg == NULL)
-					{
-						continue;
-					}
-
-					free_node(arg);
-				}
-			}
-
-			break;
-		}
-
-		case IR_NODE_REFERENCE:
-		{
-			free_node(node->reference.expr);
-
-			break;
-		}
-
-		case IR_NODE_DEREFERENCE:
-		{
-			free_node(node->dereference.expr);
-		
-			break;
-		}
-
-		case IR_NODE_MEMBER_ACCESS:
-		{
-			free_node(node->member_access.object);
-
-			if (node->member_access.member != NULL)
-			{
-				free(node->member_access.member);
-			}
-
-			break;
-		}
-
-		case IR_NODE_ARGUMENT:
-		{
-			free_node(node->argument.value);
-
-			break;
-		}
-
-		case IR_NODE_PARAM:
-		{
-			free(node->param.name);
-			free_type(node->param.type);
-
-			break;
-		}
-		
-		case IR_NODE_CLASS:
-		{
-			if (node->class.constructor != NULL)
-			{
-				free_node(node->class.constructor);
-			}
-
-			const unsigned int fields_length = node->class.fields->length;
-
-			for (int i = 0; i < fields_length; i++)
-			{
-				IRNode* field = node->class.fields->elements[i];
-
-				if (field == NULL)
-				{
-					continue;
-				}
-
-				free_node(field);
-			}
-
-			const unsigned int methods_length = node->class.methods->length;
-
-			for (int i = 0; i < fields_length; i++)
-			{
-				IRNode* method = node->class.methods->elements[i];
-
-				if (method == NULL)
-				{
-					continue;
-				}
-
-				free_node(method);
-			}
-
-			break;
-		}
-
-		case IR_NODE_SUPER:
-		{
-			break;
-		}
-
-		case IR_NODE_THIS:
-		{
-			break;
-		}
-
-		case IR_NODE_ARR_ACCESS:
-		{
-			free_node(node->arr_access.arr);
-			free_node(node->arr_access.index);
-
-			break;
-		}
-
-		default:
-		{
-			println("Invalid node while freeing with type id: %d...", node->type);
-			exit(1);
-		}
+	default:
+	{
+		println("Invalid node while freeing with type id: %d...", node->type);
+		exit(1);
+	}
 	}
 
 	free(node);

@@ -1,11 +1,11 @@
-#include <stdlib.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "modules.h"
 #include "../../utils/file/file.h"
 #include "../../utils/logger/logger.h"
 #include "../../utils/string/string.h"
+#include "modules.h"
 
 static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 dump_tokens);
 
@@ -14,14 +14,14 @@ static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 du
 ModuleConfig* handle_dotmod(const str path, const u32 dump_tokens)
 {
 	str extension = "";
-	
+
 	if (!has_extension(path, &extension, ".mod"))
 	{
 		log_error("Invalid extension from file: \"%s\"...", extension);
 		exit(1);
 	}
-	
-	str buff = calloc(MODULE_FILE_READ_BUFFER_SIZE, sizeof(char));
+
+	str	    buff  = calloc(MODULE_FILE_READ_BUFFER_SIZE, sizeof(char));
 	const i32 error = read_file(buff, MODULE_FILE_READ_BUFFER_SIZE, path);
 
 	if (error)
@@ -44,14 +44,14 @@ ModuleConfig* handle_dotmod(const str path, const u32 dump_tokens)
 // um signicado aos pedaços do conteúdo do dotmod.
 static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 {
-	ModuleToken* buff = calloc(MODULE_TOKENS_BUFFER_SIZE, sizeof(ModuleToken));
-	u32 buff_length = 0;
+	ModuleToken* buff		 = calloc(MODULE_TOKENS_BUFFER_SIZE, sizeof(ModuleToken));
+	u32		 buff_length = 0;
 
 	u32 i = 0;
 
-	u32 row = 0;
+	u32 row    = 0;
 	u32 column = 1;
-	
+
 	while (1)
 	{
 		if (i > MODULE_FILE_READ_BUFFER_SIZE)
@@ -66,7 +66,7 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 		{
 			break;
 		}
-		
+
 		if (ch == ' ')
 		{
 			row++;
@@ -87,10 +87,10 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 
 			token.type = MODULE_TOKEN_END_LINE;
 
-			token.start = &content[i];
-			token.end = &token.start[1];
+			token.start	 = &content[i];
+			token.end	 = &token.start[1];
 			token.length = 1;
-			
+
 			++row;
 			column = 1;
 			++i;
@@ -107,8 +107,8 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 
 			token.type = MODULE_TOKEN_EQUALS;
 
-			token.start = &content[i];
-			token.end = &token.start[1];
+			token.start	 = &content[i];
+			token.end	 = &token.start[1];
 			token.length = 1;
 
 			column++;
@@ -124,7 +124,7 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 		{
 			ModuleToken token = { 0 };
 
-			token.type = MODULE_TOKEN_STRING;
+			token.type	= MODULE_TOKEN_STRING;
 			token.start = &content[++i];
 
 			++column;
@@ -136,7 +136,8 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 			{
 				if (*curr == '\n' || *curr == '\0')
 				{
-					log_error("Failed to tokenize dotmod, found a incomplete string at row: %d, column: %d", row, column);
+					log_error("Failed to tokenize dotmod, found a incomplete string at row: %d, column: %d",
+						    row, column);
 					exit(1);
 				}
 
@@ -144,7 +145,7 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 				curr = &token.start[j];
 			}
 
-			token.end = curr;
+			token.end	 = curr;
 			token.length = j;
 
 			i += token.length + 1;
@@ -160,7 +161,7 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 		{
 			ModuleToken token = { 0 };
 
-			token.type = MODULE_TOKEN_IDENTIFIER;
+			token.type	= MODULE_TOKEN_IDENTIFIER;
 			token.start = &content[i];
 
 			u32 j = 0;
@@ -173,7 +174,7 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 				curr = &token.start[j];
 			}
 
-			token.end = curr;
+			token.end	 = curr;
 			token.length = j;
 
 			i += token.length;
@@ -184,13 +185,13 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 
 			continue;
 		}
-		
+
 		log_error("Not expected char found at row: \"%d\", column: %d...", row, column);
 		exit(1);
 	}
 
 	ModuleToken token = { 0 };
-	token.type = MODULE_TOKEN_END_SOURCE;
+	token.type		= MODULE_TOKEN_END_SOURCE;
 
 	buff[buff_length] = token;
 	++buff_length;
@@ -203,11 +204,11 @@ static ModuleToken* tokenize_dotmod(ModuleConfig* cfg, str content, u32* length)
 // Lida com todo o conteúdo do dotmod e atribui cada elemento na struct da config 'cfg'.
 static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 dump_tokens)
 {
-	u32 tokens_length = 0;
-	ModuleToken* tokens = tokenize_dotmod(cfg, content, &tokens_length);
-	
+	u32		 tokens_length = 0;
+	ModuleToken* tokens	   = tokenize_dotmod(cfg, content, &tokens_length);
+
 	if (dump_tokens)
-	{	
+	{
 		for (u32 i = 0; i < tokens_length; i++)
 		{
 			ModuleToken* token = &tokens[i];
@@ -223,7 +224,7 @@ static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 du
 		{
 			curr++;
 		}
-		
+
 		if (curr->type != MODULE_TOKEN_IDENTIFIER)
 		{
 			log_error("Expected a attribute identifier...");
@@ -250,7 +251,7 @@ static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 du
 				exit(1);
 			}
 
-			str path = strndup(curr->start, curr->length);
+			str path	   = strndup(curr->start, curr->length);
 			cfg->root_path = path;
 
 			curr++;
@@ -267,8 +268,8 @@ static void get_module_config_atrib(ModuleConfig* cfg, str content, const u32 du
 Module* setup_module(ModuleConfig* cfg, str path)
 {
 	Module* module = calloc(1, sizeof(Module));
-	
-	module->cfg = cfg;
+
+	module->cfg	    = cfg;
 	module->imports = create_list(8);
 
 	str full_path = get_full_path(cfg->root_path, path);
