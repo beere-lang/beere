@@ -1,7 +1,7 @@
 #ifndef IR_GEN_H
 #define IR_GEN_H
 
-#include "../../frontend/structure/ast/nodes/nodes.h"
+#include "../../frontend/structure/nodes/nodes.h"
 #include "../structure/ir/ir-nodes.h"
 
 // Func entry block label.

@@ -1,7 +1,7 @@
 #ifndef IR_NODES_H
 #define IR_NODES_H
 
-#include "../../../frontend/structure/ast/types/types.h"
+#include "../../../frontend/structure/types/types.h"
 #include "../../../utils/list/list.h"
 
 typedef struct IRNode		    IRNode;
