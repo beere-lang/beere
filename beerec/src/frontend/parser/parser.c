@@ -14,6 +14,7 @@ static void	   expect_token(Parser* parser, TokenType* types, const u32 types_le
 
 // ==------------------------------ Global Fields ---------------------------------== \\
 
+// Table pra registrar os user types, como classes.
 TypeTable* type_table = NULL;
 
 // ==---------------------------------- Core --------------------------------------== \\
