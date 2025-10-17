@@ -32,6 +32,8 @@ BraceWrapping:
 BracedInitializerIndentWidth: 4
 Cpp11BracedListStyle: false
 
+IndentCaseLabels: true
+
 ---
 Language: Cpp
 

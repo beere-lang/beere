@@ -96,4 +96,7 @@ struct ASTNode
 	};
 };
 
+// Retorna uma node alocada na heap ja atribuida com o tipo 'type'.
+ASTNode* create_node(ASTNodeType type);
+
 #endif

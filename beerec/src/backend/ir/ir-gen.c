@@ -363,56 +363,56 @@ static IRNode* generate_ir_node(ASTNode* node)
 
 	switch (node->type)
 	{
-	case NODE_FUNC:
-	{
-		return generate_func(node);
-	}
+		case NODE_FUNC:
+		{
+			return generate_func(node);
+		}
 
-	case NODE_RET:
-	{
-		return generate_ret(node);
-	}
+		case NODE_RET:
+		{
+			return generate_ret(node);
+		}
 
-	case NODE_IF:
-	{
-		return generate_if(node);
-	}
+		case NODE_IF:
+		{
+			return generate_if(node);
+		}
 
-	case NODE_WHILE_LOOP:
-	{
-		return generate_while(node);
-	}
+		case NODE_WHILE_LOOP:
+		{
+			return generate_while(node);
+		}
 
-	case NODE_FIELD:
-	{
-		return generate_field(node);
-	}
+		case NODE_FIELD:
+		{
+			return generate_field(node);
+		}
 
-	case NODE_ASSIGN:
-	{
-		return generate_store(node);
-	}
+		case NODE_ASSIGN:
+		{
+			return generate_store(node);
+		}
 
-	case NODE_OPERATION:
-	{
-		return generate_operation(node);
-	}
+		case NODE_OPERATION:
+		{
+			return generate_operation(node);
+		}
 
-	case NODE_CALL:
-	{
-		return generate_call(node);
-	}
+		case NODE_CALL:
+		{
+			return generate_call(node);
+		}
 
-	case NODE_CLASS:
-	{
-		return generate_class(node);
-	}
+		case NODE_CLASS:
+		{
+			return generate_class(node);
+		}
 
-	default:
-	{
-		println("Node with type id: %d, not implemented...", node->type);
-		exit(1);
-	}
+		default:
+		{
+			println("Node with type id: %d, not implemented...", node->type);
+			exit(1);
+		}
 	}
 }
 
@@ -539,66 +539,66 @@ static IRNode* generate_expression(ASTNode* node)
 {
 	switch (node->type)
 	{
-	case NODE_LITERAL:
-	{
-		return generate_literal(node);
-	}
+		case NODE_LITERAL:
+		{
+			return generate_literal(node);
+		}
 
-	case NODE_OPERATION:
-	{
-		return generate_operation(node);
-	}
+		case NODE_OPERATION:
+		{
+			return generate_operation(node);
+		}
 
-	case NODE_IDENT:
-	{
-		return generate_field_literal(node);
-	}
+		case NODE_IDENT:
+		{
+			return generate_field_literal(node);
+		}
 
-	case NODE_REFERENCE:
-	{
-		return generate_reference(node);
-	}
+		case NODE_REFERENCE:
+		{
+			return generate_reference(node);
+		}
 
-	case NODE_DEREFERENCE:
-	{
-		return generate_dereference(node);
-	}
+		case NODE_DEREFERENCE:
+		{
+			return generate_dereference(node);
+		}
 
-	case NODE_CALL:
-	{
-		return generate_call(node);
-	}
+		case NODE_CALL:
+		{
+			return generate_call(node);
+		}
 
-	case NODE_MEMBER_ACCESS:
-	{
-		return generate_member_access(node);
-	}
+		case NODE_MEMBER_ACCESS:
+		{
+			return generate_member_access(node);
+		}
 
-	case NODE_CAST:
-	{
-		return generate_cast(node);
-	}
+		case NODE_CAST:
+		{
+			return generate_cast(node);
+		}
 
-	case NODE_THIS:
-	{
-		return generate_this(node);
-	}
+		case NODE_THIS:
+		{
+			return generate_this(node);
+		}
 
-	case NODE_SUPER:
-	{
-		return generate_super(node);
-	}
+		case NODE_SUPER:
+		{
+			return generate_super(node);
+		}
 
-	case NODE_ARR_ACCESS:
-	{
-		return generate_arr_access(node);
-	}
+		case NODE_ARR_ACCESS:
+		{
+			return generate_arr_access(node);
+		}
 
-	default:
-	{
-		println("Node with type id: %d, not implemented (expressions)...", node->type);
-		exit(1);
-	}
+		default:
+		{
+			println("Node with type id: %d, not implemented (expressions)...", node->type);
+			exit(1);
+		}
 	}
 }
 
@@ -705,81 +705,81 @@ static IROperationType convert_op_type(const TokenType type)
 {
 	switch (type)
 	{
-	case TOKEN_OPERATOR_PLUS:
-	{
-		return IR_OPERATION_ADD;
-	}
+		case TOKEN_OPERATOR_PLUS:
+		{
+			return IR_OPERATION_ADD;
+		}
 
-	case TOKEN_OPERATOR_MINUS:
-	{
-		return IR_OPERATION_SUB;
-	}
+		case TOKEN_OPERATOR_MINUS:
+		{
+			return IR_OPERATION_SUB;
+		}
 
-	case TOKEN_CHAR_STAR:
-	{
-		return IR_OPERATION_MUL;
-	}
+		case TOKEN_CHAR_STAR:
+		{
+			return IR_OPERATION_MUL;
+		}
 
-	case TOKEN_OPERATOR_DIVIDED:
-	{
-		return IR_OPERATION_DIV;
-	}
+		case TOKEN_OPERATOR_DIVIDED:
+		{
+			return IR_OPERATION_DIV;
+		}
 
-	case TOKEN_OPERATOR_PLUS_EQUALS:
-	{
-		return IR_OPERATION_ADD_EQUALS;
-	}
+		case TOKEN_OPERATOR_PLUS_EQUALS:
+		{
+			return IR_OPERATION_ADD_EQUALS;
+		}
 
-	case TOKEN_OPERATOR_MINUS_EQUALS:
-	{
-		return IR_OPERATION_SUB_EQUALS;
-	}
+		case TOKEN_OPERATOR_MINUS_EQUALS:
+		{
+			return IR_OPERATION_SUB_EQUALS;
+		}
 
-	case TOKEN_OPERATOR_TIMES_EQUALS:
-	{
-		return IR_OPERATION_MUL_EQUALS;
-	}
+		case TOKEN_OPERATOR_TIMES_EQUALS:
+		{
+			return IR_OPERATION_MUL_EQUALS;
+		}
 
-	case TOKEN_OPERATOR_DIVIDED_EQUALS:
-	{
-		return IR_OPERATION_DIV_EQUALS;
-	}
+		case TOKEN_OPERATOR_DIVIDED_EQUALS:
+		{
+			return IR_OPERATION_DIV_EQUALS;
+		}
 
-	case TOKEN_OPERATOR_GREATER:
-	{
-		return IR_OPERATION_GREATER;
-	}
+		case TOKEN_OPERATOR_GREATER:
+		{
+			return IR_OPERATION_GREATER;
+		}
 
-	case TOKEN_OPERATOR_LESS:
-	{
-		return IR_OPERATION_LESS;
-	}
+		case TOKEN_OPERATOR_LESS:
+		{
+			return IR_OPERATION_LESS;
+		}
 
-	case TOKEN_OPERATOR_EQUALS:
-	{
-		return IR_OPERATION_EQUALS;
-	}
+		case TOKEN_OPERATOR_EQUALS:
+		{
+			return IR_OPERATION_EQUALS;
+		}
 
-	case TOKEN_OPERATOR_NOT_EQUALS:
-	{
-		return IR_OPERATION_NOT_EQUALS;
-	}
+		case TOKEN_OPERATOR_NOT_EQUALS:
+		{
+			return IR_OPERATION_NOT_EQUALS;
+		}
 
-	case TOKEN_OPERATOR_GREATER_EQUALS:
-	{
-		return IR_OPERATION_GREATER_EQUALS;
-	}
+		case TOKEN_OPERATOR_GREATER_EQUALS:
+		{
+			return IR_OPERATION_GREATER_EQUALS;
+		}
 
-	case TOKEN_OPERATOR_LESS_EQUALS:
-	{
-		return IR_OPERATION_LESS_EQUALS;
-	}
+		case TOKEN_OPERATOR_LESS_EQUALS:
+		{
+			return IR_OPERATION_LESS_EQUALS;
+		}
 
-	default:
-	{
-		println("Invalid operation type: %d...", type);
-		exit(1);
-	}
+		default:
+		{
+			println("Invalid operation type: %d...", type);
+			exit(1);
+		}
 	}
 }
 
@@ -813,80 +813,80 @@ static void get_type_str(Type* type, char* buff)
 
 	switch (type->type)
 	{
-	case TYPE_INT:
-	{
-		text = _strdup("int");
+		case TYPE_INT:
+		{
+			text = _strdup("int");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_FLOAT:
-	{
-		text = _strdup("float");
+		case TYPE_FLOAT:
+		{
+			text = _strdup("float");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_DOUBLE:
-	{
-		text = _strdup("double");
+		case TYPE_DOUBLE:
+		{
+			text = _strdup("double");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_CHAR:
-	{
-		text = _strdup("char");
+		case TYPE_CHAR:
+		{
+			text = _strdup("char");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_STRING:
-	{
-		text = _strdup("string");
+		case TYPE_STRING:
+		{
+			text = _strdup("string");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_ARRAY:
-	{
-		text = _strdup("[]");
+		case TYPE_ARRAY:
+		{
+			text = _strdup("[]");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_BOOL:
-	{
-		text = _strdup("bool");
+		case TYPE_BOOL:
+		{
+			text = _strdup("bool");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_PTR:
-	{
-		text = _strdup("*");
+		case TYPE_PTR:
+		{
+			text = _strdup("*");
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_CLASS:
-	{
-		snprintf(text, 256, "Class (%s)", type->class_name);
+		case TYPE_CLASS:
+		{
+			snprintf(text, 256, "Class (%s)", type->class_name);
 
-		break;
-	}
+			break;
+		}
 
-	case TYPE_VOID:
-	{
-		text = _strdup("void");
+		case TYPE_VOID:
+		{
+			text = _strdup("void");
 
-		break;
-	}
+			break;
+		}
 
-	default:
-	{
-		break;
-	}
+		default:
+		{
+			break;
+		}
 	}
 
 	snprintf(buff, 128, "%s%s", buff, text);
@@ -955,27 +955,27 @@ static void dump_node(IRNode* node, const int depth)
 {
 	switch (node->type)
 	{
-	case IR_NODE_FUNC:
-	{
-		dump_func(node, depth);
+		case IR_NODE_FUNC:
+		{
+			dump_func(node, depth);
 
-		break;
-	}
+			break;
+		}
 
-	case IR_NODE_BLOCK:
-	{
-		dump_block(node, depth);
+		case IR_NODE_BLOCK:
+		{
+			dump_block(node, depth);
 
-		break;
-	}
+			break;
+		}
 
-	default:
-	{
-		print_depth(depth);
-		printf("Node: %d\n", node->type);
+		default:
+		{
+			print_depth(depth);
+			printf("Node: %d\n", node->type);
 
-		break;
-	}
+			break;
+		}
 	}
 }
 
@@ -1022,267 +1022,267 @@ static void free_node(IRNode* node)
 {
 	switch (node->type)
 	{
-	case IR_NODE_FUNC:
-	{
-		free(node->func.name);
-		free(node->func.name);
-
-		free_type(node->func.type);
-
-		if (node->func.params != NULL)
+		case IR_NODE_FUNC:
 		{
-			for (int i = 0; i < node->func.params_size; i++)
-			{
-				IRNode* param = node->func.params[i];
+			free(node->func.name);
+			free(node->func.name);
 
-				if (param == NULL)
+			free_type(node->func.type);
+
+			if (node->func.params != NULL)
+			{
+				for (int i = 0; i < node->func.params_size; i++)
 				{
-					continue;
+					IRNode* param = node->func.params[i];
+
+					if (param == NULL)
+					{
+						continue;
+					}
+
+					free_node(param);
 				}
-
-				free_node(param);
-			}
-		}
-
-		const int length = node->func.blocks->length;
-
-		for (int i = 0; i < length; i++)
-		{
-			IRNode* block = node->func.blocks->elements[i];
-
-			if (block == NULL)
-			{
-				continue;
 			}
 
-			free_node(block);
-			node->func.blocks->elements[i] = NULL;
-		}
-
-		free(node->func.blocks->elements);
-		free(node->func.blocks);
-
-		break;
-	}
-
-	case IR_NODE_BLOCK:
-	{
-		if (node->block.label != NULL)
-		{
-			free(node->block.label);
-		}
-
-		const int length = node->block.nodes->length;
-
-		for (int i = 0; i < length; i++)
-		{
-			IRNode* block = node->block.nodes->elements[i];
-
-			if (block == NULL)
-			{
-				continue;
-			}
-
-			free_node(block);
-			node->block.nodes->elements[i] = NULL;
-		}
-
-		free(node->block.nodes->elements);
-		free(node->block.nodes);
-
-		break;
-	}
-
-	case IR_NODE_FIELD:
-	{
-		free(node->field.name);
-		free_type(node->field.type);
-
-		free_node(node->field.value);
-
-		break;
-	}
-
-	case IR_NODE_RET:
-	{
-		free_node(node->ret.value);
-
-		break;
-	}
-
-	case IR_NODE_BRANCH:
-	{
-		free_node(node->branch.condition);
-
-		break;
-	}
-
-	case IR_NODE_GOTO:
-	{
-		break;
-	}
-
-	case IR_NODE_OPERATION:
-	{
-		free_node(node->operation.left);
-		free_node(node->operation.right);
-
-		break;
-	}
-
-	case IR_NODE_LITERAL:
-	{
-		free_type(node->literal.type);
-
-		if (node->literal.string_val != NULL)
-		{
-			free(node->literal.string_val);
-		}
-
-		break;
-	}
-
-	case IR_NODE_FIELD_LITERAL:
-	{
-		free(node->field_literal.name);
-
-		break;
-	}
-
-	case IR_NODE_STORE:
-	{
-		free_node(node->store.dest);
-		free_node(node->store.expr);
-
-		break;
-	}
-
-	case IR_NODE_CALL:
-	{
-		free_node(node->call.func);
-
-		if (node->call.args != NULL)
-		{
-			const int length = node->call.args->length;
+			const int length = node->func.blocks->length;
 
 			for (int i = 0; i < length; i++)
 			{
-				IRNode* arg = node->call.args->elements[i];
+				IRNode* block = node->func.blocks->elements[i];
 
-				if (arg == NULL)
+				if (block == NULL)
 				{
 					continue;
 				}
 
-				free_node(arg);
+				free_node(block);
+				node->func.blocks->elements[i] = NULL;
 			}
+
+			free(node->func.blocks->elements);
+			free(node->func.blocks);
+
+			break;
 		}
 
-		break;
-	}
-
-	case IR_NODE_REFERENCE:
-	{
-		free_node(node->reference.expr);
-
-		break;
-	}
-
-	case IR_NODE_DEREFERENCE:
-	{
-		free_node(node->dereference.expr);
-
-		break;
-	}
-
-	case IR_NODE_MEMBER_ACCESS:
-	{
-		free_node(node->member_access.object);
-
-		if (node->member_access.member != NULL)
+		case IR_NODE_BLOCK:
 		{
-			free(node->member_access.member);
-		}
-
-		break;
-	}
-
-	case IR_NODE_ARGUMENT:
-	{
-		free_node(node->argument.value);
-
-		break;
-	}
-
-	case IR_NODE_PARAM:
-	{
-		free(node->param.name);
-		free_type(node->param.type);
-
-		break;
-	}
-
-	case IR_NODE_CLASS:
-	{
-		if (node->class.constructor != NULL)
-		{
-			free_node(node->class.constructor);
-		}
-
-		const unsigned int fields_length = node->class.fields->length;
-
-		for (int i = 0; i < fields_length; i++)
-		{
-			IRNode* field = node->class.fields->elements[i];
-
-			if (field == NULL)
+			if (node->block.label != NULL)
 			{
-				continue;
+				free(node->block.label);
 			}
 
-			free_node(field);
-		}
+			const int length = node->block.nodes->length;
 
-		const unsigned int methods_length = node->class.methods->length;
-
-		for (int i = 0; i < fields_length; i++)
-		{
-			IRNode* method = node->class.methods->elements[i];
-
-			if (method == NULL)
+			for (int i = 0; i < length; i++)
 			{
-				continue;
+				IRNode* block = node->block.nodes->elements[i];
+
+				if (block == NULL)
+				{
+					continue;
+				}
+
+				free_node(block);
+				node->block.nodes->elements[i] = NULL;
 			}
 
-			free_node(method);
+			free(node->block.nodes->elements);
+			free(node->block.nodes);
+
+			break;
 		}
 
-		break;
-	}
+		case IR_NODE_FIELD:
+		{
+			free(node->field.name);
+			free_type(node->field.type);
 
-	case IR_NODE_SUPER:
-	{
-		break;
-	}
+			free_node(node->field.value);
 
-	case IR_NODE_THIS:
-	{
-		break;
-	}
+			break;
+		}
 
-	case IR_NODE_ARR_ACCESS:
-	{
-		free_node(node->arr_access.arr);
-		free_node(node->arr_access.index);
+		case IR_NODE_RET:
+		{
+			free_node(node->ret.value);
 
-		break;
-	}
+			break;
+		}
 
-	default:
-	{
-		println("Invalid node while freeing with type id: %d...", node->type);
-		exit(1);
-	}
+		case IR_NODE_BRANCH:
+		{
+			free_node(node->branch.condition);
+
+			break;
+		}
+
+		case IR_NODE_GOTO:
+		{
+			break;
+		}
+
+		case IR_NODE_OPERATION:
+		{
+			free_node(node->operation.left);
+			free_node(node->operation.right);
+
+			break;
+		}
+
+		case IR_NODE_LITERAL:
+		{
+			free_type(node->literal.type);
+
+			if (node->literal.string_val != NULL)
+			{
+				free(node->literal.string_val);
+			}
+
+			break;
+		}
+
+		case IR_NODE_FIELD_LITERAL:
+		{
+			free(node->field_literal.name);
+
+			break;
+		}
+
+		case IR_NODE_STORE:
+		{
+			free_node(node->store.dest);
+			free_node(node->store.expr);
+
+			break;
+		}
+
+		case IR_NODE_CALL:
+		{
+			free_node(node->call.func);
+
+			if (node->call.args != NULL)
+			{
+				const int length = node->call.args->length;
+
+				for (int i = 0; i < length; i++)
+				{
+					IRNode* arg = node->call.args->elements[i];
+
+					if (arg == NULL)
+					{
+						continue;
+					}
+
+					free_node(arg);
+				}
+			}
+
+			break;
+		}
+
+		case IR_NODE_REFERENCE:
+		{
+			free_node(node->reference.expr);
+
+			break;
+		}
+
+		case IR_NODE_DEREFERENCE:
+		{
+			free_node(node->dereference.expr);
+
+			break;
+		}
+
+		case IR_NODE_MEMBER_ACCESS:
+		{
+			free_node(node->member_access.object);
+
+			if (node->member_access.member != NULL)
+			{
+				free(node->member_access.member);
+			}
+
+			break;
+		}
+
+		case IR_NODE_ARGUMENT:
+		{
+			free_node(node->argument.value);
+
+			break;
+		}
+
+		case IR_NODE_PARAM:
+		{
+			free(node->param.name);
+			free_type(node->param.type);
+
+			break;
+		}
+
+		case IR_NODE_CLASS:
+		{
+			if (node->class.constructor != NULL)
+			{
+				free_node(node->class.constructor);
+			}
+
+			const unsigned int fields_length = node->class.fields->length;
+
+			for (int i = 0; i < fields_length; i++)
+			{
+				IRNode* field = node->class.fields->elements[i];
+
+				if (field == NULL)
+				{
+					continue;
+				}
+
+				free_node(field);
+			}
+
+			const unsigned int methods_length = node->class.methods->length;
+
+			for (int i = 0; i < fields_length; i++)
+			{
+				IRNode* method = node->class.methods->elements[i];
+
+				if (method == NULL)
+				{
+					continue;
+				}
+
+				free_node(method);
+			}
+
+			break;
+		}
+
+		case IR_NODE_SUPER:
+		{
+			break;
+		}
+
+		case IR_NODE_THIS:
+		{
+			break;
+		}
+
+		case IR_NODE_ARR_ACCESS:
+		{
+			free_node(node->arr_access.arr);
+			free_node(node->arr_access.index);
+
+			break;
+		}
+
+		default:
+		{
+			println("Invalid node while freeing with type id: %d...", node->type);
+			exit(1);
+		}
 	}
 
 	free(node);

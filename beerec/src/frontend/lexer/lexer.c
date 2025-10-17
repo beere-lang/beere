@@ -406,31 +406,31 @@ static Token handle_number_constants(Lexer* lexer)
 
 		switch (token.constant_number.type)
 		{
-		case NUMBER_TYPE_INT:
-		{
-			token.constant_number.int_value = atoi(str_value);
-			break;
-		}
-
-		case NUMBER_TYPE_FLOAT:
-		{
-			token.constant_number.float_value = atof(str_value);
-			break;
-		}
-
-		case NUMBER_TYPE_DOUBLE:
-		{
-			char* end				     = NULL;
-			token.constant_number.double_value = strtod(str_value, &end);
-
-			if (end == NULL || end == token.start)
+			case NUMBER_TYPE_INT:
 			{
-				log_error("Failed to convert number constant (string) to double...");
-				exit(1);
+				token.constant_number.int_value = atoi(str_value);
+				break;
 			}
 
-			break;
-		}
+			case NUMBER_TYPE_FLOAT:
+			{
+				token.constant_number.float_value = atof(str_value);
+				break;
+			}
+
+			case NUMBER_TYPE_DOUBLE:
+			{
+				char* end				     = NULL;
+				token.constant_number.double_value = strtod(str_value, &end);
+
+				if (end == NULL || end == token.start)
+				{
+					log_error("Failed to convert number constant (string) to double...");
+					exit(1);
+				}
+
+				break;
+			}
 		}
 	}
 

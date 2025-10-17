@@ -146,38 +146,38 @@ static CFBlock* generate_control_flow(DList* func_blocks, IRNode* block, CFBlock
 
 		switch (jmp->type)
 		{
-		case IR_NODE_GOTO:
-		{
-			CFBlock* successor = generate_control_flow(func_blocks, jmp->go_to.block, cf_block);
-			add_element_to_list(cf_block->successors, successor);
+			case IR_NODE_GOTO:
+			{
+				CFBlock* successor = generate_control_flow(func_blocks, jmp->go_to.block, cf_block);
+				add_element_to_list(cf_block->successors, successor);
 
-			next_block = 0;
+				next_block = 0;
 
-			break;
-		}
+				break;
+			}
 
-		case IR_NODE_BRANCH:
-		{
-			CFBlock* thenb = generate_control_flow(func_blocks, jmp->branch.then_block, cf_block);
-			CFBlock* elseb = generate_control_flow(func_blocks, jmp->branch.else_block, cf_block);
+			case IR_NODE_BRANCH:
+			{
+				CFBlock* thenb = generate_control_flow(func_blocks, jmp->branch.then_block, cf_block);
+				CFBlock* elseb = generate_control_flow(func_blocks, jmp->branch.else_block, cf_block);
 
-			add_element_to_list(cf_block->successors, thenb);
-			add_element_to_list(cf_block->successors, elseb);
+				add_element_to_list(cf_block->successors, thenb);
+				add_element_to_list(cf_block->successors, elseb);
 
-			break;
-		}
+				break;
+			}
 
-		case IR_NODE_RET:
-		{
-			next_block = 0;
+			case IR_NODE_RET:
+			{
+				next_block = 0;
 
-			break;
-		}
+				break;
+			}
 
-		default:
-		{
-			exit(1);
-		}
+			default:
+			{
+				exit(1);
+			}
 		}
 	}
 
